@@ -1,0 +1,7 @@
+[submodule "EmbeddedLciMpc.jl"]
+	path = src/a1_cpp/lib/EmbeddedLciMpc.jl
+	url = https://github.com/RoboticExplorationLab/EmbeddedLciMpc.jl.git 
+
+[submodule "ContactImplicitMPC.jl"]
+	path = src/a1_cpp/lib/ContactImplicitMPC.jl 
+	url = https://github.com/johnzhang3/ContactImplicitMPC.jl.git

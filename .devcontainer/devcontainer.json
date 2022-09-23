@@ -15,7 +15,7 @@
 				"--device=/dev/bus",  "--volume=/dev/serial:/dev/serial:ro",
 		        "--name=legged_cpp_ctrl_container"],
 	"workspaceMount": "source=${localWorkspaceFolder},target=/home/REXOperator/legged_ctrl_ws/,type=bind",
-	"workspaceFolder": "/home/REXOperator",
+	"workspaceFolder": "/home/REXOperator/legged_ctrl_ws",
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 

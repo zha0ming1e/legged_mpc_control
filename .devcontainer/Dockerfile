@@ -324,7 +324,6 @@ RUN echo "export export UNITREE_SDK_VERSION=${UNITREE_SDK_VERSION}" >> ~/.bashrc
 RUN echo "export UNITREE_LEGGED_SDK_PATH=${SUPPORT_WS}/unitree_legged_sdk" >> ~/.bashrc
 RUN echo "export ALIENGO_SDK_PATH=${SUPPORT_WS}/aliengo_sdk" >> ~/.bashrc
 RUN echo "export UNITREE_PLATFORM=\"amd64\"" >> ~/.bashrc
-RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash"
 
 # install ocs2 
 RUN sudo apt-get update \
@@ -352,13 +351,8 @@ RUN sudo apt-get update \
     && sudo apt-get install -y ros-${ROS_DISTRO}-interactive-markers
 
 WORKDIR $OCS2_WS
-RUN catkin init
-RUN catkin config --extend /opt/ros/noetic
-RUN catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
-RUN catkin build ocs2_legged_robot_ros
+RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash; catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo; catkin build ocs2_legged_robot_ros"
 
-RUN echo "source /home/${USERNAME}/ocs2_ws/devel/setup.bash" >> ~/.bashrc  
-RUN echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  
 
 # install altro-cpp
 RUN sudo apt-get update \
@@ -368,6 +362,10 @@ RUN git clone https://github.com/optimusride/altro-cpp.git
 WORKDIR $SUPPORT_WS/altro-cpp
 RUN mkdir build 
 WORKDIR $SUPPORT_WS/altro-cpp/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=~/.local ../
+RUN cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../
 RUN make -j$(USE_PROC)
 RUN sudo make install
+
+# final 
+RUN /bin/bash -c "source ${OCS2_WS}/devel/setup.bash"
+RUN echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  

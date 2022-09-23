@@ -30,3 +30,19 @@
 *.exe
 *.out
 *.app
+
+
+
+devel/
+logs/
+build/
+bin/
+lib/
+msg_gen/
+srv_gen/
+build_isolated/
+devel_isolated/
+.catkin_tools/
+
+# Catkin custom files
+CATKIN_IGNORE
