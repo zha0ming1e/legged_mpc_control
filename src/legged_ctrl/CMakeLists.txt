@@ -2,10 +2,8 @@ cmake_minimum_required(VERSION 3.10.1)
 project(legged_ctrl)
 set(CMAKE_BUILD_TYPE "Release")
 # set(CMAKE_BUILD_TYPE "Debug")
-set(CMAKE_CXX_FLAGS "-std=c++14")
 set(CMAKE_CXX_STANDARD 14)
-#-DEIGEN_USE_MKL_ALL")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 #check environmental variables
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
@@ -87,22 +85,34 @@ set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 # test ocs2 
 add_library(wbc_ctrl_lib
         src/wbc_ctrl/ho_qp.cpp
+        src/wbc_ctrl/wbc.cpp
         )
 
 target_link_libraries(wbc_ctrl_lib
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
         )
+
 target_compile_options(wbc_ctrl_lib PUBLIC ${OCS2_CXX_FLAGS})        
 
+add_executable(wbc_test
+        src/test/test_wbc.cpp
+        )
+
+target_link_libraries(wbc_test
+        wbc_ctrl_lib
+        ${pinocchio_LIBRARIES}
+        )
+
 if (CATKIN_ENABLE_TESTING)
-    catkin_add_gtest(wbc_ctrl_lib_test
+    catkin_add_gtest(ho_qp_test
             src/test/ho_qp_test.cpp
             )
 
-    target_link_libraries(wbc_ctrl_lib_test
+    target_link_libraries(ho_qp_test
             wbc_ctrl_lib
             ${pinocchio_LIBRARIES}
             gtest_main
             )
+
 endif (CATKIN_ENABLE_TESTING)
