@@ -1,19 +1,24 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(a1_description)
+cmake_minimum_required(VERSION 3.10)
+project(unitree_description)
 
-find_package(catkin REQUIRED COMPONENTS
-    genmsg
-    roscpp
-    std_msgs
-    tf
-)
+## Find catkin macros and libraries
+find_package(catkin REQUIRED
+        COMPONENTS
+        )
 
+###################################
+## catkin specific configuration ##
+###################################
 catkin_package(
-    CATKIN_DEPENDS
+        CATKIN_DEPENDS
 )
 
-include_directories(
-    # include
-    ${Boost_INCLUDE_DIR}
-    ${catkin_INCLUDE_DIRS}
+#############
+## Install ##
+#############
+
+# Mark resource files for installation
+install(
+        DIRECTORY meshes urdf launch
+        DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 )

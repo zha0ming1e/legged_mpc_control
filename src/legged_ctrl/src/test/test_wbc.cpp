@@ -53,13 +53,29 @@ int main() {
                 referenceFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/config/reference.info";
 
     bool verbose = true;
-  
+    // check that task file exists
+    boost::filesystem::path task_file_path(taskFile);
+    if (boost::filesystem::exists(task_file_path))
+        std::cerr << "[LeggedInterface] Loading task file: " << task_file_path << std::endl;
+    else
+        throw std::invalid_argument("[LeggedInterface] Task file not found: " + task_file_path.string());
+
+    // check that urdf file exists
+    boost::filesystem::path urdf_file_path(urdfFile);
+    if (boost::filesystem::exists(urdf_file_path))
+        std::cerr << "[LeggedInterface] Loading Pinocchio model from: " << urdf_file_path << std::endl;
+    else
+        throw std::invalid_argument("[LeggedInterface] URDF file not found: " + urdf_file_path.string());
+
     ModelSettings modelSettings_ = loadModelSettings(taskFile, "model_settings", verbose);
+
+
     std::unique_ptr<PinocchioInterface> pinocchioInterfacePtr_;
     CentroidalModelInfo centroidalModelInfo_;
     // PinocchioInterface
     pinocchioInterfacePtr_.reset(
         new PinocchioInterface(centroidal_model::createPinocchioInterface(urdfFile, modelSettings_.jointNames)));
+
 
     // CentroidalModelInfo
     centroidalModelInfo_ = centroidal_model::createCentroidalModelInfo(
@@ -74,5 +90,16 @@ int main() {
 
     std::shared_ptr<Wbc> wbc_;
     wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics, verbose);
+
+    //
+    vector_t x = wbc_->update(optimized_state, optimized_input, measured_rbd_state, planned_mode);
+
+    vector_t torque = x.tail(12);
+
+    vector_t pos_des = centroidal_model::getJointAngles(optimized_state, legged_interface_->getCentroidalModelInfo());
+    vector_t vel_des = centroidal_model::getJointVelocities(optimized_input, legged_interface_->getCentroidalModelInfo());
+
+
+
     return 0;
 }
