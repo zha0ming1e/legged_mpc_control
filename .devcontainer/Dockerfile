@@ -324,5 +324,50 @@ RUN echo "export export UNITREE_SDK_VERSION=${UNITREE_SDK_VERSION}" >> ~/.bashrc
 RUN echo "export UNITREE_LEGGED_SDK_PATH=${SUPPORT_WS}/unitree_legged_sdk" >> ~/.bashrc
 RUN echo "export ALIENGO_SDK_PATH=${SUPPORT_WS}/aliengo_sdk" >> ~/.bashrc
 RUN echo "export UNITREE_PLATFORM=\"amd64\"" >> ~/.bashrc
-RUN echo "source ${UNITREE_WS}/devel/setup.bash" >> ~/.bashrc
-RUN echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc
+RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash"
+
+# install ocs2 
+RUN sudo apt-get update \
+    && sudo apt-get install -y libglpk-dev ros-${ROS_DISTRO}-pybind11-catkin \
+    liburdfdom-dev liboctomap-dev libassimp-dev doxygen doxygen-latex
+
+ENV OCS2_WS=/home/${USERNAME}/ocs2_ws
+RUN mkdir -p $OCS2_WS/src
+WORKDIR $OCS2_WS/src
+RUN git clone https://github.com/leggedrobotics/ocs2.git
+RUN git clone --depth 1 https://github.com/leggedrobotics/pinocchio.git
+WORKDIR $OCS2_WS/src/pinocchio
+RUN git submodule init
+RUN git submodule update --depth 1
+WORKDIR $OCS2_WS/src
+RUN git clone --depth 1 https://github.com/leggedrobotics/hpp-fcl.git  
+WORKDIR $OCS2_WS/src/hpp-fcl
+RUN git submodule init
+RUN git submodule update --depth 1
+WORKDIR $OCS2_WS/src
+RUN git clone https://github.com/leggedrobotics/ocs2_robotic_assets.git
+
+
+RUN sudo apt-get update \
+    && sudo apt-get install -y ros-${ROS_DISTRO}-interactive-markers
+
+WORKDIR $OCS2_WS
+RUN catkin init
+RUN catkin config --extend /opt/ros/noetic
+RUN catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo
+RUN catkin build ocs2_legged_robot_ros
+
+RUN echo "source /home/${USERNAME}/ocs2_ws/devel/setup.bash" >> ~/.bashrc  
+RUN echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  
+
+# install altro-cpp
+RUN sudo apt-get update \
+    && sudo apt-get install -y libfmt-dev
+WORKDIR $SUPPORT_WS
+RUN git clone https://github.com/optimusride/altro-cpp.git
+WORKDIR $SUPPORT_WS/altro-cpp
+RUN mkdir build 
+WORKDIR $SUPPORT_WS/altro-cpp/build
+RUN cmake -DCMAKE_INSTALL_PREFIX=~/.local ../
+RUN make -j$(USE_PROC)
+RUN sudo make install
