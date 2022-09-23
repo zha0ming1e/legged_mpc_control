@@ -91,13 +91,22 @@ int main() {
     std::shared_ptr<Wbc> wbc_;
     wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics, verbose);
 
+    vector_t measured_rbd_state = vector_t(2*centroidalModelInfo_.generalizedCoordinatesNum);
+    vector_t optimized_state = vector_t(centroidalModelInfo_.generalizedCoordinatesNum);
+    vector_t optimized_input = vector_t(3 * centroidalModelInfo_.numThreeDofContacts + 
+                                        6 * centroidalModelInfo_.numSixDofContacts + 
+                                            centroidalModelInfo_.actuatedDofNum);
+
+    // need to fill some test data here                                            
+
+    int planned_mode = 1;
     //
     vector_t x = wbc_->update(optimized_state, optimized_input, measured_rbd_state, planned_mode);
 
     vector_t torque = x.tail(12);
 
-    vector_t pos_des = centroidal_model::getJointAngles(optimized_state, legged_interface_->getCentroidalModelInfo());
-    vector_t vel_des = centroidal_model::getJointVelocities(optimized_input, legged_interface_->getCentroidalModelInfo());
+    vector_t pos_des = centroidal_model::getJointAngles(optimized_state, centroidalModelInfo_);
+    vector_t vel_des = centroidal_model::getJointVelocities(optimized_input, centroidalModelInfo_);
 
 
 
