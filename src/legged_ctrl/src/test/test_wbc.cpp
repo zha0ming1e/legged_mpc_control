@@ -141,11 +141,17 @@ int main() {
 
     // test ik
     LeggedIKSolver ik_solve(*pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics);
+    
+    std::unique_ptr<LeggedIKSolver> ik_solver2 = LeggedIKSolver::createLeggedIKSolver(taskFile, urdfFile, referenceFile);
+
+
     int leg_id = 0;
     for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i) {
         ik_solve.setWarmStartPos(measured_rbd_state.segment<3>(6+3*i), i);
+        ik_solver2 -> setWarmStartPos(measured_rbd_state.segment<3>(6+3*i), i);
     }
     ik_solve.setBasePos(optimized_state.head(6)); 
+    ik_solver2 -> setBasePos(optimized_state.head(6)); 
 
     // test pinocchio kinematics 
     vector_t  measured_q_, measured_v_;
@@ -212,7 +218,7 @@ int main() {
         vel_des = centroidal_model::getJointVelocities(optimized_input, centroidalModelInfo_);
     } else {
         for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i) {
-            pos_des.segment<3>(3*i) = ik_solve.solveIK(optimized_state.segment<3>(6+3*i), i);
+            pos_des.segment<3>(3*i) = ik_solver2->solveIK(optimized_state.segment<3>(6+3*i), i);
             // vel need jacobian
         }
         // pos_des = ik_solve.solveIK(optimized_state.tail(centroidalModelInfo_.actuatedDofNum));

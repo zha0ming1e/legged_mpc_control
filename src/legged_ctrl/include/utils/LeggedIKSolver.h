@@ -13,6 +13,7 @@ using namespace legged_robot;
 
 class LeggedIKSolver {
     public:
+        static std::unique_ptr<LeggedIKSolver> createLeggedIKSolver(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
         LeggedIKSolver(PinocchioInterface& pino_interface, CentroidalModelInfo& info,
             const PinocchioEndEffectorKinematics& ee_kinematics);
 

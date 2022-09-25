@@ -11,9 +11,61 @@
 #include <ocs2_centroidal_model/AccessHelperFunctions.h>
 #include <ocs2_centroidal_model/ModelHelperFunctions.h>
 
+#include <ocs2_centroidal_model/FactoryFunctions.h>
+#include <ocs2_centroidal_model/AccessHelperFunctions.h>
+#include <ocs2_centroidal_model/CentroidalModelPinocchioMapping.h>
+#include <ocs2_centroidal_model/ModelHelperFunctions.h>
+#include <ocs2_core/soft_constraint/StateInputSoftConstraint.h>
+#include <ocs2_oc/synchronized_module/SolverSynchronizedModule.h>
+#include <ocs2_pinocchio_interface/PinocchioEndEffectorKinematicsCppAd.h>
+
+// Boost
+#include <ocs2_legged_robot/common/ModelSettings.h>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 namespace legged
 {
+    std::unique_ptr<LeggedIKSolver> LeggedIKSolver::createLeggedIKSolver(const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile) {
+        bool verbose = true;
+        // check that task file exists
+        boost::filesystem::path task_file_path(taskFile);
+        if (boost::filesystem::exists(task_file_path))
+            std::cerr << "[LeggedInterface] Loading task file: " << task_file_path << std::endl;
+        else
+            throw std::invalid_argument("[LeggedInterface] Task file not found: " + task_file_path.string());
+
+        // check that urdf file exists
+        boost::filesystem::path urdf_file_path(urdfFile);
+        if (boost::filesystem::exists(urdf_file_path))
+            std::cerr << "[LeggedInterface] Loading Pinocchio model from: " << urdf_file_path << std::endl;
+        else
+            throw std::invalid_argument("[LeggedInterface] URDF file not found: " + urdf_file_path.string());
+
+        ModelSettings* modelSettings_ = new ModelSettings(loadModelSettings(taskFile, "model_settings", verbose));
+
+
+        
+        PinocchioInterface* pinocchioInterface = new PinocchioInterface(centroidal_model::createPinocchioInterface(urdfFile, modelSettings_->jointNames));
+
+
+        // CentroidalModelInfo
+        CentroidalModelInfo* centroidalModelInfo_=  new CentroidalModelInfo(centroidal_model::createCentroidalModelInfo(
+            *pinocchioInterface, centroidal_model::loadCentroidalType(taskFile),
+            centroidal_model::loadDefaultJointState(pinocchioInterface->getModel().nq - 6, referenceFile),
+            modelSettings_->contactNames3DoF, modelSettings_->contactNames6DoF));                
+
+
+        CentroidalModelPinocchioMapping* pinocchio_mapping = new CentroidalModelPinocchioMapping(*centroidalModelInfo_);
+        PinocchioEndEffectorKinematics* ee_kinematics = new PinocchioEndEffectorKinematics(*pinocchioInterface, *pinocchio_mapping,
+                                                    modelSettings_->contactNames3DoF);
+        // must set this manually                                                    
+        ee_kinematics -> setPinocchioInterface(*pinocchioInterface);
+
+        return std::unique_ptr<LeggedIKSolver>(new LeggedIKSolver(*pinocchioInterface, *centroidalModelInfo_, *ee_kinematics));    
+    }
+
+
     LeggedIKSolver::LeggedIKSolver(PinocchioInterface& pino_interface, CentroidalModelInfo& info,
                 const PinocchioEndEffectorKinematics& ee_kinematics) 
     : pino_interface_(pino_interface)
