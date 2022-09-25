@@ -1,5 +1,6 @@
 
 #include "wbc_ctrl/wbc.h"
+#include "utils/LeggedIKSolver.h"
 
 
 #include <ocs2_core/Types.h>
@@ -87,9 +88,12 @@ int main() {
     CentroidalModelPinocchioMapping pinocchio_mapping(centroidalModelInfo_);
     PinocchioEndEffectorKinematics ee_kinematics(*pinocchioInterfacePtr_, pinocchio_mapping,
                                                 modelSettings_.contactNames3DoF);
+    // must set this manually                                                    
+    ee_kinematics.setPinocchioInterface(*pinocchioInterfacePtr_);
 
     std::shared_ptr<Wbc> wbc_;
-    wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics, verbose);
+    // state desired and input desired contains WORK SPACE target 
+    wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics, 1, verbose);
 
     vector_t measured_rbd_state = vector_t(2*centroidalModelInfo_.generalizedCoordinatesNum);
     vector_t optimized_state = vector_t(centroidalModelInfo_.generalizedCoordinatesNum);
@@ -97,18 +101,111 @@ int main() {
                                         6 * centroidalModelInfo_.numSixDofContacts + 
                                             centroidalModelInfo_.actuatedDofNum);
 
-    // need to fill some test data here                                            
+    // need to fill some test data here  
+    measured_rbd_state << 0, 0, 0,    
+                          0, 0, 0.0,
+                          -0.05, 0.72, -1.44,
+                          -0.05, 0.72, -1.44,
+                          0.05, 0.72, -1.44,
+                          0.05, 0.72, -1.44,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0;
 
-    int planned_mode = 1;
+    optimized_state <<    0, 0, 0,    
+                          0, 0, 0.3,    
+                          0.18,  0.15, -0.32,
+                         -0.18,  0.15, -0.32,            
+                          0.18, -0.15, -0.32,            
+                         -0.18, -0.15, -0.32;
+    optimized_input <<  0, 0, centroidalModelInfo_.robotMass*9.8/4,
+                        0, 0, centroidalModelInfo_.robotMass*9.8/4,
+                        0, 0, centroidalModelInfo_.robotMass*9.8/4,
+                        0, 0, centroidalModelInfo_.robotMass*9.8/4,
+                        0, 0, 0,  
+                        0, 0, 0,  
+                        0, 0, 0,  
+                        0, 0, 0;                                  
+
+
+    int planned_mode = 15; // all on the ground
     //
     vector_t x = wbc_->update(optimized_state, optimized_input, measured_rbd_state, planned_mode);
 
     vector_t torque = x.tail(12);
 
-    vector_t pos_des = centroidal_model::getJointAngles(optimized_state, centroidalModelInfo_);
-    vector_t vel_des = centroidal_model::getJointVelocities(optimized_input, centroidalModelInfo_);
+    // test ik
+    LeggedIKSolver ik_solve(*pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics);
+    int leg_id = 0;
+    ik_solve.setWarmStartPos(measured_rbd_state.segment<3>(6, 3*leg_id), leg_id);
+
+    // test pinocchio kinematics 
+    vector_t  measured_q_, measured_v_;
+    measured_q_ = vector_t(centroidalModelInfo_.generalizedCoordinatesNum);
+    measured_v_ = vector_t(centroidalModelInfo_.generalizedCoordinatesNum);
+    measured_q_.head<3>() = measured_rbd_state.segment<3>(3);
+    measured_q_.segment<3>(3) = measured_rbd_state.head<3>();
+    measured_q_.tail(centroidalModelInfo_.actuatedDofNum) = measured_rbd_state.segment(6, centroidalModelInfo_.actuatedDofNum);
+
+    measured_v_.head<3>() = measured_rbd_state.segment<3>(centroidalModelInfo_.generalizedCoordinatesNum + 3);
+    measured_v_.segment<3>(3) = getEulerAnglesZyxDerivativesFromGlobalAngularVelocity<scalar_t>(
+        measured_q_.segment<3>(3), measured_rbd_state.segment<3>(centroidalModelInfo_.generalizedCoordinatesNum));
+    measured_v_.tail(centroidalModelInfo_.actuatedDofNum) =
+        measured_rbd_state.segment(centroidalModelInfo_.generalizedCoordinatesNum + 6, centroidalModelInfo_.actuatedDofNum);
+
+    const auto& model = pinocchioInterfacePtr_->getModel();
+    auto& data = pinocchioInterfacePtr_->getData();
+    pinocchio::forwardKinematics(model, data, measured_q_, measured_v_);
+    pinocchio::updateFramePlacements(model, data);
+    pinocchio::computeJointJacobians(model, data);
+
+    // the angle
+    std::vector<vector3_t> pos_measured = ee_kinematics.getPosition(vector_t());
+    std::cout << "pos_measured"<< std::endl << pos_measured[0] << std::endl;
 
 
+    measured_rbd_state << 0, 0, 0,    
+                          0, 0, 0.0,
+                          -0.05, 0.78, -1.44,
+                          -0.05, 0.78, -1.44,
+                          0.05, 0.78, -1.44,
+                          0.05, 0.78, -1.44,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0,
+                          0, 0, 0;
+    measured_q_.tail(centroidalModelInfo_.actuatedDofNum) = measured_rbd_state.segment(6, centroidalModelInfo_.actuatedDofNum);
+    pinocchio::forwardKinematics(model, data, measured_q_, measured_v_);
+    pinocchio::updateFramePlacements(model, data);
+    pinocchio::computeJointJacobians(model, data);
+
+    // the angle
+    pos_measured = ee_kinematics.getPosition(vector_t());
+    std::cout << "pos_measured2"<< std::endl << pos_measured[0] << std::endl;
+
+    for (int i = 0; i < 10; i++) {
+        vector_t angle = ik_solve.solveIK(pos_measured[0], leg_id);
+        std::cout << "angle solved"<< std::endl << angle << std::endl;
+        measured_q_.segment<3>(6+3*leg_id) = angle;
+        pinocchio::forwardKinematics(model, data, measured_q_, measured_v_);
+        pinocchio::updateFramePlacements(model, data);
+        pinocchio::computeJointJacobians(model, data);
+        pos_measured = ee_kinematics.getPosition(vector_t());
+        std::cout << "pos_measured"<< std::endl << pos_measured[0] << std::endl;
+    }
+
+    // if wbc uses workspace, now we need ik here to calculate joint angles11
+    // vector_t pos_des = centroidal_model::getJointAngles(optimized_state, centroidalModelInfo_);
+    // vector_t vel_des = centroidal_model::getJointVelocities(optimized_input, centroidalModelInfo_);
+
+    // std::cout << "torque" << torque << std::endl;
+    // std::cout << "pos_des" << pos_des << std::endl;
+    // std::cout << "vel_des" << vel_des << std::endl;
 
     return 0;
 }

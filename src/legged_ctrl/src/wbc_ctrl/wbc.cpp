@@ -14,7 +14,7 @@
 namespace legged
 {
 Wbc::Wbc(const std::string& task_file, PinocchioInterface& pino_interface, CentroidalModelInfo& info,
-         const PinocchioEndEffectorKinematics& ee_kinematics, bool verbose)
+         const PinocchioEndEffectorKinematics& ee_kinematics, int swing_task_type, bool verbose)
   : pino_interface_(pino_interface)
   , info_(info)
   , centroidal_dynamics_(info_)
@@ -27,6 +27,9 @@ Wbc::Wbc(const std::string& task_file, PinocchioInterface& pino_interface, Centr
   measured_q_ = vector_t(info_.generalizedCoordinatesNum);
   measured_v_ = vector_t(info_.generalizedCoordinatesNum);
   ee_kinematics_->setPinocchioInterface(pino_interface_);
+
+  // TODO: load swing leg task type in config file
+  swing_task_type_ = swing_task_type;
 
   loadTasksSetting(task_file, verbose);
 }
@@ -194,15 +197,25 @@ Task Wbc::formulateSwingLegTask()
 {
   std::vector<vector3_t> pos_measured = ee_kinematics_->getPosition(vector_t());
   std::vector<vector3_t> vel_measured = ee_kinematics_->getVelocity(vector_t(), vector_t());
-  vector_t q_desired = mapping_.getPinocchioJointPosition(state_desired_);
-  vector_t v_desired = mapping_.getPinocchioJointVelocity(state_desired_, input_desired_);
-  const auto& model = pino_interface_.getModel();
-  auto& data = pino_interface_.getData();
-  pinocchio::forwardKinematics(model, data, q_desired, v_desired);
-  pinocchio::updateFramePlacements(model, data);
-  std::vector<vector3_t> pos_desired = ee_kinematics_->getPosition(vector_t());
-  std::vector<vector3_t> vel_desired = ee_kinematics_->getVelocity(vector_t(), vector_t());
 
+  std::vector<vector3_t> pos_desired;
+  std::vector<vector3_t> vel_desired;
+  if (swing_task_type_ == 0) {  // state desired and input desired contains JOINT SPACE target
+    vector_t q_desired = mapping_.getPinocchioJointPosition(state_desired_);
+    vector_t v_desired = mapping_.getPinocchioJointVelocity(state_desired_, input_desired_);
+    const auto& model = pino_interface_.getModel();
+    auto& data = pino_interface_.getData();
+    pinocchio::forwardKinematics(model, data, q_desired, v_desired);
+    pinocchio::updateFramePlacements(model, data);
+    pos_desired = ee_kinematics_->getPosition(vector_t());
+    vel_desired = ee_kinematics_->getVelocity(vector_t(), vector_t());
+  } else {  // state desired and input desired contains WORK SPACE target
+    const size_t startRow = 3 * info_.numThreeDofContacts + 6 * info_.numSixDofContacts;
+    for (size_t i = 0; i < info_.numThreeDofContacts; ++i) {
+      pos_desired.emplace_back(state_desired_.segment(6 + 3 * i, 3));
+      vel_desired.emplace_back(input_desired_.segment(startRow + 3 * i, 3));
+    }
+  }
   matrix_t a(3 * (info_.numThreeDofContacts - num_contacts_), num_decision_vars_);
   vector_t b(a.rows());
   a.setZero();

@@ -43,6 +43,7 @@ srv_gen/
 build_isolated/
 devel_isolated/
 .catkin_tools/
+.vscode/
 
 # Catkin custom files
 CATKIN_IGNORE

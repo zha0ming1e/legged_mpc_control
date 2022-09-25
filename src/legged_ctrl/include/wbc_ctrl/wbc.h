@@ -20,7 +20,7 @@ class Wbc
 {
 public:
   Wbc(const std::string& task_file, PinocchioInterface& pino_interface, CentroidalModelInfo& info,
-      const PinocchioEndEffectorKinematics& ee_kinematics, bool verbose);
+      const PinocchioEndEffectorKinematics& ee_kinematics, int swing_task_type, bool verbose);
   vector_t update(const vector_t& state_desired, const vector_t& input_desired, vector_t& measured_rbd_state,
                   size_t mode);
 
@@ -48,6 +48,8 @@ private:
   size_t num_contacts_;
 
   // Task Parameters:
+  int swing_task_type_;   // 0 - state desired and input desired contains JOINT SPACE target  (joint angles & angle velocities)
+                         // 1 - state desired and input desired contains WORK SPACE target   (end effector position & velocity)
   vector_t torque_limits_;
   scalar_t friction_coeff_, swing_kp_, swing_kd_;
 };

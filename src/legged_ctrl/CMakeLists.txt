@@ -88,12 +88,24 @@ add_library(wbc_ctrl_lib
         src/wbc_ctrl/wbc.cpp
         )
 
+
 target_link_libraries(wbc_ctrl_lib
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
         )
+target_compile_options(wbc_ctrl_lib PUBLIC ${OCS2_CXX_FLAGS})   
 
-target_compile_options(wbc_ctrl_lib PUBLIC ${OCS2_CXX_FLAGS})        
+
+add_library(utils_lib
+        src/utils/LeggedIKSolver.cpp
+        src/utils/Utils.cpp
+        )
+target_link_libraries(utils_lib
+        ${catkin_LIBRARIES}
+        ${pinocchio_LIBRARIES}
+        )
+     
+target_compile_options(utils_lib PUBLIC ${OCS2_CXX_FLAGS})   
 
 add_executable(wbc_test
         src/test/test_wbc.cpp
@@ -101,6 +113,7 @@ add_executable(wbc_test
 
 target_link_libraries(wbc_test
         wbc_ctrl_lib
+        utils_lib
         ${pinocchio_LIBRARIES}
         )
 
