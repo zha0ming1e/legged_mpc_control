@@ -92,8 +92,9 @@ int main() {
     ee_kinematics.setPinocchioInterface(*pinocchioInterfacePtr_);
 
     std::shared_ptr<Wbc> wbc_;
+    int swing_leg_ctrl_type = 1;
     // state desired and input desired contains WORK SPACE target 
-    wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics, 1, verbose);
+    wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics, swing_leg_ctrl_type, verbose);
 
     vector_t measured_rbd_state = vector_t(2*centroidalModelInfo_.generalizedCoordinatesNum);
     vector_t optimized_state = vector_t(centroidalModelInfo_.generalizedCoordinatesNum);
@@ -102,12 +103,13 @@ int main() {
                                             centroidalModelInfo_.actuatedDofNum);
 
     // need to fill some test data here  
+    // leg order contactNames3DoF{"LF_FOOT", "RF_FOOT", "LH_FOOT", "RH_FOOT"};
     measured_rbd_state << 0, 0, 0,    
-                          0, 0, 0.0,
-                          -0.05, 0.72, -1.44,
+                          0, 0, 0.3,
+                          0.05, 0.72, -1.44,
                           -0.05, 0.72, -1.44,
                           0.05, 0.72, -1.44,
-                          0.05, 0.72, -1.44,
+                          -0.05, 0.72, -1.44,
                           0, 0, 0,
                           0, 0, 0,
                           0, 0, 0,
@@ -117,10 +119,10 @@ int main() {
 
     optimized_state <<    0, 0, 0,    
                           0, 0, 0.3,    
-                          0.18,  0.15, -0.32,
-                         -0.18,  0.15, -0.32,            
-                          0.18, -0.15, -0.32,            
-                         -0.18, -0.15, -0.32;
+                          0.18,  0.15, -0.02,
+                         0.18,  -0.15, -0.02,            
+                          -0.18, 0.15, -0.02,            
+                         -0.18, -0.15, -0.02;
     optimized_input <<  0, 0, centroidalModelInfo_.robotMass*9.8/4,
                         0, 0, centroidalModelInfo_.robotMass*9.8/4,
                         0, 0, centroidalModelInfo_.robotMass*9.8/4,
@@ -140,7 +142,10 @@ int main() {
     // test ik
     LeggedIKSolver ik_solve(*pinocchioInterfacePtr_, centroidalModelInfo_, ee_kinematics);
     int leg_id = 0;
-    ik_solve.setWarmStartPos(measured_rbd_state.segment<3>(6, 3*leg_id), leg_id);
+    for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i) {
+        ik_solve.setWarmStartPos(measured_rbd_state.segment<3>(6+3*i), i);
+    }
+    ik_solve.setBasePos(optimized_state.head(6)); 
 
     // test pinocchio kinematics 
     vector_t  measured_q_, measured_v_;
@@ -166,13 +171,13 @@ int main() {
     std::vector<vector3_t> pos_measured = ee_kinematics.getPosition(vector_t());
     std::cout << "pos_measured"<< std::endl << pos_measured[0] << std::endl;
 
-
+    // leg order contactNames3DoF{"LF_FOOT", "RF_FOOT", "LH_FOOT", "RH_FOOT"};
     measured_rbd_state << 0, 0, 0,    
-                          0, 0, 0.0,
-                          -0.05, 0.78, -1.44,
-                          -0.05, 0.78, -1.44,
-                          0.05, 0.78, -1.44,
-                          0.05, 0.78, -1.44,
+                          0, 0, 0.3,
+                          0.05, 0.72, -1.44,
+                          -0.05, 0.72, -1.44,
+                          0.05, 0.72, -1.44,
+                          -0.05, 0.72, -1.44,
                           0, 0, 0,
                           0, 0, 0,
                           0, 0, 0,
@@ -200,12 +205,22 @@ int main() {
     }
 
     // if wbc uses workspace, now we need ik here to calculate joint angles11
-    // vector_t pos_des = centroidal_model::getJointAngles(optimized_state, centroidalModelInfo_);
-    // vector_t vel_des = centroidal_model::getJointVelocities(optimized_input, centroidalModelInfo_);
+    vector_t pos_des = vector_t(centroidalModelInfo_.actuatedDofNum);
+    vector_t vel_des = vector_t(centroidalModelInfo_.actuatedDofNum); vel_des.setZero();
+    if (swing_leg_ctrl_type == 0) {
+        pos_des = centroidal_model::getJointAngles(optimized_state, centroidalModelInfo_);
+        vel_des = centroidal_model::getJointVelocities(optimized_input, centroidalModelInfo_);
+    } else {
+        for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i) {
+            pos_des.segment<3>(3*i) = ik_solve.solveIK(optimized_state.segment<3>(6+3*i), i);
+            // vel need jacobian
+        }
+        // pos_des = ik_solve.solveIK(optimized_state.tail(centroidalModelInfo_.actuatedDofNum));
+    }
 
-    // std::cout << "torque" << torque << std::endl;
-    // std::cout << "pos_des" << pos_des << std::endl;
-    // std::cout << "vel_des" << vel_des << std::endl;
+    std::cout << "torque" << torque << std::endl;
+    std::cout << "pos_des" << pos_des << std::endl;
+    std::cout << "vel_des" << vel_des << std::endl;
 
     return 0;
 }

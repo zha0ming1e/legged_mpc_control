@@ -41,6 +41,12 @@ namespace legged
     }
 
 
+    void LeggedIKSolver::setBasePos(vector_t orientation_pos) {
+        state_q.head(6) = orientation_pos;
+    }
+
+
+
     vector_t LeggedIKSolver::solveIK(vector3_t foot_pos, int leg_id) {
 
         Eigen::Matrix<scalar_t, 6, Eigen::Dynamic> jac;
@@ -52,7 +58,7 @@ namespace legged
         bool success = false;
         const auto& model = pino_interface_.getModel();
         auto& data = pino_interface_.getData();
-        Eigen::VectorXd v(model.nv);
+        Eigen::VectorXd v(model.nv); v.setZero();
 
         // get warm start angle 
         state_q.segment<3>(6+3*leg_id) = prev_joint_angs4_.segment<3>(3*leg_id);
@@ -95,10 +101,10 @@ namespace legged
         }
         else 
         {
-            // std::cout << "\nWarning: the iterative algorithm has not reached convergence to the desired precision" << std::endl;
+            std::cout << "\nWarning: the iterative algorithm has not reached convergence to the desired precision" << std::endl;
         }
-        return state_q.segment<3>(6+3*leg_id);
-            
+        return state_q.segment<3>(6+3*leg_id);        
     }
+
 
 } // namespace legged
