@@ -8,6 +8,8 @@
 #include "LeggedParams.h"
 #include "LeggedState.h"
 
+namespace legged
+{
 void LeggedFeedback::reset() {
 
 }
@@ -15,3 +17,5 @@ void LeggedFeedback::reset() {
 void LeggedCtrl::reset() {
 }
 
+
+}  // namespace legged

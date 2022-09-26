@@ -42,6 +42,7 @@ namespace legged
         else
             throw std::invalid_argument("[LeggedInterface] URDF file not found: " + urdf_file_path.string());
 
+        // TODO: there may be memory leak happen
         ModelSettings* modelSettings_ = new ModelSettings(loadModelSettings(taskFile, "model_settings", verbose));
 
 

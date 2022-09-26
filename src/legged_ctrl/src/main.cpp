@@ -81,14 +81,14 @@ int main(int argc, char **argv) {
 
 
     // test init a LeggedState
-    LeggedState leggedState;
-    GazeboInterface intef(nh);
+    legged::LeggedState leggedState;
+    legged::GazeboInterface intef(nh, taskFile, urdfFile, referenceFile);
 
     std::atomic<bool> control_execute{};
     control_execute.store(true, std::memory_order_release);
 
     // Thread 2: update robot states, run whole body controller, and send commands
-    std::cout << "Enter thread 2: update robot states, compute desired swing legs forces, compute desired joint torques, and send commands"
+    std::cout << "Start thread 2: update robot states, compute desired swing legs forces, compute desired joint torques, and send commands"
               << std::endl;
     std::thread main_thread([&]() {
         // prepare variables to monitor time and control the while loop
@@ -121,8 +121,8 @@ int main(int argc, char **argv) {
         }
     });
 
-    ros::AsyncSpinner spinner(4);
-    spinner.start();
+    ros::MultiThreadedSpinner spinner(4);
+    spinner.spin();
 
     main_thread.join();
     return 0;

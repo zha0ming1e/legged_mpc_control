@@ -8,6 +8,8 @@
 
 #include "LeggedParams.h"
 
+namespace legged
+{
 class LeggedFeedback {
     public:
         LeggedFeedback() {
@@ -24,7 +26,7 @@ class LeggedFeedback {
     // important feedback kinematics variables
     Eigen::Vector3d root_pos;
     Eigen::Quaterniond root_quat;
-    Eigen::Vector3d root_euler;
+    Eigen::Vector3d root_euler;     // here we use roll, pitch, yaw
     Eigen::Matrix3d root_rot_mat;
     Eigen::Matrix3d root_rot_mat_z;
     Eigen::Vector3d root_lin_vel;
@@ -83,10 +85,18 @@ class LeggedCtrl {
 
     bool contacts[NUM_LEG];         // flag to decide leg in the stance/swing
 
+    // MPC output
+    // TODO: do not hardcode state size, use parameter
+    Eigen::Matrix<double, 18, 1> optimized_state;  //[position, euler(ZYX), foot position]
+    Eigen::Matrix<double, 24, 1> optimized_input;  //[3*4 contact force,    foot velocity]
+
     // final results to the robot 
     Eigen::Matrix<double, NUM_DOF, 1> joint_ang_tgt;
     Eigen::Matrix<double, NUM_DOF, 1> joint_vel_tgt;
     Eigen::Matrix<double, NUM_DOF, 1> joint_tau_tgt;
+
+
+    double movement_mode = 0;
 };
 
 class LeggedJoyCmd {
@@ -128,3 +138,6 @@ class LeggedState {
 
     // put other unclassified variables here
 };
+
+}  // namespace legged
+

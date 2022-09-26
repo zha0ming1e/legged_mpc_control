@@ -1,7 +1,9 @@
 #include "interfaces/GazeboInterface.h"
 
-GazeboInterface::GazeboInterface(ros::NodeHandle &_nh)
-:BaseInterface(_nh) {
+namespace legged
+{
+GazeboInterface::GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile)
+:BaseInterface(_nh, taskFile, urdfFile, referenceFile) {
 
     // ROS publisher
     pub_joint_cmd[0] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FL_hip_controller/command", 1);
@@ -53,11 +55,15 @@ bool GazeboInterface::update(double t, double dt) {
     // debug print some variables 
     std::cout << legged_state.joy.ctrl_state << std::endl;
 
-    // get sensor feedback
+    /*
+     * get sensor feedback
+     */
+    bool sensor_run = sensor_update(t, dt);
 
     // update state estimator
 
     // run wbc 
+    // TODO: do not immediately send_cmd, only send after a certain period of time
 
     return joy_run;
 }
@@ -200,3 +206,6 @@ void GazeboInterface::RL_foot_contact_callback(const geometry_msgs::WrenchStampe
 void GazeboInterface::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     legged_state.fbk.foot_force[3] = force.wrench.force.z;
 }
+
+
+}  // namespace legged

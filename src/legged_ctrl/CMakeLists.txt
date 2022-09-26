@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10.1)
 project(legged_ctrl)
-set(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -114,6 +114,11 @@ add_library(interfaces_lib
         src/interfaces/BaseInterface.cpp
         src/interfaces/GazeboInterface.cpp
         src/LeggedState.cpp
+        src/utils/Utils.cpp
+        src/estimation/BasicEKF.cpp
+        src/wbc_ctrl/wbc.cpp
+        src/wbc_ctrl/HoQp.cpp
+        src/utils/LeggedIKSolver.cpp
         )
 target_link_libraries(interfaces_lib
         ${catkin_LIBRARIES}
@@ -127,7 +132,6 @@ add_executable(main
 )
 
 target_link_libraries(main
-        wbc_ctrl_lib
         utils_lib
         interfaces_lib
         ${pinocchio_LIBRARIES}

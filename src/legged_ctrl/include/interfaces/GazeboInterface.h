@@ -14,9 +14,14 @@
 #include "LeggedState.h"
 #include "interfaces/BaseInterface.h"
 
+namespace legged
+{
+using namespace ocs2;
+using namespace legged_robot;
+
 class GazeboInterface : public BaseInterface {
 public:
-    GazeboInterface(ros::NodeHandle &_nh);
+    GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
 
     bool update(double t, double dt);
     
@@ -80,3 +85,5 @@ private:
     unitree_legged_msgs::LowCmd low_cmd;
 
 };
+
+}  // namespace legged
