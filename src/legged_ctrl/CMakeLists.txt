@@ -4,6 +4,7 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 # set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "-std=c++14")
 
 #check environmental variables
 message(STATUS "CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
@@ -59,9 +60,9 @@ include_directories(
 find_package(OsqpEigen REQUIRED)
 
 # Find Library for julia 
-#add_subdirectory(lib/EmbeddedLciMpc.jl)
-#include_directories(${EmbeddedLciMpc_INCLUDE_DIRS})
-#link_directories(${EmbeddedLciMpc_LIB_DIRS})
+add_subdirectory(src/mpc_ctrl/ci_mpc/lib/EmbeddedLciMpc.jl)
+include_directories(${EmbeddedLciMpc_INCLUDE_DIRS})
+link_directories(${EmbeddedLciMpc_LIB_DIRS})
 
 # Find unitree hardware library
 include_directories(
@@ -124,7 +125,19 @@ target_link_libraries(interfaces_lib
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
         )
+
 target_compile_options(interfaces_lib PUBLIC ${OCS2_CXX_FLAGS})   
+
+
+add_library(ci_mpc_lib
+        src/mpc_ctrl/ci_mpc/LciMpc.cpp
+        )
+target_link_libraries(ci_mpc_lib
+        ${catkin_LIBRARIES} 
+        OsqpEigen::OsqpEigen 
+        juliaCpp_lib
+        )
+
 
 ############# main prorgam ######################
 add_executable(main
@@ -134,6 +147,7 @@ add_executable(main
 target_link_libraries(main
         utils_lib
         interfaces_lib
+        ci_mpc_lib
         ${pinocchio_LIBRARIES}
 )
 

@@ -14,6 +14,21 @@ The goal is
 ## Controller Setup
 We build, develop and test controller in a docker container. 
 
+## Julia setup
+Since LCI MPC uses Julia, we need to config Julia environment after building the docker container. After docker is built, we first 
+
+    1. git submodule update. Make sure src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib has EmbeddedLciMpc.jl lib 
+    2. go into src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/EmbeddedLciMpc.jl
+    3. start julia 
+    4. pkg> activate .
+    5. pkg> instantiate 
+    6. pkg> add YAML 
+    7. (@v1.7) pkg> rm ContactImplicitMPC.jl
+    8. @v1.7) pkg> dev ../ContactImplicitMPC.jl/
+    9. @v1.7) pkg> status ContactImplicitMPC (must be the local dir)
+    10. julia> import Pkg; Pkg.upgrade_manifest()
+    11. julia> include("scripts/precompile_sysimage.jl") 
+
 ## Gazebo Setup
 On the host computer, build a second docker in "gazebo_docker" folder
 
