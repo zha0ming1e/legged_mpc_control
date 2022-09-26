@@ -7,7 +7,7 @@
 #include <vector>
 #include <Eigen/Dense>
 
-#include "A1Params.h"
+#include "LeggedParams.h"
 
 class Utils {
 public:

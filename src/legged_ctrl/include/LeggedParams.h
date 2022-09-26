@@ -2,13 +2,11 @@
 // Created by shuoy on 10/18/21.
 //
 
-#ifndef A1_CPP_A1PARAMS_H
-#define A1_CPP_A1PARAMS_H
-
+#pragma once
 // control time related
 //#define CTRL_FREQUENCY 2.5  // ms
 #define GRF_UPDATE_FREQUENCY 2.5 // ms 2.5
-#define MAIN_UPDATE_FREQUENCY 2.5 // ms 2.5
+#define MAIN_UPDATE_FREQUENCY 2.0 // ms 2.5
 #define HARDWARE_FEEDBACK_FREQUENCY 2.0  // ms
 
 // constant define
@@ -47,4 +45,3 @@
 #define ERROR_CURVE_ALREADY_SET 184
 #define ERROR_CURVE_NOT_SET 185
 
-#endif //A1_CPP_A1PARAMS_H

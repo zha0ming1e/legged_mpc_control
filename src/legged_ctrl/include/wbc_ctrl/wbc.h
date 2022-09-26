@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "wbc_ctrl/ho_qp.h"
+#include "wbc_ctrl/HoQp.h"
 
 #include <ocs2_legged_robot/gait/MotionPhaseDefinition.h>
 #include <ocs2_centroidal_model/PinocchioCentroidalDynamics.h>

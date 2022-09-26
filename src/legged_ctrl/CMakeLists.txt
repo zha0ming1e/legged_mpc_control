@@ -82,9 +82,10 @@ set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 #)
 
 
+
 # test ocs2 
 add_library(wbc_ctrl_lib
-        src/wbc_ctrl/ho_qp.cpp
+        src/wbc_ctrl/HoQp.cpp
         src/wbc_ctrl/wbc.cpp
         )
 
@@ -99,6 +100,7 @@ target_compile_options(wbc_ctrl_lib PUBLIC ${OCS2_CXX_FLAGS})
 add_library(utils_lib
         src/utils/LeggedIKSolver.cpp
         src/utils/Utils.cpp
+        src/LeggedState.cpp
         )
 target_link_libraries(utils_lib
         ${catkin_LIBRARIES}
@@ -106,6 +108,31 @@ target_link_libraries(utils_lib
         )
      
 target_compile_options(utils_lib PUBLIC ${OCS2_CXX_FLAGS})   
+
+
+add_library(interfaces_lib
+        src/interfaces/BaseInterface.cpp
+        src/interfaces/GazeboInterface.cpp
+        src/LeggedState.cpp
+        )
+target_link_libraries(interfaces_lib
+        ${catkin_LIBRARIES}
+        ${pinocchio_LIBRARIES}
+        )
+target_compile_options(interfaces_lib PUBLIC ${OCS2_CXX_FLAGS})   
+
+############# main prorgam ######################
+add_executable(main
+        src/main.cpp
+)
+
+target_link_libraries(main
+        wbc_ctrl_lib
+        utils_lib
+        interfaces_lib
+        ${pinocchio_LIBRARIES}
+)
+
 
 add_executable(wbc_test
         src/test/test_wbc.cpp

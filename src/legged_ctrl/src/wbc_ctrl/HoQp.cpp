@@ -4,7 +4,7 @@
 // Ref: https://github.com/bernhardpg/quadruped_locomotion
 //
 
-#include "wbc_ctrl/ho_qp.h"
+#include "wbc_ctrl/HoQp.h"
 
 #include <utility>
 #include <qpOASES.hpp>
