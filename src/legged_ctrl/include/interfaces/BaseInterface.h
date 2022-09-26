@@ -76,6 +76,12 @@ public:
     int swing_leg_ctrl_type = 1;    // 1 contains WORK SPACE target 
                                     // 0 contains JOINT SPACE target
     bool verbose = false;
+    // inverse kinematics solver
+    std::unique_ptr<LeggedIKSolver> ik_solver;
+
+    vector_t pos_des;
+    vector_t prev_pos_des;
+    vector_t vel_des;
 
 
 private:

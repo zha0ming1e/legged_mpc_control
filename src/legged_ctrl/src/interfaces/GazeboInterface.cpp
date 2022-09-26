@@ -56,13 +56,15 @@ bool GazeboInterface::update(double t, double dt) {
     std::cout << legged_state.joy.ctrl_state << std::endl;
 
     /*
-     * get sensor feedback
+     * get sensor feedback & update state estimator
      */
     bool sensor_run = sensor_update(t, dt);
 
-    // update state estimator
-
     // run wbc 
+    // TODO: only update wbc after MPC start to solve
+    bool wbc_run = wbc_update(t, dt);
+
+
     // TODO: do not immediately send_cmd, only send after a certain period of time
 
     return joy_run;

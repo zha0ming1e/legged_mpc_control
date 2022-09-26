@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
             auto t3 = std::chrono::high_resolution_clock::now();
 
-            ros::Duration(HARDWARE_FEEDBACK_FREQUENCY / 1000).sleep();
+            ros::Duration(LOW_LEVEL_CTRL_FREQUENCY / 1000).sleep();
 
             // get t and dt
             now = ros::Time::now();

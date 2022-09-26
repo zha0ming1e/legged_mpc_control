@@ -62,6 +62,13 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
     pinocchio_state_v = vector_t(centroidalModelInfo_.generalizedCoordinatesNum); pinocchio_state_v.setZero();
 
     wbc_ = std::make_shared<Wbc>(taskFile, *pinocchioInterfacePtr_, centroidalModelInfo_, *ee_kinematics_, swing_leg_ctrl_type, verbose);
+
+    ik_solver = LeggedIKSolver::createLeggedIKSolver(taskFile, urdfFile, referenceFile);
+
+    // joint position target helper variables
+    pos_des = vector_t(centroidalModelInfo_.actuatedDofNum); pos_des.setZero();
+    prev_pos_des = vector_t(centroidalModelInfo_.actuatedDofNum); prev_pos_des.setZero();
+    vel_des = vector_t(centroidalModelInfo_.actuatedDofNum); vel_des.setZero();
 }
 
 
@@ -193,7 +200,44 @@ bool BaseInterface::estimation_update(double t, double dt) {
     return true;
 }
 
-bool wbc_update(double t, double dt) {
+bool BaseInterface::wbc_update(double t, double dt) {
+
+    // assemble feedback into wbc's input measured_rbd_state
+    vector_t measured_rbd_state = vector_t(2*centroidalModelInfo_.generalizedCoordinatesNum);
+    measured_rbd_state.head<3>() = Eigen::Vector3d(legged_state.fbk.root_euler[2], legged_state.fbk.root_euler[1], legged_state.fbk.root_euler[0]);
+    measured_rbd_state.segment<3>(3) = legged_state.fbk.root_pos;
+    measured_rbd_state.segment(6, centroidalModelInfo_.actuatedDofNum) = legged_state.fbk.joint_pos;
+
+    measured_rbd_state.segment<3>(centroidalModelInfo_.generalizedCoordinatesNum) = legged_state.fbk.root_ang_vel;
+    measured_rbd_state.segment<3>(centroidalModelInfo_.generalizedCoordinatesNum + 3) = legged_state.fbk.root_lin_vel;
+    measured_rbd_state.segment(centroidalModelInfo_.generalizedCoordinatesNum + 6, centroidalModelInfo_.actuatedDofNum) = legged_state.fbk.joint_vel;
+
+    size_t planned_mode = stanceLeg2ModeNumber(legged_state.ctrl.plan_contacts);
+
+    // optimized_state optimized_input should contain world frame foot position velocity target 
+
+    vector_t x = wbc_->update(legged_state.ctrl.optimized_state, legged_state.ctrl.optimized_input, 
+        measured_rbd_state, planned_mode);
+
+    vector_t torque = x.tail(12);
+
+    if (swing_leg_ctrl_type == 0) {
+        pos_des = centroidal_model::getJointAngles(legged_state.ctrl.optimized_state, centroidalModelInfo_);
+        vel_des = centroidal_model::getJointVelocities(legged_state.ctrl.optimized_input, centroidalModelInfo_);
+    } else {
+        ik_solver -> setBasePos(legged_state.ctrl.optimized_state.head(6)); 
+        for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i) {
+            pos_des.segment<3>(3*i) = ik_solver->solveIK(legged_state.ctrl.optimized_state.segment<3>(6+3*i), i);
+            // vel uses finite diff
+            vel_des.segment<3>(3*i) = (pos_des.segment<3>(3*i) - prev_pos_des.segment<3>(3*i)) / dt;
+            prev_pos_des.segment<3>(3*i) = pos_des.segment<3>(3*i);
+        }
+    }
+
+    // save command to struct
+    legged_state.ctrl.joint_ang_tgt = pos_des;
+    legged_state.ctrl.joint_vel_tgt = vel_des;
+    legged_state.ctrl.joint_tau_tgt = torque;
 
     return true;
 }
