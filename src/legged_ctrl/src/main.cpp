@@ -14,6 +14,7 @@
 #include "LeggedState.h"
 #include "interfaces/GazeboInterface.h"
 #include "mpc_ctrl/ci_mpc/LciMpc.h"
+#include "utils/LeggedLogger.hpp"
 
 std::mutex lci_init_mutex;
 
@@ -52,8 +53,8 @@ int main(int argc, char **argv) {
     std::cout << "Controller type: \t" << mpc_type << std::endl; 
     if (use_sim_time == false) {
         std::cout <<  "Press a key to confirm and continue to start hardware run..." << std::endl;
+        std::cin.get();
     }
-    std::cin.get();
 
 
     // Initialize OCS2 -  Since we running things in docker so absolute paths are not a problem 
@@ -61,6 +62,7 @@ int main(int argc, char **argv) {
                 urdfFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/urdf/a1_description/urdf/a1.urdf",
                 referenceFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/config/reference.info";
 
+    std::unique_ptr<legged::LeggedLogger> logger = std::unique_ptr<legged::LeggedLogger>(new legged::LeggedLogger(nh)); 
     // different interface 
     std::unique_ptr<legged::BaseInterface> intef;
     if (use_sim_time == true && robot_type == 0) {
@@ -126,6 +128,9 @@ int main(int argc, char **argv) {
             std::cout << "MPC solution is updated in " << ms_double.count() << "ms" << std::endl;
 
             
+            // Logging 
+            logger->publish_state(intef->get_legged_state(), elapsed.toSec()); 
+
             if (!running) {
                 std::cout << "Thread 1 loop is terminated because of errors." << std::endl;
                 jl_atexit_hook(0);

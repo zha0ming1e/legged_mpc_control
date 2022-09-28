@@ -1,4 +1,4 @@
-use_sim_time: false
+use_sim_time: true
 
 robot_type: 0     # 0: A1
                   # 1: Go1

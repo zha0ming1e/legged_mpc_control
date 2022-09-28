@@ -124,6 +124,19 @@ bool BaseInterface::joy_update(double t, double dt) {
         legged_state.joy.ctrl_state = legged_state.joy.ctrl_state % 2; //TODO: how to toggle more states?
         legged_state.joy.ctrl_state_change_request = false; //erase this change request;
     }
+
+    // update movement mode
+    if (legged_state.joy.ctrl_state == 1) {
+        // walking mode, in this mode the robot should execute gait
+        legged_state.ctrl.movement_mode = 1;
+    } else if (legged_state.joy.ctrl_state == 0 && legged_state.joy.prev_ctrl_state == 1) {
+        // leave walking mode
+        // lock current position, should just happen for one instance
+        legged_state.ctrl.movement_mode = 0;
+    } else {
+        legged_state.ctrl.movement_mode = 0;
+    }    
+
     return true;
 }
 
@@ -146,6 +159,9 @@ bool BaseInterface::sensor_update(double t, double dt) {
     pinocchio_state_v.setZero();
     pinocchio_state_q.tail(centroidalModelInfo_.actuatedDofNum) = legged_state.fbk.joint_pos;
     pinocchio_state_v.tail(centroidalModelInfo_.actuatedDofNum) = legged_state.fbk.joint_vel;
+
+    // always warm start with the feedback joint position
+    ik_solver -> setWarmStartPos(legged_state.fbk.joint_pos);
     
     pinocchio::forwardKinematics(model, data, pinocchio_state_q, pinocchio_state_v);
     pinocchio::computeJointJacobians(model, data);
@@ -202,6 +218,12 @@ bool BaseInterface::estimation_update(double t, double dt) {
 
 bool BaseInterface::wbc_update(double t, double dt) {
 
+    // TODO:
+    if (legged_state.mpc_solver_inited == false) {
+        std::cout << "mpc_solver is not generating results!" <<std::endl;
+        return true;
+    }
+
     // assemble feedback into wbc's input measured_rbd_state
     vector_t measured_rbd_state = vector_t(2*centroidalModelInfo_.generalizedCoordinatesNum);
     measured_rbd_state.head<3>() = Eigen::Vector3d(legged_state.fbk.root_euler[2], legged_state.fbk.root_euler[1], legged_state.fbk.root_euler[0]);
@@ -219,7 +241,7 @@ bool BaseInterface::wbc_update(double t, double dt) {
     vector_t x = wbc_->update(legged_state.ctrl.optimized_state, legged_state.ctrl.optimized_input, 
         measured_rbd_state, planned_mode);
 
-    vector_t torque = x.tail(12);
+    Eigen::Matrix<scalar_t, 12, 1> torque = x.tail(12);
 
     if (swing_leg_ctrl_type == 0) {
         pos_des = centroidal_model::getJointAngles(legged_state.ctrl.optimized_state, centroidalModelInfo_);
@@ -239,6 +261,12 @@ bool BaseInterface::wbc_update(double t, double dt) {
     legged_state.ctrl.joint_vel_tgt = vel_des;
     legged_state.ctrl.joint_tau_tgt = torque;
 
+    std::cout << "measured_rbd_state \t " << measured_rbd_state.segment(0, centroidalModelInfo_.generalizedCoordinatesNum).transpose() << std::endl;
+    std::cout << "optimized_state \t " << legged_state.ctrl.optimized_state.transpose() << std::endl;
+    std::cout << "optimized_input \t " << legged_state.ctrl.optimized_input.transpose() << std::endl;
+    std::cout << "pos_des \t " << pos_des.transpose() << std::endl;
+    std::cout << "vel_des \t " << vel_des.transpose() << std::endl;
+    std::cout << "torque \t " << torque.transpose() << std::endl;
     return true;
 }
 

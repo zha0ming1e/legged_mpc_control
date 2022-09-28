@@ -93,6 +93,10 @@ namespace legged
         prev_joint_angs4_.segment<3>(3*leg_id) = prev_joint_angs;
     }
 
+    void LeggedIKSolver::setWarmStartPos(vector_t prev_joint_angs4) {
+        prev_joint_angs4_ = prev_joint_angs4;
+    }
+
 
     void LeggedIKSolver::setBasePos(vector_t orientation_pos) {
         state_q.head(6) = orientation_pos;
@@ -154,7 +158,7 @@ namespace legged
         }
         else 
         {
-            std::cout << "\nWarning: the iterative algorithm has not reached convergence to the desired precision" << std::endl;
+            // std::cout << "\nWarning: the iterative algorithm has not reached convergence to the desired precision" << std::endl;
         }
         return state_q.segment<3>(6+3*leg_id);        
     }

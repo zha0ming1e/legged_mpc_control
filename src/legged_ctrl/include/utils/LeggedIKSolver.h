@@ -19,6 +19,7 @@ class LeggedIKSolver {
 
         // leg ID, follows ETH convension 0-LF 1-LH 2-RF 3-RH, notice this is different from unitree conversion
         void setWarmStartPos(vector_t prev_joint_angs, int leg_id);
+        void setWarmStartPos(vector_t prev_joint_angs4);
         void setBasePos(vector_t orientation_pos);
         // solve ik for individual leg
         vector_t solveIK(vector3_t foot_pos, int leg_id);

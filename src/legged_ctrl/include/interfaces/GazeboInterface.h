@@ -13,6 +13,7 @@
 
 #include "LeggedState.h"
 #include "interfaces/BaseInterface.h"
+#include "utils/MovingWindowFilter.hpp"
 
 namespace legged
 {
@@ -84,6 +85,17 @@ private:
     
     unitree_legged_msgs::LowCmd low_cmd;
 
+    // filters for IMU
+    MovingWindowFilter acc_x;
+    MovingWindowFilter acc_y;
+    MovingWindowFilter acc_z;
+    MovingWindowFilter gyro_x;
+    MovingWindowFilter gyro_y;
+    MovingWindowFilter gyro_z;
+    MovingWindowFilter quat_w;
+    MovingWindowFilter quat_x;
+    MovingWindowFilter quat_y;
+    MovingWindowFilter quat_z;
 };
 
 }  // namespace legged

@@ -180,8 +180,20 @@ Task Wbc::formulateBaseAccelTask()
   a.setZero();
   a.block(0, 0, 6, 6) = matrix_t::Identity(6, 6);
 
+  vector_t state_task;
+  vector_t input_task; 
+  if (swing_task_type_ == 0) { 
+    state_task = state_desired_;
+    input_task = input_desired_;
+  } else {   // state_desired_ contains WORK SPACE target, we need to modify tail into joint angles
+    state_task = state_desired_;
+    input_task = input_desired_;
+    state_task.tail(info_.actuatedDofNum) = measured_q_.tail(info_.actuatedDofNum);
+    input_task.tail(info_.actuatedDofNum) = measured_v_.tail(info_.actuatedDofNum);
+  }
+
   const vector_t momentum_rate =
-      info_.robotMass * centroidal_dynamics_.getValue(0, state_desired_, input_desired_).head(6);
+      info_.robotMass * centroidal_dynamics_.getValue(0, state_task, input_task).head(6);
   const Eigen::Matrix<scalar_t, 6, 6> a_base = getCentroidalMomentumMatrix(pino_interface_).template leftCols<6>();
   const auto a_base_inv = computeFloatingBaseCentroidalMomentumMatrixInverse(a_base);
   vector_t b = a_base_inv * momentum_rate;

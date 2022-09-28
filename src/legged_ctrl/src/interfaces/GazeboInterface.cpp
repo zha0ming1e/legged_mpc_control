@@ -48,9 +48,29 @@ GazeboInterface::GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFi
     sub_foot_contact_msg[2] = nh.subscribe("/visual/RL_foot_contact/the_force", 2, &GazeboInterface::RL_foot_contact_callback, this);
     sub_foot_contact_msg[3] = nh.subscribe("/visual/RR_foot_contact/the_force", 2, &GazeboInterface::RR_foot_contact_callback, this);
 
+    acc_x = MovingWindowFilter(5);
+    acc_y = MovingWindowFilter(5);
+    acc_z = MovingWindowFilter(5);
+    gyro_x = MovingWindowFilter(5);
+    gyro_y = MovingWindowFilter(5);
+    gyro_z = MovingWindowFilter(5);
+    quat_w = MovingWindowFilter(5);
+    quat_x = MovingWindowFilter(5);
+    quat_y = MovingWindowFilter(5);
+    quat_z = MovingWindowFilter(5);
+
 }
 bool GazeboInterface::update(double t, double dt) {
 
+    // let callbacks run a little bit
+    if (t < 0.1) {
+        legged_state.estimation_inited = false;
+        return true;
+    }
+    if (t >= 0.1) {
+        // this variable make the MPC control loop wait for sensor data to fill up and estimator runs 
+        legged_state.estimation_inited = true;
+    }
     bool joy_run = joy_update(t, dt);
     // debug print some variables 
     std::cout << legged_state.joy.ctrl_state << std::endl;
@@ -61,25 +81,26 @@ bool GazeboInterface::update(double t, double dt) {
     bool sensor_run = sensor_update(t, dt);
 
     // run wbc 
-    // TODO: only update wbc after MPC start to solve
-    bool wbc_run = wbc_update(t, dt);
+    // bool wbc_run = wbc_update(t, dt);
 
 
-    // TODO: do not immediately send_cmd, only send after a certain period of time
+    send_cmd();
 
     return joy_run;
 }
 
 bool GazeboInterface::send_cmd() {
     // send control cmd to robot via ros topic
-
+    // have to manually do PD control because gazebo only accepts tau command
     for (int i = 0; i < 12; i++) {
         low_cmd.motorCmd[i].mode = 0x0A;
-        low_cmd.motorCmd[i].q =   legged_state.ctrl.joint_ang_tgt(i, 0);
-        low_cmd.motorCmd[i].dq =  legged_state.ctrl.joint_vel_tgt(i, 0);
-        low_cmd.motorCmd[i].Kp =  5;
-        low_cmd.motorCmd[i].Kd =  3;
-        low_cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(i, 0);
+        low_cmd.motorCmd[i].q =   0;
+        low_cmd.motorCmd[i].dq =  0;
+        low_cmd.motorCmd[i].Kp =  0;
+        low_cmd.motorCmd[i].Kd =  0;
+        low_cmd.motorCmd[i].tau = 0 * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
+                                + 0 * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
+                                + legged_state.ctrl.joint_tau_tgt(i, 0);
         pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
     }
 
@@ -112,19 +133,19 @@ void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom)
 }
 
 void GazeboInterface::imu_callback(const sensor_msgs::Imu::ConstPtr &imu) {
-    legged_state.fbk.root_quat = Eigen::Quaterniond(imu->orientation.w,
-                                                    imu->orientation.x,
-                                                    imu->orientation.y,
-                                                    imu->orientation.z);
+    legged_state.fbk.root_quat = Eigen::Quaterniond(quat_w.CalculateAverage(imu->orientation.w),
+                                                  quat_x.CalculateAverage(imu->orientation.x),
+                                                  quat_y.CalculateAverage(imu->orientation.y),
+                                                  quat_z.CalculateAverage(imu->orientation.z));
     legged_state.fbk.imu_acc = Eigen::Vector3d(
-            imu->linear_acceleration.x,
-            imu->linear_acceleration.y,
-            imu->linear_acceleration.z
+            acc_x.CalculateAverage(imu->linear_acceleration.x),
+            acc_y.CalculateAverage(imu->linear_acceleration.y),
+            acc_z.CalculateAverage(imu->linear_acceleration.z)
     );
     legged_state.fbk.imu_ang_vel = Eigen::Vector3d(
-            imu->angular_velocity.x,
-            imu->angular_velocity.y,
-            imu->angular_velocity.z
+            gyro_x.CalculateAverage(imu->angular_velocity.x),
+            gyro_y.CalculateAverage(imu->angular_velocity.y),
+            gyro_z.CalculateAverage(imu->angular_velocity.z)
     );
 }
 

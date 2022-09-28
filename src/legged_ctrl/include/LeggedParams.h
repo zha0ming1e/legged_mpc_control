@@ -4,10 +4,8 @@
 
 #pragma once
 // control time related
-//#define CTRL_FREQUENCY 2.5  // ms
-#define MPC_UPDATE_FREQUENCY 2.5 // ms 2.5
-#define MAIN_UPDATE_FREQUENCY 2.0 // ms 2.5
-#define LOW_LEVEL_CTRL_FREQUENCY 2.0  // ms
+#define MPC_UPDATE_FREQUENCY     2.0  // ms       500Hz
+#define LOW_LEVEL_CTRL_FREQUENCY 2.0  // ms       500Hz
 
 // constant define
 // joy stick command interprate
