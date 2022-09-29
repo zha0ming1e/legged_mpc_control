@@ -83,6 +83,8 @@ bool GazeboInterface::update(double t, double dt) {
     // run wbc 
     // bool wbc_run = wbc_update(t, dt);
 
+    // run basic tau control 
+    bool basic_run = tau_ctrl_update(t, dt);
 
     send_cmd();
 

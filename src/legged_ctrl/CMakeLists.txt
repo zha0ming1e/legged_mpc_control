@@ -102,6 +102,7 @@ add_library(utils_lib
         src/utils/LeggedIKSolver.cpp
         src/utils/Utils.cpp
         src/LeggedState.cpp
+        src/utils/A1Kinematics.cpp
         )
 target_link_libraries(utils_lib
         ${catkin_LIBRARIES}
@@ -120,6 +121,7 @@ add_library(interfaces_lib
         src/wbc_ctrl/wbc.cpp
         src/wbc_ctrl/HoQp.cpp
         src/utils/LeggedIKSolver.cpp
+        src/utils/A1Kinematics.cpp
         )
 target_link_libraries(interfaces_lib
         ${catkin_LIBRARIES}
