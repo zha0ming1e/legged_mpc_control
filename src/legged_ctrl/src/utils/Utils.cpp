@@ -32,6 +32,19 @@ Eigen::Vector3d Utils::quat_to_euler(Eigen::Quaterniond quat) {
     return rst;
 }
 
+Eigen::Vector3d Utils::quatToZyx(const Eigen::Quaterniond q)
+{
+  Eigen::Matrix<double, 3, 1> zyx;
+
+  double as = std::min(-2. * (q.x() * q.z() - q.w() * q.y()), .99999);
+  zyx(0) =
+      std::atan2(2 * (q.x() * q.y() + q.w() * q.z()), square(q.w()) + square(q.x()) - square(q.y()) - square(q.z()));
+  zyx(1) = std::asin(as);
+  zyx(2) =
+      std::atan2(2 * (q.y() * q.z() + q.w() * q.x()), square(q.w()) - square(q.x()) - square(q.y()) + square(q.z()));
+  return zyx;
+}
+
 Eigen::Vector3d Utils::quat_to_rotVec(Eigen::Quaterniond quat) {
     Eigen::Vector3d axis; axis.setZero(); 
     double angle = 0.0; 
@@ -75,6 +88,24 @@ double Utils::cal_dihedral_angle(Eigen::Vector3d surf_coef_1, Eigen::Vector3d su
             / (sqrt(surf_coef_1[0] * surf_coef_1[0] + surf_coef_1[1] * surf_coef_1[1] + surf_coef_1[2] * surf_coef_1[2]) *
                sqrt(surf_coef_2[0] * surf_coef_2[0] + surf_coef_2[1] * surf_coef_2[1] + surf_coef_2[2] * surf_coef_2[2]));
     return acos(angle_cos);
+}
+
+Eigen::Matrix<double, NUM_DOF,1> Utils::joint_vec_unitree_to_pinnochio(Eigen::Matrix<double, NUM_DOF,1> vec) {
+    Eigen::Matrix<double, NUM_DOF,1> return_vec;
+    return_vec.segment<3>(0) = vec.segment<3>(0);
+    return_vec.segment<3>(3) = vec.segment<3>(6);
+    return_vec.segment<3>(6) = vec.segment<3>(3);
+    return_vec.segment<3>(9) = vec.segment<3>(9);
+    return return_vec;
+}
+
+Eigen::Matrix<double, NUM_DOF,1> Utils::joint_vec_pinnochio_to_unitree(Eigen::Matrix<double, NUM_DOF,1> vec) {
+    Eigen::Matrix<double, NUM_DOF,1> return_vec;
+    return_vec.segment<3>(0) = vec.segment<3>(0);
+    return_vec.segment<3>(3) = vec.segment<3>(6);
+    return_vec.segment<3>(6) = vec.segment<3>(3);
+    return_vec.segment<3>(9) = vec.segment<3>(9);
+    return return_vec;
 }
 
 Eigen::Vector3d BezierUtils::get_foot_pos_curve(float t,

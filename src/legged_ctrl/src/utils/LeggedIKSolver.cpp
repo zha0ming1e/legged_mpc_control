@@ -90,7 +90,10 @@ namespace legged
 
     void LeggedIKSolver::setWarmStartPos(vector_t prev_joint_angs, int leg_id) {
         // TODO: make sure leg_id is 0-3
-        prev_joint_angs4_.segment<3>(3*leg_id) = prev_joint_angs;
+        int swap_leg_id = leg_id;
+        if (leg_id == 1) swap_leg_id = 2;
+        else if (leg_id == 2) swap_leg_id = 1;
+        prev_joint_angs4_.segment<3>(3*swap_leg_id) = prev_joint_angs;
     }
 
     void LeggedIKSolver::setWarmStartPos(vector_t prev_joint_angs4) {
@@ -105,6 +108,9 @@ namespace legged
 
 
     vector_t LeggedIKSolver::solveIK(vector3_t foot_pos, int leg_id) {
+        int swap_leg_id = leg_id;
+        if (leg_id == 1) swap_leg_id = 2;
+        else if (leg_id == 2) swap_leg_id = 1;
 
         Eigen::Matrix<scalar_t, 6, Eigen::Dynamic> jac;
         Eigen::Matrix<scalar_t, 3, 3> pos_jac;
@@ -118,15 +124,18 @@ namespace legged
         Eigen::VectorXd v(model.nv); v.setZero();
 
         // get warm start angle 
-        state_q.segment<3>(6+3*leg_id) = prev_joint_angs4_.segment<3>(3*leg_id);
+        state_q.segment<3>(6+3*swap_leg_id) = prev_joint_angs4_.segment<3>(3*swap_leg_id);
 
         for (int i=0;i<IT_MAX;i++) {
             pinocchio::forwardKinematics(model, data, state_q, state_v);
             pinocchio::updateFramePlacements(model, data);
             pinocchio::computeJointJacobians(model, data);
-            pinocchio::getFrameJacobian(model, data, info_.endEffectorFrameIndices[leg_id],  
-                pinocchio::LOCAL_WORLD_ALIGNED, jac);
-            pos_jac = jac.block<3,3>(0, 6+3*leg_id);
+            // notice pinocchio foot id is aligned with our leg id
+            for (int j = 0; j < 4; j++) {
+                pinocchio::getFrameJacobian(model, data, info_.endEffectorFrameIndices[j],  
+                    pinocchio::LOCAL_WORLD_ALIGNED, jac);
+            }
+            pos_jac = jac.block<3,3>(0, 6+3*swap_leg_id);
             pos_measured = ee_kinematics_->getPosition(vector_t());
 
             // std::cout << "angle: " << state_q.segment<3>(6+3*leg_id).transpose() 
@@ -145,7 +154,7 @@ namespace legged
             }
             pos_jjt.noalias() = pos_jac * pos_jac.transpose();
             pos_jjt.diagonal().array() += DAMP;
-            v.segment<3>(6+3*leg_id) = pos_jac.transpose() * pos_jjt.ldlt().solve(pos_err);
+            v.segment<3>(6+3*swap_leg_id) = pos_jac.transpose() * pos_jjt.ldlt().solve(pos_err);
             state_q = pinocchio::integrate(model,state_q,v*DT);
 
         }
@@ -160,7 +169,7 @@ namespace legged
         {
             // std::cout << "\nWarning: the iterative algorithm has not reached convergence to the desired precision" << std::endl;
         }
-        return state_q.segment<3>(6+3*leg_id);        
+        return state_q.segment<3>(6+3*swap_leg_id);        
     }
 
 

@@ -14,10 +14,18 @@ public:
     // compare to Eigen's default eulerAngles
     // this function returns yaw angle within -pi to pi
     static Eigen::Vector3d quat_to_euler(Eigen::Quaterniond quat);
+    // lqy's ZYX order 
+    static Eigen::Vector3d quatToZyx(const Eigen::Quaterniond q);
+    static double square(double a) { return a * a; }
     static Eigen::Vector3d quat_to_rotVec(Eigen::Quaterniond quat);
     static Eigen::Matrix3d skew(Eigen::Vector3d vec);
     static Eigen::Matrix3d pseudo_inverse(const Eigen::Matrix3d &mat);
     static double cal_dihedral_angle(Eigen::Vector3d surf_coef_1, Eigen::Vector3d surf_coef_2);
+
+    // pinnochio joint order: FL_shoulder FL_hip FL_knee RL_shoulder RL_hip RL_knee FR_shoulder FR_hip FR_knee  RR_shoulder RR_hip RR_knee
+    // unitree   joint order: FL_shoulder FL_hip FL_knee FR_shoulder FR_hip FR_knee RL_shoulder RL_hip RL_knee  RR_shoulder RR_hip RR_knee
+    static Eigen::Matrix<double, NUM_DOF,1> joint_vec_unitree_to_pinnochio(Eigen::Matrix<double, NUM_DOF,1> vec);
+    static Eigen::Matrix<double, NUM_DOF,1> joint_vec_pinnochio_to_unitree(Eigen::Matrix<double, NUM_DOF,1> vec);
 };
 
 class BezierUtils {
