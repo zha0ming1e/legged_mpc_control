@@ -13,6 +13,7 @@
 #include "LeggedParams.h"
 #include "LeggedState.h"
 #include "interfaces/GazeboInterface.h"
+#include "mpc_ctrl/LeggedMPC.h"
 #include "mpc_ctrl/ci_mpc/LciMpc.h"
 #include "utils/LeggedLogger.hpp"
 
@@ -97,10 +98,17 @@ int main(int argc, char **argv) {
     // Thread 1: MPC
     std::cout << "Enter thread 1: MPC" << std::endl;
     std::thread MPC_thread([&]() {
-        // Init LCI MPC 
-        lci_init_mutex.lock();
-        std::unique_ptr<legged::LciMpc> lciMpc_control = std::unique_ptr<legged::LciMpc>(new legged::LciMpc()); 
-        lci_init_mutex.unlock();
+
+        std::unique_ptr<legged::LeggedMPC> mpc_control;
+        if (mpc_type == 0) {
+            // Init LCI MPC 
+            lci_init_mutex.lock();
+            mpc_control = std::unique_ptr<legged::LciMpc>(new legged::LciMpc()); 
+            lci_init_mutex.unlock();
+        } else if (mpc_type == 1) {
+            // Init convex MPC
+            mpc_control = std::unique_ptr<legged::ConvexMpc>(new legged::ConvexMpc());
+        }
 
         // prepare variables to monitor time and control the while loop
         ros::Time start = ros::Time::now();
@@ -120,7 +128,7 @@ int main(int argc, char **argv) {
 
             // compute desired ground forces
             bool running = true; 
-            lciMpc_control->update(intef->get_legged_state(), elapsed.toSec(), dt.toSec());
+            mpc_control->update(intef->get_legged_state(), elapsed.toSec(), dt.toSec());
 
             auto t2 = std::chrono::high_resolution_clock::now();
             
@@ -159,10 +167,12 @@ int main(int argc, char **argv) {
         ros::Time now = ros::Time::now();  // bool res = app.exec();
         ros::Duration dt(0);
 
-        // wait for MPC controller to load
-        ros::Duration(1.5).sleep();
-        lci_init_mutex.lock();
-        lci_init_mutex.unlock();
+        if (mpc_type == 0) {
+            // wait for LCI MPC controller to load julia stuff
+            ros::Duration(1.5).sleep();
+            lci_init_mutex.lock();
+            lci_init_mutex.unlock();
+        }
 
         while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
             auto t3 = std::chrono::high_resolution_clock::now();

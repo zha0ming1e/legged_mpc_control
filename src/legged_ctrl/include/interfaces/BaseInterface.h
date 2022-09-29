@@ -50,6 +50,8 @@ public:
     // update state estimation
     bool estimation_update(double t, double dt);
 
+
+    // two low level controllers
     // basic tau controller
     bool tau_ctrl_update(double t, double dt);
     // wbc controller, very important

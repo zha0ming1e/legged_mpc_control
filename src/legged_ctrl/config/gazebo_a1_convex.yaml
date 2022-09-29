@@ -1,33 +1,35 @@
 use_sim_time: true
 
+# basic program type
+# refer to src/legged_ctrl/include/LeggedState.h
+run_type: 0
 robot_type: 0     # 0: A1
                   # 1: Go1
 mpc_type: 1       # 0: convex MPC 
                   # 1: CI-MPC
                   # 2: ocs2 nonlinear MPC
+low_level_type: 0 # 0: basic tau ctrl
+                  # 1: whole body control 
 
-# default foothold position in robot body frame 
+# default foothold position in robot body frame (varialbes with "_rel" in the code)
+default_foot_pos_FL_x: 0.17
+default_foot_pos_FL_y: 0.15
+default_foot_pos_FL_z: -0.35
 
-a1_default_foot_pos_FL_x: 0.17
-a1_default_foot_pos_FL_y: 0.15
-a1_default_foot_pos_FL_z: -0.35
+default_foot_pos_FR_x: 0.17
+default_foot_pos_FR_y: -0.15
+default_foot_pos_FR_z: -0.35
 
-a1_default_foot_pos_FR_x: 0.17
-a1_default_foot_pos_FR_y: -0.15
-a1_default_foot_pos_FR_z: -0.35
+default_foot_pos_RL_x: -0.17
+default_foot_pos_RL_y: 0.15
+default_foot_pos_RL_z: -0.35
 
-a1_default_foot_pos_RL_x: -0.17
-a1_default_foot_pos_RL_y: 0.15
-a1_default_foot_pos_RL_z: -0.35
+default_foot_pos_RR_x: -0.17
+default_foot_pos_RR_y: -0.15
+default_foot_pos_RR_z: -0.35
 
-a1_default_foot_pos_RR_x: -0.17
-a1_default_foot_pos_RR_y: -0.15
-a1_default_foot_pos_RR_z: -0.35
-
-a1_gait_counter_speed_FL: 1.5
-a1_gait_counter_speed_FR: 1.5
-a1_gait_counter_speed_RL: 1.5
-a1_gait_counter_speed_RR: 1.5
+# gait speed in phase per second
+gait_counter_speed: 3.0    # 3 gait cycle per second
 
 # convex MPC parameters
 
@@ -64,3 +66,16 @@ r_weights_8: 1e-7
 r_weights_9: 1e-7
 r_weights_10: 1e-7
 r_weights_11: 1e-7
+
+# swing leg parameters
+kp_foot_x: 100.0
+kp_foot_y: 100.0
+kp_foot_z: 150.0
+
+kd_foot_x: 10.0
+kd_foot_y: 10.0
+kd_foot_z: 8.0
+
+km_foot_x: 0.1
+km_foot_y: 0.1
+km_foot_z: 0.1

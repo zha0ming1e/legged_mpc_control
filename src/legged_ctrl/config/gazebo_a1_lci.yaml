@@ -1,13 +1,20 @@
 use_sim_time: true
 
-a1_kp_foot_x: 50
-a1_kp_foot_y: 50
-a1_kp_foot_z: 50
+# basic program type
+# refer to src/legged_ctrl/include/LeggedState.h
+run_type: 0
+robot_type: 0
+mpc_type: 0
+low_level_type: 0
 
-a1_kd_foot_x: 1.2
-a1_kd_foot_y: 1.2
-a1_kd_foot_z: 1.2
+kp_foot_x: 50
+kp_foot_y: 50
+kp_foot_z: 50
 
-a1_km_foot_x: 0.2
-a1_km_foot_y: 0.2
-a1_km_foot_z: 0.2
+kd_foot_x: 1.2
+kd_foot_y: 1.2
+kd_foot_z: 1.2
+
+km_foot_x: 0.2
+km_foot_y: 0.2
+km_foot_z: 0.2

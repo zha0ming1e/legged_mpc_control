@@ -132,6 +132,7 @@ target_compile_options(interfaces_lib PUBLIC ${OCS2_CXX_FLAGS})
 
 
 add_library(ci_mpc_lib
+        src/mpc_ctrl/LeggedMPC.cpp
         src/mpc_ctrl/ci_mpc/LciMpc.cpp
         )
 target_link_libraries(ci_mpc_lib
@@ -139,6 +140,16 @@ target_link_libraries(ci_mpc_lib
         OsqpEigen::OsqpEigen 
         juliaCpp_lib
         )
+
+add_library(convex_mpc_lib
+src/mpc_ctrl/LeggedMPC.cpp
+src/mpc_ctrl/ci_mpc/ConvexMpc.cpp
+)
+
+target_link_libraries(convex_mpc_lib
+${catkin_LIBRARIES} 
+OsqpEigen::OsqpEigen 
+)
 
 
 ############# main prorgam ######################

@@ -19,8 +19,9 @@
 #define JOY_CMD_ROLL_MAX 0.4            // rad
 
 // mpc
-#define PLAN_HORIZON 10
+#define PLAN_HORIZON 35
 #define MPC_STATE_DIM 13
+#define MPC_STATE_DIM_SPARSE 12
 #define MPC_CONSTRAINT_DIM 20
 
 // robot constant
