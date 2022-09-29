@@ -14,6 +14,9 @@ The goal is
 ## Controller Setup
 We build, develop and test controller in a docker container. 
 
+!important: First thing you need to do after building the docker container: run "source ~/ocs2_ws/devel/setup.bash" in the container. 
+(I don't know how to automate this yet )
+
 ## Julia setup
 Since LCI MPC uses Julia, we need to config Julia environment after building the docker container. After docker is built, we first 
 
