@@ -37,7 +37,7 @@ public:
 private:
 
     double total_run_time;
-    
+    // leg finite state machine 
 }; 
 
 
