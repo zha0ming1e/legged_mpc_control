@@ -15,6 +15,7 @@
 #include "interfaces/GazeboInterface.h"
 #include "mpc_ctrl/LeggedMPC.h"
 #include "mpc_ctrl/ci_mpc/LciMpc.h"
+#include "mpc_ctrl/convex_mpc/ConvexMpc.h"
 #include "utils/LeggedLogger.hpp"
 
 std::mutex lci_init_mutex;
@@ -106,8 +107,8 @@ int main(int argc, char **argv) {
             mpc_control = std::unique_ptr<legged::LciMpc>(new legged::LciMpc()); 
             lci_init_mutex.unlock();
         } else if (mpc_type == 1) {
-            // Init convex MPC
-            mpc_control = std::unique_ptr<legged::ConvexMpc>(new legged::ConvexMpc());
+            // Init convex MPC, notice the convex MPC need to be initialized using state and ros parameters
+            mpc_control = std::unique_ptr<legged::ConvexMpc>(new legged::ConvexMpc(intef->get_legged_state()));
         }
 
         // prepare variables to monitor time and control the while loop

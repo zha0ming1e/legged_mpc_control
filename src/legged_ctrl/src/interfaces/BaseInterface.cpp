@@ -95,6 +95,9 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
         rho_fix_list.push_back(rho_fix);
         rho_opt_list.push_back(rho_opt);
     }
+
+    // load parameter is very important 
+    legged_state.param.load(_nh);
 }
 
 

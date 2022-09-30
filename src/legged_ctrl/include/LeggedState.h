@@ -146,6 +146,9 @@ class LeggedParam {
     Eigen::Matrix<double, NUM_DOF_PER_LEG, NUM_LEG> kd_foot;
     Eigen::Matrix<double, NUM_DOF_PER_LEG, 1> km_foot;
 
+    double robot_mass;
+    Eigen::Matrix3d a1_trunk_inertia;
+
 };
 
 class LeggedState {

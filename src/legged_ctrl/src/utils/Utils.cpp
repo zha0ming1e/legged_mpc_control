@@ -108,19 +108,22 @@ Eigen::Matrix<double, NUM_DOF,1> Utils::joint_vec_pinnochio_to_unitree(Eigen::Ma
     return return_vec;
 }
 
-Eigen::Vector3d BezierUtils::get_foot_pos_curve(float t,
+Eigen::Matrix<double, 6,1> BezierUtils::get_foot_pos_curve(float t,
                                    Eigen::Vector3d foot_pos_start,
                                    Eigen::Vector3d foot_pos_final, 
                                    double terrain_pitch_angle = 0)
 {
-    Eigen::Vector3d foot_pos_target;
+    Eigen::Matrix<double, 6,1> foot_pos_vel_target;
+    Eigen::Vector2d rst;
     // X-axis
     std::vector<double> bezierX{foot_pos_start(0),
                                foot_pos_start(0),
                                 foot_pos_final(0),
                                 foot_pos_final(0),
                                 foot_pos_final(0)};
-    foot_pos_target(0) = bezier_curve(t, bezierX);
+    rst = bezier_curve(t, bezierX);
+    foot_pos_vel_target[0]  = rst[0];
+    foot_pos_vel_target[3]  = rst[1];
 
     // Y-axis
     std::vector<double> bezierY{foot_pos_start(1),
@@ -128,7 +131,9 @@ Eigen::Vector3d BezierUtils::get_foot_pos_curve(float t,
                                 foot_pos_final(1),
                                 foot_pos_final(1),
                                 foot_pos_final(1)};
-    foot_pos_target(1) = bezier_curve(t, bezierY);
+    rst = bezier_curve(t, bezierY);
+    foot_pos_vel_target[1]  = rst[0];
+    foot_pos_vel_target[4]  = rst[1];
 
     // Z-axis
     std::vector<double> bezierZ{foot_pos_start(2),
@@ -138,17 +143,35 @@ Eigen::Vector3d BezierUtils::get_foot_pos_curve(float t,
                                 foot_pos_final(2)};
     bezierZ[1] += FOOT_SWING_CLEARANCE1;
     bezierZ[2] += FOOT_SWING_CLEARANCE2 + 0.5*sin(terrain_pitch_angle);
-    foot_pos_target(2) = bezier_curve(t, bezierZ);
+    rst = bezier_curve(t, bezierZ);
+    foot_pos_vel_target[2]  = rst[0];
+    foot_pos_vel_target[5]  = rst[1];
 
-    return foot_pos_target;
+    return foot_pos_vel_target;
 }
 
 
-double BezierUtils::bezier_curve(double t, const std::vector<double> &P) {
-    std::vector<double> coefficients{1, 4, 6, 4, 1};
-    double y = 0;
+Eigen::Vector2d BezierUtils::bezier_curve(double t, const std::vector<double> &P) {
+    double y = 0, dy = 0;
     for (int i = 0; i <= bezier_degree; i++) {
-        y += coefficients[i] * std::pow(t, i) * std::pow(1 - t, bezier_degree - i) * P[i];
+        y += bezier_coefficient(t, bezier_degree, i) * P[i];
+        if (i < bezier_degree) {
+            dy += bezier_coefficient(t, bezier_degree - 1, i) * (P[i + 1] - P[i]) * bezier_degree;
+        }
     }
-    return y;
+    return Eigen::Vector2d(y, dy);
+}
+
+double BezierUtils::binomial(int n, int k) {
+    if (k > n) {
+        return 0;
+    }
+    if (k == 0 || k == n) {
+        return 1;
+    }
+    return binomial(n - 1, k - 1) + binomial(n - 1, k);
+}
+
+double BezierUtils::bezier_coefficient(double t, int n, int k) {
+    return binomial(n, k) * std::pow(t, k) * std::pow(1 - t, n - k);
 }

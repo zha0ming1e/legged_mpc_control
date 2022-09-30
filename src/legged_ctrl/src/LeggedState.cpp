@@ -65,7 +65,7 @@ bool LeggedParam::load(ros::NodeHandle &_nh) {
             default_foot_pos_FL_z, default_foot_pos_FR_z, default_foot_pos_RL_z, default_foot_pos_RR_z;
 
 
-    double q_weights_0, q_weights_1, q_weights_2, q_weights_3, q_weights_4, q_weights_5, q_weights_6, q_weights_7, q_weights_8, q_weights_9, q_weights_10, q_weights_11, q_weights_12, q_weights_rw_1, q_weights_rw_2;
+    double q_weights_0, q_weights_1, q_weights_2, q_weights_3, q_weights_4, q_weights_5, q_weights_6, q_weights_7, q_weights_8, q_weights_9, q_weights_10, q_weights_11;
 
     _nh.param("q_weights_0", q_weights_0, 80.0);
     _nh.param("q_weights_1", q_weights_1, 80.0);
@@ -83,14 +83,13 @@ bool LeggedParam::load(ros::NodeHandle &_nh) {
     _nh.param("q_weights_10", q_weights_10, 20.0);
     _nh.param("q_weights_11", q_weights_11, 20.0);
 
-    _nh.param("q_weights_rw_1", q_weights_rw_1, 0.0);
-    _nh.param("q_weights_rw_2", q_weights_rw_2, 0.0);
 
+    q_weights.resize(12);
+    r_weights.resize(12);
     q_weights << q_weights_0, q_weights_1, q_weights_2,
             q_weights_3, q_weights_4, q_weights_5,
             q_weights_6, q_weights_7, q_weights_8,
-            q_weights_9, q_weights_10, q_weights_11,
-            q_weights_12;
+            q_weights_9, q_weights_10, q_weights_11;
 
     double r_weights_0, r_weights_1, r_weights_2, r_weights_3, r_weights_4, r_weights_5, r_weights_6, r_weights_7, r_weights_8, r_weights_9, r_weights_10, r_weights_11, r_weights_rw_1, r_weights_rw_2;
 
@@ -139,7 +138,28 @@ bool LeggedParam::load(ros::NodeHandle &_nh) {
             kd_foot_y, kd_foot_y, kd_foot_y, kd_foot_y,
             kd_foot_z, kd_foot_z, kd_foot_z, kd_foot_z;
 
-    km_foot = Eigen::Vector3d(km_foot_x, km_foot_y, km_foot_z);            
+    km_foot = Eigen::Vector3d(km_foot_x, km_foot_y, km_foot_z);      
+
+
+    _nh.param("a1_robot_mass", robot_mass, 13.0);
+
+    double a1_trunk_inertia_xx;
+    double a1_trunk_inertia_xy;
+    double a1_trunk_inertia_xz;
+    double a1_trunk_inertia_yz;
+    double a1_trunk_inertia_yy;
+    double a1_trunk_inertia_zz;
+
+    _nh.param("a1_trunk_inertia_xx", a1_trunk_inertia_xx, 0.0158533);
+    _nh.param("a1_trunk_inertia_xy", a1_trunk_inertia_xy, 0.0);
+    _nh.param("a1_trunk_inertia_xz", a1_trunk_inertia_xz, 0.0);
+    _nh.param("a1_trunk_inertia_yz", a1_trunk_inertia_yz, 0.0);
+    _nh.param("a1_trunk_inertia_yy", a1_trunk_inertia_yy, 0.0377999);
+    _nh.param("a1_trunk_inertia_zz", a1_trunk_inertia_zz, 0.0456542);
+
+    a1_trunk_inertia << a1_trunk_inertia_xx, a1_trunk_inertia_xy, a1_trunk_inertia_xz,
+            a1_trunk_inertia_xy, a1_trunk_inertia_yy, a1_trunk_inertia_yz,
+            a1_trunk_inertia_xz, a1_trunk_inertia_yz, a1_trunk_inertia_zz;
     return true;
 }
 

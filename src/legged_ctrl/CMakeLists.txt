@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10.1)
 project(legged_ctrl)
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
-# set(CMAKE_BUILD_TYPE "Debug")
+# set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-std=c++14")
@@ -143,7 +143,9 @@ target_link_libraries(ci_mpc_lib
 
 add_library(convex_mpc_lib
 src/mpc_ctrl/LeggedMPC.cpp
-src/mpc_ctrl/ci_mpc/ConvexMpc.cpp
+src/mpc_ctrl/convex_mpc/ConvexMpc.cpp
+src/mpc_ctrl/convex_mpc/ConvexQPSolver.cpp
+src/utils/LeggedContactFSM.cpp
 )
 
 target_link_libraries(convex_mpc_lib
@@ -161,6 +163,7 @@ target_link_libraries(main
         utils_lib
         interfaces_lib
         ci_mpc_lib
+        convex_mpc_lib
         ${pinocchio_LIBRARIES}
 )
 

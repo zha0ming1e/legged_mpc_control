@@ -13,6 +13,7 @@
 #include <ros/ros.h> 
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/Float64.h>
@@ -86,9 +87,11 @@ public:
         swing_forces_msg_.effort.resize(12); 
 
         // Initialize contact forces 
-        pub_contact_forces_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/contact_forces", 100); 
-        contact_forces_msg_.name = {"FL, FR, RL, RR"}; 
-        contact_forces_msg_.effort.resize(4); 
+        pub_contact_forces_ = nh_.advertise<geometry_msgs::QuaternionStamped>(prefix + "/contact_forces", 100); 
+        // contact_forces_msg_.name = {"FL, FR, RL, RR"}; 
+        // contact_forces_msg_.position.resize(4); 
+        // contact_forces_msg_.velocity.resize(4); 
+        // contact_forces_msg_.effort.resize(4); 
 
 
     }
@@ -175,8 +178,12 @@ public:
             pub_foot_pose_[i].publish(foot_marker_[i]); 
             pub_foot_pose_target_[i].publish(foot_marker_target_[i]); 
 
-            contact_forces_msg_.effort[i] = state.fbk.foot_force[i]; 
+            // contact_forces_msg_.effort[i] = state.fbk.foot_force[i]; 
         }
+        contact_forces_msg_.quaternion.w = state.ctrl.plan_contacts[0]; 
+        contact_forces_msg_.quaternion.x = state.ctrl.plan_contacts[1]; 
+        contact_forces_msg_.quaternion.y = state.ctrl.plan_contacts[2]; 
+        contact_forces_msg_.quaternion.z = state.ctrl.plan_contacts[3]; 
 
         // publish 
         pub_root_pose_.publish(odom_); 
@@ -220,7 +227,7 @@ private:
     
     // publish contact info 
     ros::Publisher pub_contact_forces_; 
-    sensor_msgs::JointState contact_forces_msg_; 
+    geometry_msgs::QuaternionStamped contact_forces_msg_; 
 
     // Foot name mapping 
     unordered_map<int, string> foot_name_map_{{0, "/FL"},

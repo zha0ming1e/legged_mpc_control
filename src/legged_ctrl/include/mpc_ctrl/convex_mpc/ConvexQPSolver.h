@@ -14,6 +14,8 @@
 #include "LeggedState.h"
 #include "utils/Utils.h"
 
+namespace legged {
+    
 class ConvexQPSolver {
 typedef std::pair<int, int> pairInt; 
 public: 
@@ -28,11 +30,11 @@ public:
 
     void update_cons_matrix(); 
 
-    void calc_mpc_reference(A1CtrlStates& state); 
+    void calc_mpc_reference(LeggedState& state); 
 
-    Eigen::Matrix<double, DIM_GRF, 1> compute_grfs(A1CtrlStates& state); 
+    Eigen::Matrix<double, DIM_GRF, 1> compute_grfs(LeggedState& state); 
 
-    void update_bound_constraints(bool contacts[NUM_LEG]);
+    void update_bound_constraints(std::array<bool, NUM_LEG>& contacts);
 
     std::vector<Eigen::Triplet<double>> create_shifted_triplet_vector(std::vector<Eigen::Triplet<double>>& triplet_vec,  int row_offset, int col_offset); 
 
@@ -86,4 +88,5 @@ private:
     std::unordered_map<std::pair<int, int>, double, pair_hash> sparse_map_; 
 }; 
 
-#endif //A1_CPPFASTCONVEX_H
+
+} // namespace legged
