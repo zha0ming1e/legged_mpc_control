@@ -21,7 +21,7 @@ namespace legged
         dynamics_constraint_size_((MPC_STATE_DIM_SPARSE) * PLAN_HORIZON),
         friction_constraint_size_(PLAN_HORIZON * 4 * NUM_LEG), 
         bound_constraint_size_(PLAN_HORIZON * 4) {
-        mu_ = 0.3;     
+        mu_ = 0.5;     
         mpc_dt_ = 0.005;
 
         // Initialize hessian (only once)
@@ -179,7 +179,6 @@ namespace legged
 
         // Initialize solver 
         solver.settings()->setVerbosity(false);
-        solver.settings()->setWarmStart(false);
         solver.settings()->setAbsoluteTolerance(1e-3);
         solver.settings()->setRelativeTolerance(1e-4);
         solver.settings()->setWarmStart(true);

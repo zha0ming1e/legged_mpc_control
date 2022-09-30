@@ -112,15 +112,15 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     }
 
     // right updown
-    legged_state.joy.velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
+    legged_state.joy.velx = joy_msg->axes[5] * JOY_CMD_VELX_MAX;
     // right horiz
-    legged_state.joy.vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
+    legged_state.joy.vely = joy_msg->axes[2] * JOY_CMD_VELY_MAX;
     // left horiz
     legged_state.joy.yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
     // up-down button
-    legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
+    // legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
     // left-right button
-    legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
+    // legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
 
     // lb
     if (joy_msg->buttons[4] == 1) {
@@ -233,6 +233,8 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // {
     //     legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = pos_measured2[i];
     //     legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = vel_measured2[i];
+    //     legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) = legged_state.fbk.foot_pos_world.block<3, 1>(0, i) - legged_state.fbk.root_pos;
+    //     legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) = legged_state.fbk.foot_vel_world.block<3, 1>(0, i) - legged_state.fbk.root_lin_vel;
     // }
 
 
@@ -308,15 +310,16 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
             foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
                 (legged_state.ctrl.optimized_state.segment<3>(i*3 + 6) - legged_state.fbk.root_pos);
             foot_vel_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
-                (legged_state.ctrl.optimized_input.segment<3>(i*3+12)); 
+                (legged_state.ctrl.optimized_input.segment<3>(i*3+12) - legged_state.fbk.root_lin_vel); 
 
             foot_pos_error_rel.block<3, 1>(0, i) = 
                 foot_pos_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
             foot_vel_error_rel.block<3, 1>(0, i) = 
                 foot_vel_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
             
-            foot_forces_kin.block<3, 1>(0, i) = 0.2*(foot_pos_error_rel.block<3, 1>(0, i)*50+
-                                                    foot_vel_error_rel.block<3, 1>(0, i)*1.2);        
+            Eigen::Vector3d tmp = foot_pos_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kp_foot.block<3, 1>(0, i)) + foot_vel_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kd_foot.block<3, 1>(0, i)); 
+                     
+            foot_forces_kin.block<3, 1>(0, i) = legged_state.param.km_foot.cwiseProduct(tmp);        
 
             Eigen::Vector3d joint_kin = jac.lu().solve( foot_forces_kin.block<3, 1>(0, i) );
             if ((isnan(joint_kin[0])) || (isnan(joint_kin[1])) || (isnan(joint_kin[2]))) {

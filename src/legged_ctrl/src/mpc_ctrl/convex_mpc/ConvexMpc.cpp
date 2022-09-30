@@ -30,7 +30,7 @@ namespace legged
         state.ctrl.root_lin_vel_d_rel[1] = state.joy.vely;
         state.ctrl.root_ang_vel_d_rel[2] = state.joy.yaw_rate;
         // set default foot position to be on the ground according to target body height
-        state.param.default_foot_pos_rel.row(2) = -(state.joy.body_height-0.03) * Eigen::VectorXd::Ones(NUM_LEG);
+        // state.param.default_foot_pos_rel.row(2) = -(state.joy.body_height-0.03) * Eigen::VectorXd::Ones(NUM_LEG);
 
         // foot update
         foot_update(state, t, dt);
@@ -47,9 +47,9 @@ namespace legged
 
         for (int i = 0; i < NUM_LEG; i++)
         {
-            state.ctrl.optimized_state.segment<3>(6 + 3 * i) = leg_FSM[i].FSM_foot_pos_target_world;
+            state.ctrl.optimized_state.segment<3>(6 + 3 * i) = state.fbk.root_rot_mat * leg_FSM[i].FSM_foot_pos_target_rel + state.fbk.root_pos;
             state.ctrl.optimized_input.segment<3>(3 * i) = foot_forces_grf.col(i);
-            state.ctrl.optimized_input.segment<3>(12 + 3 * i) = leg_FSM[i].FSM_foot_vel_target_world;
+            state.ctrl.optimized_input.segment<3>(12 + 3 * i) = state.fbk.root_rot_mat * leg_FSM[i].FSM_foot_vel_target_rel + state.fbk.root_lin_vel;
         }
 
 
@@ -79,18 +79,18 @@ namespace legged
         // always calculate Raibert Heuristic, calculate foothold position
         // update foot plan: state.foot_pos_target_world
         Eigen::Vector3d lin_vel_world = state.fbk.root_lin_vel; // world frame linear velocity
-        Eigen::Vector3d lin_vel_rel = state.fbk.root_rot_mat_z.transpose() * lin_vel_world; // robot body frame linear velocity
+        Eigen::Vector3d lin_vel_rel = state.fbk.root_rot_mat.transpose() * lin_vel_world; // robot body frame linear velocity
 
         state.ctrl.foot_pos_target_rel = state.param.default_foot_pos_rel;
         for (int i = 0; i < NUM_LEG; ++i) {
             double delta_x =
-                    std::sqrt(std::abs(state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_rel(0) - state.ctrl.root_lin_vel_d_rel(0)) +
-                    ((0.5*1/state.param.gait_counter_speed)  * dt) / 2.0 *
+                    std::sqrt(std::abs(state.fbk.root_pos(2)) / 9.8) * (lin_vel_rel(0) - state.ctrl.root_lin_vel_d_rel(0)) +
+                    (1/state.param.gait_counter_speed) / 2.0 *
                     state.ctrl.root_lin_vel_d_rel(1);
                     state.ctrl.root_lin_vel_d_rel(0);
             double delta_y =
-                    std::sqrt(std::abs(state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_rel(1) - state.ctrl.root_lin_vel_d_rel(1)) +
-                    ((0.5*1/state.param.gait_counter_speed) * dt) / 2.0 *
+                    std::sqrt(std::abs(state.fbk.root_pos(2)) / 9.8) * (lin_vel_rel(1) - state.ctrl.root_lin_vel_d_rel(1)) +
+                    (1/state.param.gait_counter_speed) / 2.0 *
                     state.ctrl.root_lin_vel_d_rel(1);
                     state.ctrl.root_lin_vel_d_rel(1);
 
@@ -124,9 +124,11 @@ namespace legged
             }
         } else {
             for (int i = 0; i < NUM_LEG; i++) {
-                leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
-                                    state.ctrl.foot_pos_target_world.block<3,1>(0,i), 
+                leg_FSM[i].update(dt, state.fbk.foot_pos_rel.block<3,1>(0,i), 
+                                    state.ctrl.foot_pos_target_rel.block<3,1>(0,i), 
                                     state.fbk.estimated_contacts[i]);
+
+                // TODO: gait phase of each leg is individually controlled, so we need to occasionally synchrinize them, for example if all leg are in contact, average their gait phase and set them to that value
             }        
             for (int i = 0; i < NUM_LEG; i++)
             {

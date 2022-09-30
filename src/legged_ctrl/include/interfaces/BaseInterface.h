@@ -50,6 +50,7 @@ public:
     // update state estimation
     bool estimation_update(double t, double dt);
 
+    // TODO: add a safety check, disable control or stop robot if something is wrong (large pitch angle, large roll, etc.)
 
     // two low level controllers
     // basic tau controller
