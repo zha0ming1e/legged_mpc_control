@@ -17,7 +17,7 @@ namespace legged
     class LeggedContactFSM
     {
         public:
-            LeggedContactFSM() {set_default_gait_pattern();};
+            LeggedContactFSM() {};
             void reset_params(LeggedState &legged_state, int _leg_id);
             void set_default_gait_pattern();
             void set_default_stand_pattern();
@@ -53,6 +53,7 @@ namespace legged
 
             // either swing or stance, the getTarget function will return the target foot position
             Eigen::Vector3d FSM_foot_pos_target_world;
+            Eigen::Vector3d FSM_prev_foot_pos_target_world;
             Eigen::Vector3d FSM_foot_vel_target_world;
 
         private:
@@ -76,6 +77,7 @@ namespace legged
             double cur_state_end_time;   // 0-1 phase time 
 
             // swing phase helper variables
+            bool not_first_call = false;
             Eigen::Vector3d swing_start_foot_pos_world;
             Eigen::Vector3d swing_end_foot_pos_world;
             Eigen::Vector3d swing_extend_foot_pos_world; // this variable is used to deal with late contact, if the foot is not in contact, we will extend the swing phase and add this position to the target position

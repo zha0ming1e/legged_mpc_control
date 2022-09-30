@@ -7,6 +7,7 @@ namespace legged
         leg_id = _leg_id;
         gait_speed = legged_state.param.gait_counter_speed;
         s = STANCE;
+        set_default_gait_pattern();
     }
 
     void LeggedContactFSM::gait_update(double dt) {
@@ -29,10 +30,22 @@ namespace legged
         }
 
         s = gait_state_pattern[gait_pattern_index];
-        terrain_height = 0;
+        // terrain_height = 0;
+        // so the outloop will keep reseting the FSM's target position
+        not_first_call = false;
     }
 
     void LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag) {
+
+        // the update is called first time in the main loop, record target position
+        // in helper variables
+        if (not_first_call == false) {
+            swing_end_foot_pos_world = foot_pos_target_world;
+            FSM_foot_pos_target_world = foot_pos_target_world;
+            FSM_foot_vel_target_world.setZero();
+            not_first_call = true;
+        }
+
         std::cout << gait_phase << std::endl;
         // state transition
         if (s == STANCE) {
@@ -49,7 +62,7 @@ namespace legged
             if (!gait_freeze) {
                 gait_phase += gait_speed * dt;
             }
-            if (percent_in_state()>0.5 && foot_force_flag) {
+            if (percent_in_state() > 0.7 && foot_force_flag) {
                 // if we are in the second half of the swing phase and we have early contact
                 // then we should switch to stance phase immediately
                 s = STANCE;
@@ -60,7 +73,7 @@ namespace legged
                 // then we should freeze the gait pattern
                 gait_freeze = true;
                 gait_freeze_counter++;
-                swing_extend_foot_pos_world[2] -= 0.1*dt; // extend the swing foot target a little bit
+                // swing_extend_foot_pos_world[2] -= 0.1*dt; // extend the swing foot target a little bit
 
                 // but if gait_freeze_counter is too large, then we should switch to stance phase
                 if (gait_freeze_counter > 10) {
@@ -91,7 +104,7 @@ namespace legged
         gait_state_pattern.clear();
         gait_pattern_index = 0;
         gait_switch_time.clear();
-        if (leg_id % 2 == 0) {
+        if (leg_id == 0 || leg_id == 3) {
             gait_state_pattern.push_back(STANCE);
             gait_state_pattern.push_back(SWING);
         } else {
@@ -160,9 +173,10 @@ namespace legged
                     swing_start_foot_pos_world,
                     foot_pos_target_world+swing_extend_foot_pos_world, 0.0);
 
-        swing_end_foot_pos_world = foot_pos_target_world;                    
+        swing_end_foot_pos_world = foot_pos_target_world;       
+        FSM_prev_foot_pos_target_world = FSM_foot_pos_target_world;             
         FSM_foot_pos_target_world = foot_pos_vel_target.segment(0,3);
-        FSM_foot_vel_target_world = foot_pos_vel_target.segment(3,3);
+        FSM_foot_vel_target_world = (FSM_foot_pos_target_world - FSM_prev_foot_pos_target_world)/dt;
     }
 
 } // namespace legged

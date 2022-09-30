@@ -280,7 +280,7 @@ void ConvexQPSolver::calc_mpc_reference(LeggedState &state) {
         update_B_matrix(state.param.robot_mass,
                         state.param.a1_trunk_inertia,
                         state.fbk.root_rot_mat,
-                        state.fbk.foot_pos_world); 
+                        state.fbk.foot_pos_abs); 
 
         // Update the constraint matrix 
         for(size_t j = 0; j < b_sparsity_[i].size(); j++) {

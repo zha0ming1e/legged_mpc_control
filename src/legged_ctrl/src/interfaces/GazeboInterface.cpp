@@ -80,11 +80,12 @@ bool GazeboInterface::update(double t, double dt) {
      */
     bool sensor_run = sensor_update(t, dt);
 
-    // run wbc 
-    // bool wbc_run = wbc_update(t, dt);
-
-    // run basic tau control 
+    // run low level control 
     bool basic_run = tau_ctrl_update(t, dt);
+        
+    // bool wbc_run = wbc_update(t, dt);
+    
+    
 
     send_cmd();
 

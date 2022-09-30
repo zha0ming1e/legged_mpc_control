@@ -153,11 +153,15 @@ Eigen::Matrix<double, 6,1> BezierUtils::get_foot_pos_curve(float t,
 
 Eigen::Vector2d BezierUtils::bezier_curve(double t, const std::vector<double> &P) {
     double y = 0, dy = 0;
+    // for (int i = 0; i <= bezier_degree; i++) {
+    //     y += bezier_coefficient(t, bezier_degree, i) * P[i];
+    //     if (i < bezier_degree) {
+    //         dy += bezier_coefficient(t, bezier_degree - 1, i) * (P[i + 1] - P[i]) * bezier_degree;
+    //     }
+    // }
+    std::vector<double> coefficients{1, 4, 6, 4, 1};
     for (int i = 0; i <= bezier_degree; i++) {
-        y += bezier_coefficient(t, bezier_degree, i) * P[i];
-        if (i < bezier_degree) {
-            dy += bezier_coefficient(t, bezier_degree - 1, i) * (P[i + 1] - P[i]) * bezier_degree;
-        }
+        y += coefficients[i] * std::pow(t, i) * std::pow(1 - t, bezier_degree - i) * P[i];
     }
     return Eigen::Vector2d(y, dy);
 }
