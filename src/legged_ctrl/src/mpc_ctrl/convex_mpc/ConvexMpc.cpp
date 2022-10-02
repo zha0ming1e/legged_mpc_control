@@ -61,7 +61,7 @@ namespace legged
         // by the foot update function and leg_FSMs
 
         // TODO: pass legFSM into the convex MPC solver to predict contact 
-        fastConvex.calc_mpc_reference(state); 
+        fastConvex.calc_mpc_reference(state, leg_FSM); 
         fastConvex.update_cons_matrix(); 
         Eigen::Matrix<double, DIM_GRF, 1> qp_solution = fastConvex.compute_grfs(state); 
         for (int i = 0; i < NUM_LEG; ++i) {

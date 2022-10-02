@@ -21,7 +21,7 @@ namespace legged
         dynamics_constraint_size_((MPC_STATE_DIM_SPARSE) * PLAN_HORIZON),
         friction_constraint_size_(PLAN_HORIZON * 4 * NUM_LEG), 
         bound_constraint_size_(PLAN_HORIZON * 4) {
-        mu_ = 0.3;     
+        mu_ = 0.6;     
         mpc_dt_ = MPC_UPDATE_FREQUENCY/1000.0;
 
         // Initialize hessian (only once)
@@ -250,7 +250,7 @@ std::vector<Eigen::Triplet<double>> ConvexQPSolver::create_shifted_triplet_vecto
 }
 
 
-void ConvexQPSolver::calc_mpc_reference(LeggedState &state) { 
+void ConvexQPSolver::calc_mpc_reference(LeggedState &state, LeggedContactFSM leg_FSM[NUM_LEG]) { 
     // Initial state - update the gradient and first row of the constraint matrix    
     mpc_states_ << state.fbk.root_euler[0], state.fbk.root_euler[1], state.fbk.root_euler[2],
                         state.fbk.root_pos[0], state.fbk.root_pos[1], state.fbk.root_pos[2],
@@ -307,7 +307,8 @@ void ConvexQPSolver::calc_mpc_reference(LeggedState &state) {
         gradient_.segment((i+1)*DIM_GRF + (i)*MPC_STATE_DIM_SPARSE, 12) = -1 * Q_ * mpc_states_d; 
     }
 
-    update_bound_constraints(state.ctrl.plan_contacts); 
+    // update_bound_constraints(state.fbk.estimated_contacts); 
+    update_bound_constraints(state.ctrl.plan_contacts, leg_FSM); 
 }
 Eigen::Matrix<double, DIM_GRF, 1> ConvexQPSolver::compute_grfs(LeggedState& state) {
     solver.updateLinearConstraintsMatrix(cons_mat_); 
@@ -324,12 +325,21 @@ Eigen::Matrix<double, DIM_GRF, 1> ConvexQPSolver::compute_grfs(LeggedState& stat
     }
 }
 
-void ConvexQPSolver::update_bound_constraints(std::array<bool, NUM_LEG>& contacts) {
+void ConvexQPSolver::update_bound_constraints(bool contacts[NUM_LEG], LeggedContactFSM leg_FSM[NUM_LEG]) {
     // bound constraints 
     for(size_t i = 0; i < horizon_ ; i++) {
-        for(size_t j = 0; j <NUM_LEG; j++) {
-            lowerBound_(dynamics_constraint_size_ + friction_constraint_size_ + i*4 + j) = 0; 
-            upperBound_(dynamics_constraint_size_ + friction_constraint_size_ + i*4 + j) = contacts[j] * 180;
+        // for the first one, use current contact
+        if (i == 0) {
+            for(size_t j = 0; j <NUM_LEG; j++) {
+                lowerBound_(dynamics_constraint_size_ + friction_constraint_size_ + i*4 + j) = 0; 
+                upperBound_(dynamics_constraint_size_ + friction_constraint_size_ + i*4 + j) = contacts[j] * 180;
+            }
+        } else {
+            for(size_t j = 0; j <NUM_LEG; j++) {
+                lowerBound_(dynamics_constraint_size_ + friction_constraint_size_ + i*4 + j) = 0; 
+                upperBound_(dynamics_constraint_size_ + friction_constraint_size_ + i*4 + j) = 
+                    leg_FSM[j].predict_contact_state(i*mpc_dt_)* 180;
+            }
         }
     }
 }
