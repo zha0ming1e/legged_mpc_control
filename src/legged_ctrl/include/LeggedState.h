@@ -61,8 +61,7 @@ class LeggedCtrl {
     void reset();
 
 
-    Eigen::Vector4d gait_counter;          // use time directly
-    Eigen::Vector4d gait_counter_speed;    // delta time
+    Eigen::Vector4d gait_counter;          // use time directly, the value in gait_counter is the phase time in the gait (0-1)
 
     // control target
     Eigen::Vector3d root_pos_d;
@@ -72,7 +71,6 @@ class LeggedCtrl {
     Eigen::Vector3d root_ang_vel_d_rel;
     Eigen::Vector3d root_ang_vel_d_world;
 
-    Eigen::Matrix<double, 3, NUM_LEG> default_foot_pos_rel;
 
     // terrain related
     double terrain_pitch_angle;  // the estimated terrain angle on pitch direction
@@ -125,6 +123,34 @@ class LeggedJoyCmd {
     bool exit = false;    
 };
 
+class LeggedParam {
+    public:
+    LeggedParam() {}
+
+    bool load(ros::NodeHandle &_nh);
+
+    int run_type;             // simulation(0) or hardware(1)
+    int robot_type;           // a1(0) or go1(1)
+    int mpc_type;             // lci_mpc (0) or convex mpc (1)
+    int low_level_type;       // basic tau ctrl (0) or whole body control (1)
+
+    double gait_counter_speed;    // delta time
+    Eigen::Matrix<double, 3, NUM_LEG> default_foot_pos_rel;
+
+    // MPC parameters
+    Eigen::VectorXd q_weights;
+    Eigen::VectorXd r_weights;
+
+    // swing leg parameters
+    Eigen::Matrix<double, NUM_DOF_PER_LEG, NUM_LEG> kp_foot;
+    Eigen::Matrix<double, NUM_DOF_PER_LEG, NUM_LEG> kd_foot;
+    Eigen::Matrix<double, NUM_DOF_PER_LEG, 1> km_foot;
+
+    double robot_mass;
+    Eigen::Matrix3d a1_trunk_inertia;
+
+};
+
 class LeggedState {
     public:
     LeggedState() {
@@ -135,6 +161,7 @@ class LeggedState {
     LeggedCtrl      ctrl;
     LeggedFeedback  fbk;
     LeggedJoyCmd    joy;
+    LeggedParam     param;
 
     // put other unclassified variables here
     // Need to be aware of deadlock in thread 1 and thread 2

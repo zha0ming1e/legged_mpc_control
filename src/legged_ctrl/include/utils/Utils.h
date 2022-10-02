@@ -29,21 +29,24 @@ public:
 };
 
 class BezierUtils {
-    // TODO: allow degree change? may not be necessary, we can stick to degree 4
+    // https://pages.mtu.edu/~shene/COURSES/cs3621/NOTES/spline/Bezier/bezier-der.html
 public:
     BezierUtils () {
         curve_constructed = false;
         bezier_degree = 4;
     }
     // set of functions create bezier curves, get points, reset
-    Eigen::Vector3d get_foot_pos_curve(float t,
+    Eigen::Matrix<double, 6,1> get_foot_pos_curve(float t,
                                        Eigen::Vector3d foot_pos_start,
                                        Eigen::Vector3d foot_pos_final,
                                        double terrain_pitch_angle);
 
     void reset_foot_pos_curve() {curve_constructed = false;}
 private:
-    double bezier_curve(double t, const std::vector<double> &P);
+    Eigen::Vector2d bezier_curve(double t, const std::vector<double> &P);    
+
+    double binomial(int n, int k);
+    double bezier_coefficient(double t, int n, int k);
 
     bool curve_constructed;
     float bezier_degree;

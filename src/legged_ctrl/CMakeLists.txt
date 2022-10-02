@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10.1)
 project(legged_ctrl)
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
-# set(CMAKE_BUILD_TYPE "Debug")
+# set(CMAKE_BUILD_TYPE Release)
+# set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-std=c++14")
@@ -25,6 +26,7 @@ find_package(catkin REQUIRED COMPONENTS
         unitree_legged_msgs
         ocs2_legged_robot
         qpoases_catkin
+        tf
         )
 include_directories(
         ${catkin_INCLUDE_DIRS}
@@ -132,6 +134,7 @@ target_compile_options(interfaces_lib PUBLIC ${OCS2_CXX_FLAGS})
 
 
 add_library(ci_mpc_lib
+        src/mpc_ctrl/LeggedMPC.cpp
         src/mpc_ctrl/ci_mpc/LciMpc.cpp
         )
 target_link_libraries(ci_mpc_lib
@@ -139,6 +142,18 @@ target_link_libraries(ci_mpc_lib
         OsqpEigen::OsqpEigen 
         juliaCpp_lib
         )
+
+add_library(convex_mpc_lib
+src/mpc_ctrl/LeggedMPC.cpp
+src/mpc_ctrl/convex_mpc/ConvexMpc.cpp
+src/mpc_ctrl/convex_mpc/ConvexQPSolver.cpp
+src/utils/LeggedContactFSM.cpp
+)
+
+target_link_libraries(convex_mpc_lib
+${catkin_LIBRARIES} 
+OsqpEigen::OsqpEigen 
+)
 
 
 ############# main prorgam ######################
@@ -150,6 +165,7 @@ target_link_libraries(main
         utils_lib
         interfaces_lib
         ci_mpc_lib
+        convex_mpc_lib
         ${pinocchio_LIBRARIES}
 )
 

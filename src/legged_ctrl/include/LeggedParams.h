@@ -4,23 +4,24 @@
 
 #pragma once
 // control time related
-#define MPC_UPDATE_FREQUENCY     5.0  // ms       200Hz
-#define LOW_LEVEL_CTRL_FREQUENCY 2.0  // ms       500Hz
+#define MPC_UPDATE_FREQUENCY     5.0  // ms       500Hz
+#define LOW_LEVEL_CTRL_FREQUENCY 1.0  // ms       1000Hz
 
 // constant define
 // joy stick command interprate
 #define JOY_CMD_BODY_HEIGHT_MAX 0.32     // m
 #define JOY_CMD_BODY_HEIGHT_MIN 0.1     // m
-#define JOY_CMD_BODY_HEIGHT_VEL 0.04    // m/s
-#define JOY_CMD_VELX_MAX 0.2         // m/s
+#define JOY_CMD_BODY_HEIGHT_VEL 0.1    // m/s
+#define JOY_CMD_VELX_MAX 1.5         // m/s
 #define JOY_CMD_VELY_MAX 0.1            // m/s
 #define JOY_CMD_YAW_MAX 0.8             // rad
 #define JOY_CMD_PITCH_MAX 0.4           // rad
 #define JOY_CMD_ROLL_MAX 0.4            // rad
 
 // mpc
-#define PLAN_HORIZON 10
+#define PLAN_HORIZON 35
 #define MPC_STATE_DIM 13
+#define MPC_STATE_DIM_SPARSE 12
 #define MPC_CONSTRAINT_DIM 20
 
 // robot constant
@@ -35,11 +36,8 @@
 #define FOOT_FORCE_HIGH 80.0
 
 #define FOOT_SWING_CLEARANCE1 0.0f
-#define FOOT_SWING_CLEARANCE2 0.4f
+#define FOOT_SWING_CLEARANCE2 0.3f
 
-#define FOOT_DELTA_X_LIMIT 0.1
-#define FOOT_DELTA_Y_LIMIT 0.1
-
-#define ERROR_CURVE_ALREADY_SET 184
-#define ERROR_CURVE_NOT_SET 185
+#define FOOT_DELTA_X_LIMIT 0.8
+#define FOOT_DELTA_Y_LIMIT 0.8
 

@@ -10,6 +10,7 @@
 
 #include "LeggedParams.h"
 #include "LeggedState.h"
+#include "mpc_ctrl/LeggedMPC.h"
 #include "utils/Utils.h"
 #include "utils/MovingWindowFilter.hpp"
 
@@ -21,7 +22,8 @@ namespace legged
 {
 using namespace std; 
 using namespace Eigen;
-class LciMpc {
+class LciMpc : public LeggedMPC
+{
 public:
     LciMpc(); 
 

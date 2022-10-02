@@ -80,11 +80,12 @@ bool GazeboInterface::update(double t, double dt) {
      */
     bool sensor_run = sensor_update(t, dt);
 
-    // run wbc 
-    // bool wbc_run = wbc_update(t, dt);
-
-    // run basic tau control 
+    // run low level control 
     bool basic_run = tau_ctrl_update(t, dt);
+        
+    // bool wbc_run = wbc_update(t, dt);
+    
+    
 
     send_cmd();
 
@@ -113,22 +114,22 @@ bool GazeboInterface::send_cmd() {
 // callback functions
 void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom) {
     // update
-    // legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
-    //                                               odom->pose.pose.orientation.x,
-    //                                               odom->pose.pose.orientation.y,
-    //                                               odom->pose.pose.orientation.z);                                              
-    // legged_state.fbk.root_pos << odom->pose.pose.position.x,
-    //         odom->pose.pose.position.y,
-    //         odom->pose.pose.position.z;
+    legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
+                                                  odom->pose.pose.orientation.x,
+                                                  odom->pose.pose.orientation.y,
+                                                  odom->pose.pose.orientation.z);                                              
+    legged_state.fbk.root_pos << odom->pose.pose.position.x,
+            odom->pose.pose.position.y,
+            odom->pose.pose.position.z;
     // // make sure root_lin_vel is in world frame
-    // legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
-    //         odom->twist.twist.linear.y,
-    //         odom->twist.twist.linear.z;
+    legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
+            odom->twist.twist.linear.y,
+            odom->twist.twist.linear.z;
 
     // make sure root_ang_vel is in world frame
-    // legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,
-    //         odom->twist.twist.angular.y,
-    //         odom->twist.twist.angular.z;
+    legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,
+            odom->twist.twist.angular.y,
+            odom->twist.twist.angular.z;
 
 
 

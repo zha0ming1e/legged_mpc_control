@@ -95,6 +95,9 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
         rho_fix_list.push_back(rho_fix);
         rho_opt_list.push_back(rho_opt);
     }
+
+    // load parameter is very important 
+    legged_state.param.load(_nh);
 }
 
 
@@ -109,15 +112,15 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     }
 
     // right updown
-    legged_state.joy.velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
+    legged_state.joy.velx = joy_msg->axes[5] * JOY_CMD_VELX_MAX;
     // right horiz
-    legged_state.joy.vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
+    legged_state.joy.vely = joy_msg->axes[2] * JOY_CMD_VELY_MAX;
     // left horiz
     legged_state.joy.yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
     // up-down button
-    legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
+    // legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
     // left-right button
-    legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
+    // legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
 
     // lb
     if (joy_msg->buttons[4] == 1) {
@@ -173,88 +176,90 @@ bool BaseInterface::sensor_update(double t, double dt) {
     legged_state.fbk.root_rot_mat = legged_state.fbk.root_quat.toRotationMatrix();
     legged_state.fbk.root_euler = Utils::quat_to_euler(legged_state.fbk.root_quat);
     double yaw_angle = legged_state.fbk.root_euler[2];
-    legged_state.fbk.root_ang_vel = legged_state.fbk.root_rot_mat * legged_state.fbk.imu_ang_vel;
+    // legged_state.fbk.root_ang_vel = legged_state.fbk.root_rot_mat * legged_state.fbk.imu_ang_vel;
     legged_state.fbk.root_rot_mat_z = Eigen::AngleAxisd(yaw_angle, Eigen::Vector3d::UnitZ());
 
-    const auto& model = pinocchioInterfacePtr_->getModel();
-    auto& data = pinocchioInterfacePtr_->getData();
-    /* 
-     * first only set joint configuration
-     */
-    pinocchio_state_q.setZero();
-    pinocchio_state_v.setZero();
-    pinocchio_state_q.tail(centroidalModelInfo_.actuatedDofNum) = Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_pos);
-    pinocchio_state_v.tail(centroidalModelInfo_.actuatedDofNum) = Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_vel);
+    // const auto& model = pinocchioInterfacePtr_->getModel();
+    // auto& data = pinocchioInterfacePtr_->getData();
+    // /* 
+    //  * first only set joint configuration
+    //  */
+    // pinocchio_state_q.setZero();
+    // pinocchio_state_v.setZero();
+    // pinocchio_state_q.tail(centroidalModelInfo_.actuatedDofNum) = Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_pos);
+    // pinocchio_state_v.tail(centroidalModelInfo_.actuatedDofNum) = Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_vel);
 
-    // always warm start with the feedback joint position
-    ik_solver -> setWarmStartPos(Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_pos));
+    // // always warm start with the feedback joint position
+    // ik_solver -> setWarmStartPos(Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_pos));
     
-    pinocchio::forwardKinematics(model, data, pinocchio_state_q, pinocchio_state_v);
-    pinocchio::computeJointJacobians(model, data);
-    pinocchio::updateFramePlacements(model, data);
-    std::vector<vector3_t> pos_measured = ee_kinematics_->getPosition(vector_t());
-    std::vector<vector3_t> vel_measured = ee_kinematics_->getVelocity(vector_t(), vector_t());
-    Eigen::Matrix<scalar_t, 6, Eigen::Dynamic> jac;
-    jac.setZero(6, centroidalModelInfo_.generalizedCoordinatesNum);
-    for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i)
-    {
-        pinocchio::getFrameJacobian(model, data, centroidalModelInfo_.endEffectorFrameIndices[i], pinocchio::LOCAL_WORLD_ALIGNED, jac);
-        legged_state.fbk.foot_pos_rel.block<3, 1>(0, i) = pos_measured[i];
-        legged_state.fbk.foot_vel_rel.block<3, 1>(0, i) = vel_measured[i];
-    }
-    // swap because of joint order! refer to src/legged_ctrl/include/utils/Utils.h
-    legged_state.fbk.j_foot.block<3, 3>(3 * 0, 3 * 0) = jac.block<3,3>(0,6+3*0);
-    legged_state.fbk.j_foot.block<3, 3>(3 * 1, 3 * 1) = jac.block<3,3>(0,6+3*2);
-    legged_state.fbk.j_foot.block<3, 3>(3 * 2, 3 * 2) = jac.block<3,3>(0,6+3*1);
-    legged_state.fbk.j_foot.block<3, 3>(3 * 3, 3 * 3) = jac.block<3,3>(0,6+3*3);
+    // pinocchio::forwardKinematics(model, data, pinocchio_state_q, pinocchio_state_v);
+    // pinocchio::computeJointJacobians(model, data);
+    // pinocchio::updateFramePlacements(model, data);
+    // std::vector<vector3_t> pos_measured = ee_kinematics_->getPosition(vector_t());
+    // std::vector<vector3_t> vel_measured = ee_kinematics_->getVelocity(vector_t(), vector_t());
+    // Eigen::Matrix<scalar_t, 6, Eigen::Dynamic> jac;
+    // jac.setZero(6, centroidalModelInfo_.generalizedCoordinatesNum);
+    // for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i)
+    // {
+    //     pinocchio::getFrameJacobian(model, data, centroidalModelInfo_.endEffectorFrameIndices[i], pinocchio::LOCAL_WORLD_ALIGNED, jac);
+    //     legged_state.fbk.foot_pos_rel.block<3, 1>(0, i) = pos_measured[i];
+    //     legged_state.fbk.foot_vel_rel.block<3, 1>(0, i) = vel_measured[i];
+    // }
+    // // swap because of joint order! refer to src/legged_ctrl/include/utils/Utils.h
+    // legged_state.fbk.j_foot.block<3, 3>(3 * 0, 3 * 0) = jac.block<3,3>(0,6+3*0);
+    // legged_state.fbk.j_foot.block<3, 3>(3 * 1, 3 * 1) = jac.block<3,3>(0,6+3*2);
+    // legged_state.fbk.j_foot.block<3, 3>(3 * 2, 3 * 2) = jac.block<3,3>(0,6+3*1);
+    // legged_state.fbk.j_foot.block<3, 3>(3 * 3, 3 * 3) = jac.block<3,3>(0,6+3*3);
 
-    /* 
-     * next set joint configuration and body pose/velocity to get world frame 
-     */
-    // pinnochio uses zyx euler angle, we use Utils::quatToZyx 
-    // pinocchio_state_q [position, euler, joint position]
-    pinocchio_state_q.head<3>() = legged_state.fbk.root_pos;
-    pinocchio_state_q.segment<3>(3) = Utils::quatToZyx(legged_state.fbk.root_quat);
+    // /* 
+    //  * next set joint configuration and body pose/velocity to get world frame 
+    //  */
+    // // pinnochio uses zyx euler angle, we use Utils::quatToZyx 
+    // // pinocchio_state_q [position, euler, joint position]
+    // pinocchio_state_q.head<3>() = legged_state.fbk.root_pos;
+    // pinocchio_state_q.segment<3>(3) = Utils::quatToZyx(legged_state.fbk.root_quat);
 
-    pinocchio_state_v.head<3>() = legged_state.fbk.root_lin_vel;
-    pinocchio_state_v.segment<3>(3) = getEulerAnglesZyxDerivativesFromLocalAngularVelocity<scalar_t>(
-      pinocchio_state_q.segment<3>(3), legged_state.fbk.imu_ang_vel);
-
-
-    pinocchio::forwardKinematics(model, data, pinocchio_state_q, pinocchio_state_v);
-    pinocchio::computeJointJacobians(model, data);
-    pinocchio::updateFramePlacements(model, data);
-    std::vector<vector3_t> pos_measured2 = ee_kinematics_->getPosition(vector_t());
-    std::vector<vector3_t> vel_measured2 = ee_kinematics_->getVelocity(vector_t(), vector_t());
-    for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i)
-    {
-        legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = pos_measured2[i];
-        legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = vel_measured2[i];
-    }
+    // pinocchio_state_v.head<3>() = legged_state.fbk.root_lin_vel;
+    // pinocchio_state_v.segment<3>(3) = getEulerAnglesZyxDerivativesFromLocalAngularVelocity<scalar_t>(
+    //   pinocchio_state_q.segment<3>(3), legged_state.fbk.imu_ang_vel);
 
 
-    // // use old a1 kinematics
+    // pinocchio::forwardKinematics(model, data, pinocchio_state_q, pinocchio_state_v);
+    // pinocchio::computeJointJacobians(model, data);
+    // pinocchio::updateFramePlacements(model, data);
+    // std::vector<vector3_t> pos_measured2 = ee_kinematics_->getPosition(vector_t());
+    // std::vector<vector3_t> vel_measured2 = ee_kinematics_->getVelocity(vector_t(), vector_t());
+    // for (size_t i = 0; i < centroidalModelInfo_.numThreeDofContacts; ++i)
+    // {
+    //     legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = pos_measured2[i];
+    //     legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = vel_measured2[i];
+    //     legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) = legged_state.fbk.foot_pos_world.block<3, 1>(0, i) - legged_state.fbk.root_pos;
+    //     legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) = legged_state.fbk.foot_vel_world.block<3, 1>(0, i) - legged_state.fbk.root_lin_vel;
+    // }
+
+
+    // use old a1 kinematics
     // FL, FR, RL, RR
     // std::cout << "---------------------------------" << std::endl;
-    // for (int i = 0; i < NUM_LEG; ++i) {
-    //     legged_state.fbk.foot_pos_rel.block<3, 1>(0, i) = a1_kin.fk(
-    //             legged_state.fbk.joint_pos.segment<3>(3 * i),
-    //             rho_opt_list[i], rho_fix_list[i]);
-    //     Eigen::Matrix3d jac = a1_kin.jac(
-    //             legged_state.fbk.joint_pos.segment<3>(3 * i),
-    //             rho_opt_list[i], rho_fix_list[i]);
-    //     std::cout << jac << " ---jac"<<i<<"--- " << legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i) << std::endl;
-    //     legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i) = jac;
-    //     Eigen::Matrix3d tmp_mtx = legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i);
-    //     Eigen::Vector3d tmp_vec = legged_state.fbk.joint_vel.segment<3>(3 * i);
-    //     legged_state.fbk.foot_vel_rel.block<3, 1>(0, i) = tmp_mtx * tmp_vec;
+    for (int i = 0; i < NUM_LEG; ++i) {
+        legged_state.fbk.foot_pos_rel.block<3, 1>(0, i) = a1_kin.fk(
+                legged_state.fbk.joint_pos.segment<3>(3 * i),
+                rho_opt_list[i], rho_fix_list[i]);
+        Eigen::Matrix3d jac = a1_kin.jac(
+                legged_state.fbk.joint_pos.segment<3>(3 * i),
+                rho_opt_list[i], rho_fix_list[i]);
+        // std::cout << jac << " ---jac"<<i<<"--- " << legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i) << std::endl;
+        legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i) = jac;
+        Eigen::Matrix3d tmp_mtx = legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i);
+        Eigen::Vector3d tmp_vec = legged_state.fbk.joint_vel.segment<3>(3 * i);
+        legged_state.fbk.foot_vel_rel.block<3, 1>(0, i) = tmp_mtx * tmp_vec;
 
-    //     legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
-    //     legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
+        legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
+        legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
 
-    //     legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) + legged_state.fbk.root_pos;
-    //     legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) + legged_state.fbk.root_lin_vel;
-    // }
+        legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) + legged_state.fbk.root_pos;
+        legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) + legged_state.fbk.root_lin_vel;
+    }
     // std::cout << "---------------------------------" << std::endl;
     // //compare
     // std::cout << "---------------------------------" << std::endl;
@@ -286,34 +291,29 @@ bool BaseInterface::estimation_update(double t, double dt) {
 bool BaseInterface::tau_ctrl_update(double t, double dt) {
 
     // test old control strategy
-    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_grf;        // reach ground reaction force
-    Eigen::Matrix<double, 3, NUM_LEG> foot_pos_target_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_vel_target_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_pos_error_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_vel_error_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_kin;       // reach a target foot location
     for(int i = 0; i < NUM_LEG; ++i) {
-        // Ground reaction forces assignment 
-        foot_forces_grf.block<3,1>(0,i) = legged_state.fbk.root_rot_mat.transpose() * 
+        // Ground reaction forces assignment, world to body
+        foot_forces_grf_rel.block<3,1>(0,i) = legged_state.fbk.root_rot_mat.transpose() * 
             legged_state.ctrl.optimized_input.segment<3>(i*3); 
 
         Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3,3>(3*i, 3*i); 
-        legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) = -jac.transpose() * foot_forces_grf.block<3,1>(0,i);  
+        legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) = -jac.transpose() * foot_forces_grf_rel.block<3,1>(0,i);  
 
         if (legged_state.ctrl.movement_mode > 0) {
             // foot target force assignment
             foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
                 (legged_state.ctrl.optimized_state.segment<3>(i*3 + 6) - legged_state.fbk.root_pos);
             foot_vel_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
-                (legged_state.ctrl.optimized_input.segment<3>(i*3+12)); 
+                (legged_state.ctrl.optimized_input.segment<3>(i*3+12) - legged_state.fbk.root_lin_vel); 
 
             foot_pos_error_rel.block<3, 1>(0, i) = 
                 foot_pos_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
             foot_vel_error_rel.block<3, 1>(0, i) = 
                 foot_vel_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
             
-            foot_forces_kin.block<3, 1>(0, i) = 0.2*(foot_pos_error_rel.block<3, 1>(0, i)*50+
-                                                    foot_vel_error_rel.block<3, 1>(0, i)*1.2);        
+            Eigen::Vector3d tmp = foot_pos_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kp_foot.block<3, 1>(0, i)) + foot_vel_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kd_foot.block<3, 1>(0, i)); 
+                     
+            foot_forces_kin.block<3, 1>(0, i) = legged_state.param.km_foot.cwiseProduct(tmp);        
 
             Eigen::Vector3d joint_kin = jac.lu().solve( foot_forces_kin.block<3, 1>(0, i) );
             if ((isnan(joint_kin[0])) || (isnan(joint_kin[1])) || (isnan(joint_kin[2]))) {
@@ -323,6 +323,8 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
             }
         }
     }
+
+
     legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
     return true;

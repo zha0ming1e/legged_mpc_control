@@ -1,7 +1,7 @@
 <launch>
     <arg name="run_type" default="gazebo"/>
     <arg name="robot_type" default="a1"/>
-    <arg name="mpc_type" default="lci"/>
+    <arg name="mpc_type" default="convex"/>
 
     <!-- Loading Config files -->
     <rosparam file="$(find legged_ctrl)/config/$(arg run_type)_$(arg robot_type)_$(arg mpc_type).yaml" command="load"/>

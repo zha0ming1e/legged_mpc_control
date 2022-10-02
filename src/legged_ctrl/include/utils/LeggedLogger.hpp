@@ -13,11 +13,17 @@
 #include <ros/ros.h> 
 #include <visualization_msgs/Marker.h>
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/QuaternionStamped.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <std_msgs/Float64.h>
 #include <nav_msgs/Odometry.h> 
 #include <sensor_msgs/JointState.h> 
+
+
+#include <tf/transform_broadcaster.h>
+#include <tf/transform_listener.h>
+#include <tf/tf.h>
 
 #include "LeggedParams.h"
 #include "LeggedState.h"
@@ -34,6 +40,7 @@ public:
     LeggedLogger(ros::NodeHandle &_nh) {
         nh_ = _nh; 
 
+
         // Initialize foot debug publisher
         string prefix = "/a1_debug";
         for(size_t i = 0; i < NUM_LEG; ++i) {
@@ -44,7 +51,7 @@ public:
             pub_foot_pose_target_[i] = nh_.advertise<visualization_msgs::Marker>(topic_name_target, 100); 
 
             // initialize marker info
-            foot_marker_[i].header.frame_id = "a1_world";
+            foot_marker_[i].header.frame_id = "world";
             foot_marker_[i].ns = "basic_shapes";
             foot_marker_[i].id = 10 + i;
             foot_marker_[i].type = visualization_msgs::Marker::CYLINDER;
@@ -62,6 +69,25 @@ public:
             foot_marker_[i].color.g = 0.0f;
             foot_marker_[i].color.b = 0.0f;
             foot_marker_[i].color.a = 1.0;
+
+            foot_marker_target_[i].header.frame_id = "world";
+            foot_marker_target_[i].ns = "basic_shapes";
+            foot_marker_target_[i].id = 10 + i;
+            foot_marker_target_[i].type = visualization_msgs::Marker::CYLINDER;
+            foot_marker_target_[i].action = visualization_msgs::Marker::ADD;
+
+            foot_marker_target_[i].scale.x = 0.08;
+            foot_marker_target_[i].scale.y = 0.08;
+            foot_marker_target_[i].scale.z = 0.02;
+            foot_marker_target_[i].pose.orientation.x = 0.0;
+            foot_marker_target_[i].pose.orientation.y = 0.0;
+            foot_marker_target_[i].pose.orientation.z = 0.0;
+            foot_marker_target_[i].pose.orientation.w = 1.0;
+
+            foot_marker_target_[i].color.r = 0.0f;
+            foot_marker_target_[i].color.g = 1.0f;
+            foot_marker_target_[i].color.b = 0.0f;
+            foot_marker_target_[i].color.a = 1.0;
         }
 
         // Initialize robot state publisher
@@ -86,8 +112,10 @@ public:
         swing_forces_msg_.effort.resize(12); 
 
         // Initialize contact forces 
-        pub_contact_forces_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/contact_forces", 100); 
+        pub_contact_forces_ = nh_.advertise<geometry_msgs::QuaternionStamped>(prefix + "/contact_forces", 100); 
         contact_forces_msg_.name = {"FL, FR, RL, RR"}; 
+        contact_forces_msg_.position.resize(4); 
+        contact_forces_msg_.velocity.resize(4); 
         contact_forces_msg_.effort.resize(4); 
 
 
@@ -144,13 +172,13 @@ public:
         swing_forces_msg_.header.stamp = stamp_now; 
         for(size_t i = 0; i < NUM_LEG; ++i) {
             foot_marker_[i].header.stamp = stamp_now; 
-            foot_marker_[i].pose.position.x = state.fbk.foot_pos_rel(0, i); 
-            foot_marker_[i].pose.position.y = state.fbk.foot_pos_rel(1, i); 
-            foot_marker_[i].pose.position.z = state.fbk.foot_pos_rel(2, i); 
+            foot_marker_[i].pose.position.x = state.fbk.foot_pos_world(0, i); 
+            foot_marker_[i].pose.position.y = state.fbk.foot_pos_world(1, i); 
+            foot_marker_[i].pose.position.z = state.fbk.foot_pos_world(2, i); 
 
-            foot_marker_target_[i].pose.position.x = state.ctrl.foot_pos_target_rel(0,i); 
-            foot_marker_target_[i].pose.position.y = state.ctrl.foot_pos_target_rel(1,i);
-            foot_marker_target_[i].pose.position.z = state.ctrl.foot_pos_target_rel(2,i);
+            foot_marker_target_[i].pose.position.x = state.ctrl.foot_pos_target_world(0,i); 
+            foot_marker_target_[i].pose.position.y = state.ctrl.foot_pos_target_world(1,i);
+            foot_marker_target_[i].pose.position.z = state.ctrl.foot_pos_target_world(2,i);
             
             joint_data_.position[i*3] = state.fbk.joint_pos[i*3]; 
             joint_data_.position[i*3+1] = state.fbk.joint_pos[i*3+1]; 
@@ -177,6 +205,10 @@ public:
 
             contact_forces_msg_.effort[i] = state.fbk.foot_force[i]; 
         }
+        // contact_forces_msg_.quaternion.w = state.ctrl.plan_contacts[0]; 
+        // contact_forces_msg_.quaternion.x = state.ctrl.plan_contacts[1]; 
+        // contact_forces_msg_.quaternion.y = state.ctrl.plan_contacts[2]; 
+        // contact_forces_msg_.quaternion.z = state.ctrl.plan_contacts[3]; 
 
         // publish 
         pub_root_pose_.publish(odom_); 
@@ -187,6 +219,17 @@ public:
         pub_joint_data_.publish(joint_data_); 
         pub_contact_forces_.publish(contact_forces_msg_); 
         pub_swing_forces_.publish(swing_forces_msg_); 
+
+        // publish tf
+        tf::Transform transform;
+        transform.setOrigin( tf::Vector3(state.fbk.root_pos(0), state.fbk.root_pos(1), state.fbk.root_pos(2)) );
+        tf::Quaternion q;
+        q.setW(state.fbk.root_quat.w());
+        q.setX(state.fbk.root_quat.x());
+        q.setY(state.fbk.root_quat.y());
+        q.setZ(state.fbk.root_quat.z());
+        transform.setRotation(q);
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "world", "robot"));
     }
 
 private: 
@@ -227,6 +270,9 @@ private:
                                               {1, "/FR"},
                                               {2, "/RL"},
                                               {3, "/RR"}}; 
+
+    // tf 
+    tf::TransformBroadcaster br;                                              
 
 
 };
