@@ -76,7 +76,7 @@ namespace legged
         // state update 
         if (s == STANCE) {
             // do nothing
-            stance_update(dt);
+            stance_update(dt, foot_force_flag);
         } else if (s == SWING) {
             swing_update(dt, foot_pos_target_abs);
         }
@@ -163,6 +163,18 @@ namespace legged
         FSM_foot_vel_target_abs = (FSM_foot_pos_target_abs - FSM_prev_foot_pos_target_abs)/dt;
     }
 
+    void LeggedContactFSM::stance_update(double dt, bool foot_force_flag) {
+        // in stance phase, if do not have foot force flag, we should push down the foot to the ground
+        if (!foot_force_flag) {
+            if (FSM_foot_pos_target_abs[2] > -0.4) { // there is a threshold to prevent the foot from going too deep
+                FSM_foot_pos_target_abs[2] -= 0.2*dt;
+                FSM_foot_vel_target_abs[2] = -0.2;
+            }
+        } else {
+            FSM_foot_vel_target_abs.setZero();
+        }
+    }
+
     double LeggedContactFSM::percent_in_state() {
         double percent = (gait_phase-cur_state_start_time)/(cur_state_end_time-cur_state_start_time);
         if (percent < 0.0) {
@@ -172,6 +184,22 @@ namespace legged
         }
 
         return percent;
+    }
+
+    LeggedContactState LeggedContactFSM::predict_contact_state(double dt) {
+        double predicted_gait_phase = gait_phase + gait_speed * dt;
+        // warp predicted_gait_phase to 0 - 1 range
+        while (predicted_gait_phase > 1.0) {
+            predicted_gait_phase -= 1.0;
+        }
+        // determine the predicted state
+        for (int i = 0; i < gait_pattern_size; i++) {
+            if (predicted_gait_phase <= gait_switch_time[i]) {
+                return gait_state_pattern[i];
+            }
+        }
+        // should not reach here
+        return STANCE;
     }
 
 } // namespace legged
