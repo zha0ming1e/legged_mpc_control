@@ -83,7 +83,7 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
     } else {  // walk
         for (int i = 0; i < NUM_LEG; ++i) {
             // estimated_contacts[i] = std::min(std::max((state.fbk.foot_force(i)) / (70.0 - 0.0), 0.0), 1.0);
-            estimated_contacts[i] = 1.0/(1.0+std::exp(-(state.fbk.foot_force(i)-40)));
+            estimated_contacts[i] = 1.0/(1.0+std::exp(-(state.fbk.foot_force(i)-80)));
         }
     }
     // update Q
@@ -161,8 +161,8 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
     state.fbk.estimated_root_pos = x.segment<3>(0);
     state.fbk.estimated_root_vel = x.segment<3>(3);
 
-    state.fbk.root_pos = x.segment<3>(0);
-    state.fbk.root_lin_vel = x.segment<3>(3);
+    // state.fbk.root_pos = x.segment<3>(0);
+    // state.fbk.root_lin_vel = x.segment<3>(3);
 }
 
 }  // namespace legged

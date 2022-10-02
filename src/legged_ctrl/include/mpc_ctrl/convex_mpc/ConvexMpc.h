@@ -40,7 +40,7 @@ private:
 
     double total_run_time;
     // leg finite state machine 
-    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_grf;
+    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_grf_world;
     LeggedContactFSM leg_FSM[NUM_LEG];
 
     ConvexQPSolver fastConvex;

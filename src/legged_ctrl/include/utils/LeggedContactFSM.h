@@ -24,35 +24,35 @@ namespace legged
 
             LeggedContactState get_contact_state() {return s;}
 
-            Eigen::Vector3d get_pos_target() {return FSM_foot_pos_target_rel;}
-            Eigen::Vector3d get_vel_target() {return FSM_foot_vel_target_rel;}
+            Eigen::Vector3d get_pos_target() {return FSM_foot_pos_target_abs;}
+            Eigen::Vector3d get_vel_target() {return FSM_foot_vel_target_abs;}
 
-            // foot_pos_cur_rel is the feedback foot position, in stance phase we should hold this position
-            // foot_pos_target_rel is the raibert strategy target position, in swing phase we should move to this position
-            void update(double dt, Eigen::Vector3d foot_pos_cur_rel, Eigen::Vector3d  foot_pos_target_rel, bool foot_force_flag);
+            // foot_pos_cur_abs is the feedback foot position, in stance phase we should hold this position
+            // foot_pos_target_abs is the raibert strategy target position, in swing phase we should move to this position
+            void update(double dt, Eigen::Vector3d foot_pos_cur_abs, Eigen::Vector3d  foot_pos_target_abs, bool foot_force_flag);
 
             // reset everything to the start of the gait pattern
             void reset();
 
             void gait_update(double dt);
 
-            void swing_enter(Eigen::Vector3d foot_pos_cur_rel);
-            void swing_update(double dt, Eigen::Vector3d  foot_pos_target_rel);
+            void swing_enter(Eigen::Vector3d foot_pos_cur_abs);
+            void swing_update(double dt, Eigen::Vector3d  foot_pos_target_abs);
             void swing_exit() {};
 
             // enter function that both swing and stance can use
             void common_enter();
 
-            void stance_enter(Eigen::Vector3d foot_pos_cur_rel);
+            void stance_enter(Eigen::Vector3d foot_pos_cur_abs);
             void stance_update(double dt) {};
             void stance_exit() {};
 
             double percent_in_state(); 
 
             // either swing or stance, the getTarget function will return the target foot position
-            Eigen::Vector3d FSM_foot_pos_target_rel;
-            Eigen::Vector3d FSM_prev_foot_pos_target_rel;
-            Eigen::Vector3d FSM_foot_vel_target_rel;
+            Eigen::Vector3d FSM_foot_pos_target_abs;
+            Eigen::Vector3d FSM_prev_foot_pos_target_abs;
+            Eigen::Vector3d FSM_foot_vel_target_abs;
 
         private:
             int leg_id;
@@ -76,9 +76,9 @@ namespace legged
 
             // swing phase helper variables
             bool not_first_call = false;
-            Eigen::Vector3d swing_start_foot_pos_rel;
-            Eigen::Vector3d swing_end_foot_pos_rel;
-            Eigen::Vector3d swing_extend_foot_pos_rel; // this variable is used to deal with late contact, if the foot is not in contact, we will extend the swing phase and add this position to the target position
+            Eigen::Vector3d swing_start_foot_pos_abs;
+            Eigen::Vector3d swing_end_foot_pos_abs;
+            Eigen::Vector3d swing_extend_foot_pos_abs; // this variable is used to deal with late contact, if the foot is not in contact, we will extend the swing phase and add this position to the target position
 
             // record terrain height 
             double terrain_height = 0;

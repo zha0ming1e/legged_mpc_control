@@ -176,7 +176,7 @@ bool BaseInterface::sensor_update(double t, double dt) {
     legged_state.fbk.root_rot_mat = legged_state.fbk.root_quat.toRotationMatrix();
     legged_state.fbk.root_euler = Utils::quat_to_euler(legged_state.fbk.root_quat);
     double yaw_angle = legged_state.fbk.root_euler[2];
-    legged_state.fbk.root_ang_vel = legged_state.fbk.root_rot_mat * legged_state.fbk.imu_ang_vel;
+    // legged_state.fbk.root_ang_vel = legged_state.fbk.root_rot_mat * legged_state.fbk.imu_ang_vel;
     legged_state.fbk.root_rot_mat_z = Eigen::AngleAxisd(yaw_angle, Eigen::Vector3d::UnitZ());
 
     // const auto& model = pinocchioInterfacePtr_->getModel();
@@ -291,19 +291,13 @@ bool BaseInterface::estimation_update(double t, double dt) {
 bool BaseInterface::tau_ctrl_update(double t, double dt) {
 
     // test old control strategy
-    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_grf;        // reach ground reaction force
-    Eigen::Matrix<double, 3, NUM_LEG> foot_pos_target_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_vel_target_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_pos_error_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_vel_error_rel;
-    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_kin;       // reach a target foot location
     for(int i = 0; i < NUM_LEG; ++i) {
-        // Ground reaction forces assignment 
-        foot_forces_grf.block<3,1>(0,i) = legged_state.fbk.root_rot_mat.transpose() * 
+        // Ground reaction forces assignment, world to body
+        foot_forces_grf_rel.block<3,1>(0,i) = legged_state.fbk.root_rot_mat.transpose() * 
             legged_state.ctrl.optimized_input.segment<3>(i*3); 
 
         Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3,3>(3*i, 3*i); 
-        legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) = -jac.transpose() * foot_forces_grf.block<3,1>(0,i);  
+        legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) = -jac.transpose() * foot_forces_grf_rel.block<3,1>(0,i);  
 
         if (legged_state.ctrl.movement_mode > 0) {
             // foot target force assignment
@@ -329,6 +323,8 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
             }
         }
     }
+
+
     legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
     return true;

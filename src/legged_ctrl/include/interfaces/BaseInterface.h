@@ -106,6 +106,14 @@ private:
     std::vector<Eigen::VectorXd> rho_fix_list;
     std::vector<Eigen::VectorXd> rho_opt_list;
     A1Kinematics a1_kin;
+
+    // for tau control strategy
+    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_grf_rel;        // reach ground reaction force
+    Eigen::Matrix<double, 3, NUM_LEG> foot_pos_target_rel;
+    Eigen::Matrix<double, 3, NUM_LEG> foot_vel_target_rel;
+    Eigen::Matrix<double, 3, NUM_LEG> foot_pos_error_rel;
+    Eigen::Matrix<double, 3, NUM_LEG> foot_vel_error_rel;
+    Eigen::Matrix<double, 3, NUM_LEG> foot_forces_kin;       // reach a target foot location
 };
 
 }  // namespace legged
