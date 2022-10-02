@@ -161,8 +161,8 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
     state.fbk.estimated_root_pos = x.segment<3>(0);
     state.fbk.estimated_root_vel = x.segment<3>(3);
 
-    // state.fbk.root_pos = x.segment<3>(0);
-    // state.fbk.root_lin_vel = x.segment<3>(3);
+    state.fbk.root_pos = x.segment<3>(0);
+    state.fbk.root_lin_vel = x.segment<3>(3);
 }
 
 }  // namespace legged
