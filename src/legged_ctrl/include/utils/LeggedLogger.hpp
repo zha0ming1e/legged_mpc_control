@@ -94,7 +94,7 @@ public:
         pub_root_pose_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/odom", 100); 
         pub_euler_ = nh_.advertise<geometry_msgs::Vector3Stamped>(prefix + "/euler", 100); 
         pub_joint_data_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/joint", 100); 
-        joint_data_.name = {"FL_hip, FL_thigh, FL_calf, FR_hip, FR_thigh, FR_calf, RL_hip, RL_thigh, RL_calf, RR_hip, RR_thigh, RR_calf"};
+        joint_data_.name = {"FL_hip", "FL_thigh", "FL_calf", "FR_hip", "FR_thigh", "FR_calf", "RL_hip", "RL_thigh", "RL_calf", "RR_hip", "RR_thigh", "RR_calf"};
         joint_data_.effort.resize(12); 
         joint_data_.position.resize(12); 
         joint_data_.velocity.resize(12); 
@@ -106,17 +106,24 @@ public:
         // Initialize ground reaction forces
         pub_grf_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/stance_foot_forces", 100); 
         pub_swing_forces_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/swing_foot_forces", 100); 
-        grf_msg_.name = {"fx_FL, fy_FL, fz_FL, fx_FR, fy_FR, fz_FR, fx_RL, fy_RL, fz_RL, fx_RR, fy_RR, fz_RR"}; 
-        swing_forces_msg_.name = {"fx_FL, fy_FL, fz_FL, fx_FR, fy_FR, fz_FR, fx_RL, fy_RL, fz_RL, fx_RR, fy_RR, fz_RR"}; 
+        grf_msg_.name = {"fx_FL", "fy_FL", "fz_FL", "fx_FR", "fy_FR", "fz_FR", "fx_RL", "fy_RL", "fz_RL", "fx_RR", "fy_RR", "fz_RR"}; 
+        swing_forces_msg_.name = {"fx_FL", "fy_FL", "fz_FL", "fx_FR", "fy_FR", "fz_FR", "fx_RL", "fy_RL", "fz_RL", "fx_RR", "fy_RR", "fz_RR"}; 
         grf_msg_.effort.resize(12);
         swing_forces_msg_.effort.resize(12); 
 
         // Initialize contact forces 
-        pub_contact_forces_ = nh_.advertise<geometry_msgs::QuaternionStamped>(prefix + "/contact_forces", 100); 
-        contact_forces_msg_.name = {"FL, FR, RL, RR"}; 
+        pub_contact_forces_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/contact_forces", 100); 
+        contact_forces_msg_.name = {"FL", "FR", "RL", "RR"}; 
         contact_forces_msg_.position.resize(4); 
         contact_forces_msg_.velocity.resize(4); 
         contact_forces_msg_.effort.resize(4); 
+
+        // Compare MPC contact force with feedback from the robot
+        pub_mpc_contact_forces_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/mpc_contact_forces", 100);
+        mpc_contact_forces_msg_.name = {"FL", "FR", "RL", "RR"};
+        mpc_contact_forces_msg_.position.resize(4);
+        mpc_contact_forces_msg_.velocity.resize(4);
+        mpc_contact_forces_msg_.effort.resize(4);
 
 
     }
@@ -169,6 +176,7 @@ public:
         joint_data_.header.stamp = stamp_now; 
         grf_msg_.header.stamp = stamp_now; 
         contact_forces_msg_.header.stamp = stamp_now; 
+        mpc_contact_forces_msg_.header.stamp = stamp_now;
         swing_forces_msg_.header.stamp = stamp_now; 
         for(size_t i = 0; i < NUM_LEG; ++i) {
             foot_marker_[i].header.stamp = stamp_now; 
@@ -204,6 +212,7 @@ public:
             pub_foot_pose_target_[i].publish(foot_marker_target_[i]); 
 
             contact_forces_msg_.effort[i] = state.fbk.foot_force[i]; 
+            mpc_contact_forces_msg_.effort[i] = state.ctrl.optimized_input.segment<3>(i*3).norm();
         }
         // contact_forces_msg_.quaternion.w = state.ctrl.plan_contacts[0]; 
         // contact_forces_msg_.quaternion.x = state.ctrl.plan_contacts[1]; 
@@ -218,6 +227,7 @@ public:
         pub_grf_.publish(grf_msg_); 
         pub_joint_data_.publish(joint_data_); 
         pub_contact_forces_.publish(contact_forces_msg_); 
+        pub_mpc_contact_forces_.publish(mpc_contact_forces_msg_); 
         pub_swing_forces_.publish(swing_forces_msg_); 
 
         // publish tf
@@ -263,7 +273,9 @@ private:
     
     // publish contact info 
     ros::Publisher pub_contact_forces_; 
+    ros::Publisher pub_mpc_contact_forces_;
     sensor_msgs::JointState contact_forces_msg_; 
+    sensor_msgs::JointState mpc_contact_forces_msg_; 
 
     // Foot name mapping 
     unordered_map<int, string> foot_name_map_{{0, "/FL"},

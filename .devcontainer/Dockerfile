@@ -351,15 +351,13 @@ WORKDIR $OCS2_WS
 RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash; catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo; catkin build ocs2_legged_robot_ros"
 
 
-# install altro-cpp
-# RUN sudo apt-get update \
-#     && sudo apt-get install -y libfmt-dev
-# WORKDIR $SUPPORT_WS
-# RUN git clone https://github.com/optimusride/altro-cpp.git
-# WORKDIR $SUPPORT_WS/altro-cpp
-# RUN mkdir build 
-# WORKDIR $SUPPORT_WS/altro-cpp/build
-# RUN cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../ && make -j$(USE_PROC) && sudo make install
-
 # final 
 RUN /bin/bash -c "source ${OCS2_WS}/devel/setup.bash" && echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  
+
+# install altro-cpp
+RUN sudo apt-get update \
+    && sudo apt-get install -y libfmt-dev
+WORKDIR $SUPPORT_WS
+RUN git clone https://github.com/bjack205/altro.git && cd altro && \
+   mkdir build && cd build && \
+   cmake -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local ../ && cmake --build . -j4 && sudo cmake --install .

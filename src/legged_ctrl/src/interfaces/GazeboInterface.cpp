@@ -114,22 +114,22 @@ bool GazeboInterface::send_cmd() {
 // callback functions
 void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom) {
     // update
-    legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
-                                                  odom->pose.pose.orientation.x,
-                                                  odom->pose.pose.orientation.y,
-                                                  odom->pose.pose.orientation.z);                                              
-    legged_state.fbk.root_pos << odom->pose.pose.position.x,
-            odom->pose.pose.position.y,
-            odom->pose.pose.position.z;
-    // // make sure root_lin_vel is in world frame
-    legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
-            odom->twist.twist.linear.y,
-            odom->twist.twist.linear.z;
+    // legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
+    //                                               odom->pose.pose.orientation.x,
+    //                                               odom->pose.pose.orientation.y,
+    //                                               odom->pose.pose.orientation.z);                                              
+    // legged_state.fbk.root_pos << odom->pose.pose.position.x,
+    //         odom->pose.pose.position.y,
+    //         odom->pose.pose.position.z;
+    // // // make sure root_lin_vel is in world frame
+    // legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
+    //         odom->twist.twist.linear.y,
+    //         odom->twist.twist.linear.z;
 
-    // make sure root_ang_vel is in world frame
-    legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,
-            odom->twist.twist.angular.y,
-            odom->twist.twist.angular.z;
+    // // make sure root_ang_vel is in world frame
+    // legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,E
+    //         odom->twist.twist.angular.y,
+    //         odom->twist.twist.angular.z;
 
 
 
@@ -216,21 +216,25 @@ void GazeboInterface::RR_calf_state_callback(const unitree_legged_msgs::MotorSta
     legged_state.fbk.joint_vel[11] = a1_joint_state.dq;
 }
 
-// foot contact force
+// foot contact force, we just use norm 
 void GazeboInterface::FL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    legged_state.fbk.foot_force[0] = force.wrench.force.z;
+    Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
+    legged_state.fbk.foot_force[0] = force_vec.norm();
 }
 
 void GazeboInterface::FR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    legged_state.fbk.foot_force[1] = force.wrench.force.z;
+    Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
+    legged_state.fbk.foot_force[1] = force_vec.norm();
 }
 
 void GazeboInterface::RL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    legged_state.fbk.foot_force[2] = force.wrench.force.z;
+    Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
+    legged_state.fbk.foot_force[2] = force_vec.norm();
 }
 
 void GazeboInterface::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    legged_state.fbk.foot_force[3] = force.wrench.force.z;
+    Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
+    legged_state.fbk.foot_force[3] = force_vec.norm();
 }
 
 

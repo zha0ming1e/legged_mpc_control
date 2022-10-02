@@ -13,6 +13,7 @@
 #include "LeggedParams.h"
 #include "LeggedState.h"
 #include "utils/Utils.h"
+#include "utils/LeggedContactFSM.h"
 
 namespace legged {
     
@@ -30,11 +31,11 @@ public:
 
     void update_cons_matrix(); 
 
-    void calc_mpc_reference(LeggedState& state); 
+    void calc_mpc_reference(LeggedState& state, LeggedContactFSM leg_FSM[NUM_LEG]); 
 
     Eigen::Matrix<double, DIM_GRF, 1> compute_grfs(LeggedState& state); 
 
-    void update_bound_constraints(std::array<bool, NUM_LEG>& contacts);
+    void update_bound_constraints(bool contacts[NUM_LEG], LeggedContactFSM leg_FSM[NUM_LEG]);
 
     std::vector<Eigen::Triplet<double>> create_shifted_triplet_vector(std::vector<Eigen::Triplet<double>>& triplet_vec,  int row_offset, int col_offset); 
 
