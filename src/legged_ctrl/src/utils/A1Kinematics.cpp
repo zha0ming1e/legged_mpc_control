@@ -318,5 +318,78 @@ Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::VectorXd rho_opt
     return q;
 }
 
+Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::VectorXd rho_opt, Eigen::VectorXd rho_fix)
+{
+    double ox = rho_fix[0];
+    double oy = rho_fix[1];
+    double d = rho_fix[2];
+    double lt = rho_fix[3];
+    double lc = rho_fix[4];
+
+    double Xf = p[0];
+    double Yf = p[1];
+    double Zf = p[2];
+
+    double Yf_ = Yf - oy;
+    double Xf_ = Xf - ox;
+
+    double L_square = Zf*Zf + Yf_*Yf_ - d*d;
+    double L = sqrt(L_square);
+
+    double t1 = 0.0;
+    double t2 = 0.0;
+    double t3 = 0.0;
+
+    // calculate t1
+    if (oy > 0) { // if FL or RL
+        if (Yf_ > 0) { // if the foot is outside the body
+            t1 = atan2(L, d) + atan2(Zf, Yf_);
+        } else { // if the foot is inside the body
+            t1 = atan2(L, d) + atan2(Zf, Yf_) - PI;
+        }
+    } else { // if FR or RR
+        if (Yf_ < 0) { // if the foot is outside the body
+            t1 = atan2(L, d) + atan2(Zf, Yf_);
+        } else {
+            t1 = atan2(L, d) + atan2(Zf, Yf_) + PI;
+        }
+    }
+
+    // calculate t2
+    double cos_beta = (lt*lt + lc*lc - Xf_*Xf_ - L*L) / (2*lt*lc);
+    double beta = 0;
+    if (abs(cos_beta + 1) < 0.001) { // if cos_beta is around -1
+        beta = PI;
+    } else if (abs(cos_beta - 1) < 0.001) { // if cos_alpha is around 1
+        beta = 0;
+    } else {
+        beta = std::acos(cos_beta);
+    }
+    std::cout << "cos_beta = " << cos_beta << std::endl;
+    // std::cout << "beta = " << beta << std::endl;
+
+    double cos_alpha = (Xf_*Xf_ + L*L + lt*lt - lc*lc) / (2*lt*sqrt(Xf_*Xf_ + L*L));
+    double alpha = 0;
+    if (abs(cos_alpha + 1) < 0.001) { // if cos_alpha is around -1
+        alpha = PI;
+    } else if (abs(cos_alpha - 1) < 0.001) { // if cos_alpha is around 1
+        alpha = 0;
+    } else {
+        alpha = std::acos(cos_alpha);
+    }
+    std::cout << "cos_alpha = " << cos_alpha << std::endl;
+    // std::cout << "alpha = " << alpha << std::endl;
+
+    double gamma = atan2(-Xf_, L);
+    // std::cout << "gamma = " << gamma << std::endl;
+    
+    t2 = gamma + alpha;
+    t3 = beta - PI;
+
+    // return
+    Eigen::Vector3d inv_kin_sol;
+    inv_kin_sol << t1, t2, t3;
+    return inv_kin_sol;
+}
 
 }

@@ -322,11 +322,14 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
                 legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) += joint_kin; 
             }
         }
+
+        legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), rho_opt_list[i], rho_fix_list[i]);
+        // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = jac.lu().solve(foot_vel_target_rel.block<3, 1>(0, i));
     }
 
-
-    legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
+    // legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
+    
     return true;
 }
 
