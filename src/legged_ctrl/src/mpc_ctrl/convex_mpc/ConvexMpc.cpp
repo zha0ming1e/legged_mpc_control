@@ -30,21 +30,18 @@ namespace legged
         state.ctrl.root_lin_vel_d_rel[1] = state.joy.vely;
         state.ctrl.root_ang_vel_d_rel[2] = state.joy.yaw_rate;
         state.ctrl.root_euler_d[2] += state.joy.yaw_rate * dt;
-        // set default foot position to be on the ground according to target body height
-        // state.param.default_foot_pos_rel.row(2) = -(state.joy.body_height-0.01) * Eigen::VectorXd::Ones(NUM_LEG);
 
-        // foot update
+        // foot update 
+        // TODO: this function can totally be moved to the low level control thread to make the raibert strategy more responsive
         foot_update(state, t, dt);
 
         // grf update
         grf_update(state, t, dt);
 
         // now we have foot_forces_grf_world and FSM_foot_pos_target_world, FSM_foot_vel_target_world
-
+        // assemble them into optimized_state and optimized_input so low level controller can use them
         state.ctrl.optimized_state.segment<3>(0) = state.ctrl.root_pos_d;
-        // reverse the euler angle direction 
-        // state.ctrl.optimized_state.segment<3>(3) = Eigen::Vector3d(state.ctrl.root_euler_d(2), state.ctrl.root_euler_d(1), state.ctrl.root_euler_d(0));
-        state.ctrl.optimized_state.segment<3>(3) = Eigen::Vector3d::Zero();
+        state.ctrl.optimized_state.segment<3>(3) = state.ctrl.root_euler_d;
 
         for (int i = 0; i < NUM_LEG; i++)
         {
@@ -64,7 +61,7 @@ namespace legged
         // by the foot update function and leg_FSMs
 
         // TODO: pass legFSM into the convex MPC solver to predict contact 
-        fastConvex.calc_mpc_reference(state); 
+        fastConvex.calc_mpc_reference(state, leg_FSM); 
         fastConvex.update_cons_matrix(); 
         Eigen::Matrix<double, DIM_GRF, 1> qp_solution = fastConvex.compute_grfs(state); 
         for (int i = 0; i < NUM_LEG; ++i) {
@@ -126,7 +123,7 @@ namespace legged
                                     state.ctrl.foot_pos_target_abs.block<3,1>(0,i), 
                                     state.fbk.estimated_contacts[i]);
 
-                // TODO: gait phase of each leg is individually controlled, so we need to occasionally synchrinize them, for example if all leg are in contact, average their gait phase and set them to that value
+                // TODO: gait phase of each leg is individually controlled, so we may need to occasionally synchrinize them, for example if all leg are in contact, average their gait phase and set them to that value
             }        
             for (int i = 0; i < NUM_LEG; i++)
             {

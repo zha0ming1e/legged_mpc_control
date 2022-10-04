@@ -81,7 +81,7 @@ class LeggedCtrl {
     Eigen::Matrix<double, 3, NUM_LEG> foot_pos_target_rel; // in the robot frame
     Eigen::Matrix<double, 3, NUM_LEG> foot_vel_target_rel; 
 
-    std::array<bool, NUM_LEG> plan_contacts;         // flag to decide leg in the stance/swing
+    bool plan_contacts[NUM_LEG];         // flag to decide leg in the stance/swing
 
     // MPC output
     // TODO: do not hardcode state size, use parameter

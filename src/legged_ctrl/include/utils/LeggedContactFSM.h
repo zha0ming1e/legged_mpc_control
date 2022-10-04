@@ -23,6 +23,8 @@ namespace legged
             void set_default_stand_pattern();
 
             LeggedContactState get_contact_state() {return s;}
+            // predict contact after a given period of time 
+            LeggedContactState predict_contact_state(double dt);
 
             Eigen::Vector3d get_pos_target() {return FSM_foot_pos_target_abs;}
             Eigen::Vector3d get_vel_target() {return FSM_foot_vel_target_abs;}
@@ -44,7 +46,7 @@ namespace legged
             void common_enter();
 
             void stance_enter(Eigen::Vector3d foot_pos_cur_abs);
-            void stance_update(double dt) {};
+            void stance_update(double dt, bool foot_force_flag);
             void stance_exit() {};
 
             double percent_in_state(); 

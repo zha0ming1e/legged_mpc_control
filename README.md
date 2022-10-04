@@ -14,6 +14,9 @@ The goal is
 ## Controller Setup
 We build, develop and test controller in a docker container. 
 
+!important: First thing you need to do after building the docker container: run "source ~/ocs2_ws/devel/setup.bash" in the container. 
+(I don't know how to automate this yet )
+
 ## Julia setup
 Since LCI MPC uses Julia, we need to config Julia environment after building the docker container. After docker is built, we first 
 
@@ -39,6 +42,10 @@ docker build -t a1_unitree_gazebo_image .
 Now we need to be careful about the graphics card of the host computer. If the host computer uses Nvidia graphics card. Then we need to install nvidia-docker2. Read [this link](http://wiki.ros.org/action/login/docker/Tutorials/Hardware%20Acceleration) for more information. 
 
 Assuming an Nvidia graphics card is used, and Nvidia driver is properly installed. First follow [this link](https://nvidia.github.io/nvidia-docker/) to add nvidia-docker repo to your host computer, then install the nvidia-docker2 follows [the instruction](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+
+```
+bash run_gazebo_docker.bash
+```
 
 Then on host computer, type
 ```shell

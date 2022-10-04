@@ -317,13 +317,13 @@ RUN sudo apt install ros-noetic-mocap-optitrack
 # config bash 
 CMD ["/bin/bash"]
 RUN wget https://raw.githubusercontent.com/ohmybash/oh-my-bash/master/tools/install.sh -O -
-RUN echo "export ROS_MASTER_URI=http://localhost:11311;export ROS_IP=localhost;export ROS_HOSTNAME=localhost" >> ~/.bashrc
-RUN echo "export PATH=/usr/local/julia/bin:${PATH}" >> ~/.bashrc
-RUN echo "#unitree config" >> ~/.bashrc
-RUN echo "export export UNITREE_SDK_VERSION=${UNITREE_SDK_VERSION}" >> ~/.bashrc
-RUN echo "export UNITREE_LEGGED_SDK_PATH=${SUPPORT_WS}/unitree_legged_sdk" >> ~/.bashrc
-RUN echo "export ALIENGO_SDK_PATH=${SUPPORT_WS}/aliengo_sdk" >> ~/.bashrc
-RUN echo "export UNITREE_PLATFORM=\"amd64\"" >> ~/.bashrc
+RUN echo "export ROS_MASTER_URI=http://localhost:11311;export ROS_IP=localhost;export ROS_HOSTNAME=localhost" >> ~/.bashrc && \
+    echo "export PATH=/usr/local/julia/bin:${PATH}" >> ~/.bashrc && \
+    echo "#unitree config" >> ~/.bashrc && \
+    echo "export export UNITREE_SDK_VERSION=${UNITREE_SDK_VERSION}" >> ~/.bashrc && \
+    echo "export UNITREE_LEGGED_SDK_PATH=${SUPPORT_WS}/unitree_legged_sdk" >> ~/.bashrc && \
+    echo "export ALIENGO_SDK_PATH=${SUPPORT_WS}/aliengo_sdk" >> ~/.bashrc && \
+    echo "export UNITREE_PLATFORM=\"amd64\"" >> ~/.bashrc
 
 # install ocs2 
 RUN sudo apt-get update \
@@ -333,16 +333,13 @@ RUN sudo apt-get update \
 ENV OCS2_WS=/home/${USERNAME}/ocs2_ws
 RUN mkdir -p $OCS2_WS/src
 WORKDIR $OCS2_WS/src
-RUN git clone https://github.com/leggedrobotics/ocs2.git
-RUN git clone --depth 1 https://github.com/leggedrobotics/pinocchio.git
+RUN git clone https://github.com/leggedrobotics/ocs2.git && git clone --depth 1 https://github.com/leggedrobotics/pinocchio.git
 WORKDIR $OCS2_WS/src/pinocchio
-RUN git submodule init
-RUN git submodule update --depth 1
+RUN git submodule init && git submodule update --depth 1
 WORKDIR $OCS2_WS/src
 RUN git clone --depth 1 https://github.com/leggedrobotics/hpp-fcl.git  
 WORKDIR $OCS2_WS/src/hpp-fcl
-RUN git submodule init
-RUN git submodule update --depth 1
+RUN git submodule init && git submodule update --depth 1
 WORKDIR $OCS2_WS/src
 RUN git clone https://github.com/leggedrobotics/ocs2_robotic_assets.git
 
@@ -354,18 +351,13 @@ WORKDIR $OCS2_WS
 RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash; catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo; catkin build ocs2_legged_robot_ros"
 
 
+# final 
+RUN /bin/bash -c "source ${OCS2_WS}/devel/setup.bash" && echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  
+
 # install altro-cpp
 RUN sudo apt-get update \
     && sudo apt-get install -y libfmt-dev
 WORKDIR $SUPPORT_WS
-RUN git clone https://github.com/optimusride/altro-cpp.git
-WORKDIR $SUPPORT_WS/altro-cpp
-RUN mkdir build 
-WORKDIR $SUPPORT_WS/altro-cpp/build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../
-RUN make -j$(USE_PROC)
-RUN sudo make install
-
-# final 
-RUN /bin/bash -c "source ${OCS2_WS}/devel/setup.bash"
-RUN echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  
+RUN git clone https://github.com/bjack205/altro.git && cd altro && \
+   mkdir build && cd build && \
+   cmake -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local ../ && cmake --build . -j4 && sudo cmake --install .

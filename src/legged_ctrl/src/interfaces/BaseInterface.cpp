@@ -176,7 +176,7 @@ bool BaseInterface::sensor_update(double t, double dt) {
     legged_state.fbk.root_rot_mat = legged_state.fbk.root_quat.toRotationMatrix();
     legged_state.fbk.root_euler = Utils::quat_to_euler(legged_state.fbk.root_quat);
     double yaw_angle = legged_state.fbk.root_euler[2];
-    // legged_state.fbk.root_ang_vel = legged_state.fbk.root_rot_mat * legged_state.fbk.imu_ang_vel;
+    legged_state.fbk.root_ang_vel = legged_state.fbk.root_rot_mat * legged_state.fbk.imu_ang_vel;
     legged_state.fbk.root_rot_mat_z = Eigen::AngleAxisd(yaw_angle, Eigen::Vector3d::UnitZ());
 
     // const auto& model = pinocchioInterfacePtr_->getModel();
@@ -351,7 +351,9 @@ bool BaseInterface::wbc_update(double t, double dt) {
     measured_rbd_state.segment<3>(centroidalModelInfo_.generalizedCoordinatesNum + 3) = legged_state.fbk.root_lin_vel;
     measured_rbd_state.segment(centroidalModelInfo_.generalizedCoordinatesNum + 6, centroidalModelInfo_.actuatedDofNum) = Utils::joint_vec_unitree_to_pinnochio(legged_state.fbk.joint_vel);
 
-    size_t planned_mode = stanceLeg2ModeNumber(legged_state.ctrl.plan_contacts);
+    // convert legged_state.ctrl.plan_contacts to std::array<bool, NUM_LEG>
+    std::array<bool, NUM_LEG> tmp = {legged_state.ctrl.plan_contacts[0], legged_state.ctrl.plan_contacts[1], legged_state.ctrl.plan_contacts[2], legged_state.ctrl.plan_contacts[3]}; 
+    size_t planned_mode = stanceLeg2ModeNumber(tmp);
 
     // optimized_state optimized_input should contain world frame foot position velocity target 
 
