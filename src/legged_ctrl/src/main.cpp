@@ -13,6 +13,7 @@
 #include "LeggedParams.h"
 #include "LeggedState.h"
 #include "interfaces/GazeboInterface.h"
+#include "interfaces/HardwareInterface.h"
 #include "mpc_ctrl/LeggedMPC.h"
 #include "mpc_ctrl/ci_mpc/LciMpc.h"
 #include "mpc_ctrl/convex_mpc/ConvexMpc.h"
@@ -73,8 +74,7 @@ int main(int argc, char **argv) {
 
     } else if (use_sim_time == false && robot_type == 0) {
         urdfFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/urdf/a1_description/urdf/a1.urdf";
-        intef = std::unique_ptr<legged::GazeboInterface>(new legged::GazeboInterface(nh, taskFile, urdfFile, referenceFile)); 
-        std::cout << "not implemented yet now just for testing" << std::endl;
+        intef = std::unique_ptr<legged::HardwareInterface>(new legged::HardwareInterface(nh, taskFile, urdfFile, referenceFile)); 
 
     } else if (use_sim_time == true && robot_type == 1) {
         // TODO: use Go1 urdf
@@ -188,9 +188,8 @@ int main(int argc, char **argv) {
 
             std::cout << "run "  << elapsed.toSec() << std::endl;
             bool main_update_running = intef->update(elapsed.toSec(), dt.toSec());
-            bool send_cmd_running = true;
             
-            if (!main_update_running || !send_cmd_running) {
+            if (!main_update_running) {
                 std::cout << "Thread 2 loop is terminated because of errors." << std::endl;
                 ros::shutdown();
                 std::terminate();

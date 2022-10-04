@@ -16,6 +16,7 @@
 #include "LeggedState.h"
 #include "interfaces/BaseInterface.h"
 #include "utils/MovingWindowFilter.hpp"
+#include "utils/LeggedSafetyChecker.hpp"
 
 #define FOOT_FILTER_WINDOW_SIZE 5
 namespace legged
@@ -55,6 +56,9 @@ private:
 
     // a1 hardware foot force filter
     MovingWindowFilter foot_force_filters[NUM_LEG];
+
+    // a1 hardware safety checker
+    LeggedSafetyChecker safety_checker;
 };
 
 }  // namespace legged

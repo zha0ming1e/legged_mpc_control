@@ -45,9 +45,9 @@ namespace legged
 
         for (int i = 0; i < NUM_LEG; i++)
         {
-            state.ctrl.optimized_state.segment<3>(6 + 3 * i) =  leg_FSM[i].FSM_foot_pos_target_abs + state.fbk.root_pos;
+            state.ctrl.optimized_state.segment<3>(6 + 3 * i) =  leg_FSM[i].FSM_foot_pos_target_world;
             state.ctrl.optimized_input.segment<3>(3 * i) = foot_forces_grf_world.col(i);
-            state.ctrl.optimized_input.segment<3>(12 + 3 * i) =  leg_FSM[i].FSM_foot_vel_target_abs + state.fbk.root_lin_vel;
+            state.ctrl.optimized_input.segment<3>(12 + 3 * i) =  leg_FSM[i].FSM_foot_vel_target_world;
         }
 
         // TODO: set this flag to false if the MPC solver fails
@@ -119,8 +119,8 @@ namespace legged
             }
         } else {
             for (int i = 0; i < NUM_LEG; i++) {
-                leg_FSM[i].update(dt, state.fbk.foot_pos_abs.block<3,1>(0,i), 
-                                    state.ctrl.foot_pos_target_abs.block<3,1>(0,i), 
+                leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
+                                    state.ctrl.foot_pos_target_world.block<3,1>(0,i), 
                                     state.fbk.estimated_contacts[i]);
 
                 // TODO: gait phase of each leg is individually controlled, so we may need to occasionally synchrinize them, for example if all leg are in contact, average their gait phase and set them to that value
