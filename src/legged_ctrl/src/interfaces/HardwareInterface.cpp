@@ -83,7 +83,7 @@ namespace legged
 
         safe.PositionLimit(cmd);
         // TODO: make power level configurable
-        safe.PowerProtect(cmd, state, 10);
+        safe.PowerProtect(cmd, unitree_state, 10);
         udp.SetSend(cmd);
         udp.Send();
 
@@ -127,7 +127,7 @@ namespace legged
         // foot force, add a filter here
         for (int i = 0; i < NUM_LEG; ++i) {
             int swap_i = swap_foot_indices(i);
-            double value = static_cast<double>(state.footForce[swap_i]);
+            double value = static_cast<double>(unitree_state.footForce[swap_i]);
             legged_state.fbk.foot_force[i] = foot_force_filters[i].CalculateAverage(value);
         }
 
@@ -140,7 +140,7 @@ namespace legged
         }
         for (int i = 0; i < NUM_LEG; ++i) {
             // publish plan contacts to help state estimation
-            joint_foot_msg.velocity[NUM_DOF + i] = legged_state.fbk.plan_contacts[i];
+            joint_foot_msg.velocity[NUM_DOF + i] = legged_state.ctrl.plan_contacts[i];
             joint_foot_msg.effort[NUM_DOF + i] = legged_state.fbk.foot_force[i];
         }
         imu_msg.angular_velocity.x = unitree_state.imu.gyroscope[0];

@@ -85,6 +85,13 @@ set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 #)
 
 
+# add unitree hardware library, these flags must be correctly set
+include_directories(
+        $ENV{UNITREE_LEGGED_SDK_PATH}/include
+)
+
+link_directories($ENV{UNITREE_LEGGED_SDK_PATH}/lib)
+set(UNITREE_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 
 # test ocs2 
 add_library(wbc_ctrl_lib
@@ -117,6 +124,7 @@ target_compile_options(utils_lib PUBLIC ${OCS2_CXX_FLAGS})
 add_library(interfaces_lib
         src/interfaces/BaseInterface.cpp
         src/interfaces/GazeboInterface.cpp
+        src/interfaces/HardwareInterface.cpp
         src/LeggedState.cpp
         src/utils/Utils.cpp
         src/estimation/BasicEKF.cpp
@@ -128,6 +136,7 @@ add_library(interfaces_lib
 target_link_libraries(interfaces_lib
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
+        ${UNITREE_LIBS}
         )
 
 target_compile_options(interfaces_lib PUBLIC ${OCS2_CXX_FLAGS})   
