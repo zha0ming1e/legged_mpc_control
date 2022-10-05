@@ -108,6 +108,7 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
 
     //A
     if (joy_msg->buttons[0] == 1) {
+        std::cout << std::endl << "You have requested to chaneg state!" << std::endl << std::endl;
         legged_state.joy.ctrl_state_change_request = true;
     }
 
@@ -321,13 +322,17 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
             } else {
                 legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) += joint_kin; 
             }
+
+            legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), legged_state.fbk.joint_pos.segment<3>(i*3), rho_opt_list[i], rho_fix_list[i]);
+            // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = jac.lu().solve(foot_vel_target_rel.block<3, 1>(0, i));
         }
-
-        // legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), rho_opt_list[i], rho_fix_list[i]);
-        // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = jac.lu().solve(foot_vel_target_rel.block<3, 1>(0, i));
     }
-
-    legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
+    
+    std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
+    std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
+    std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
+    
+    // legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
     
     return true;
