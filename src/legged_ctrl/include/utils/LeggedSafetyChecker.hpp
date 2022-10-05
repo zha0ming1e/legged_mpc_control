@@ -1,0 +1,35 @@
+#pragma once
+#include <vector>
+#include <iostream>
+#include <Eigen/Dense>
+#include "LeggedParams.h"
+#include "LeggedState.h"
+#include "utils/Utils.h"
+
+namespace legged
+{
+
+    class LeggedSafetyChecker
+    {
+        public:
+            LeggedSafetyChecker() {};
+
+            bool is_safe(LeggedState &legged_state) {
+                // safe rules
+                if (legged_state.fbk.root_euler[0] > 0.5 || legged_state.fbk.root_euler[0] < -0.5) {
+                    std::cout << "LeggedSafetyChecker: robot roll is too large " << std::endl;
+                    return false;
+                }
+                if (legged_state.fbk.root_euler[1] > 0.9 || legged_state.fbk.root_euler[1] < -0.9) {
+                    std::cout << "LeggedSafetyChecker: robot pitch is too large " << std::endl;
+                    return false;
+                }
+                if (legged_state.fbk.joint_vel.maxCoeff() > 10.0) {
+                    std::cout << "LeggedSafetyChecker: joint velocity is too large " << std::endl;
+                    return false;
+                }
+                return true;
+            }
+
+    };
+}   // namespace legged

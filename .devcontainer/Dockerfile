@@ -2,7 +2,7 @@
 FROM ros:noetic-perception-focal
 
 LABEL maintainer="shuoyang@andrew.cmu.edu"
-ENV REFRESH_AT 2022-09-23
+ENV REFRESH_AT 2022-10-03
 
 # fixed a key issue using the method mentioned in https://github.com/PRBonn/bonnetal/commit/0ab883b8356954c3e57a07a73c30bbac8f035a05
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' && \
@@ -12,7 +12,7 @@ RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main"
 
 # install necessary dependencies 
 RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
-      else export USE_PROC=$(($(nproc)/2)) ; fi && \
+      else export USE_PROC=4 ; fi && \
       apt-get update && apt-get install -y \
       vim \
       libatlas-base-dev \
@@ -35,11 +35,11 @@ RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
 # install python 3.8 
 RUN apt-get update && \
     apt-get install -y python3.8
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
-RUN curl https://bootstrap.pypa.io/pip/get-pip.py -o get-pip.py
-RUN python get-pip.py
-RUN rm get-pip.py
-RUN pip --version
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1  && \
+    curl https://bootstrap.pypa.io/pip/get-pip.py -o get-pip.py  && \
+    python get-pip.py  && \
+    rm get-pip.py  && \
+    pip --version
 # RUN pip install pybullet
 # RUN pip install tensorflow
 # RUN pip install numpy
@@ -56,13 +56,13 @@ RUN git clone --recursive https://github.com/oxfordcontrol/osqp
 WORKDIR /tmp/osqp
 RUN mkdir build 
 WORKDIR /tmp/osqp/build
-RUN cmake -G "Unix Makefiles" ..
-RUN cmake --build .
-RUN cmake --build . --target install
+RUN cmake -G "Unix Makefiles" ..  && \
+    cmake --build .  && \
+    cmake --build . --target install
 
 # add OSQP-python
-RUN pip install osqp
-RUN apt-get install -y ipython3 wget
+RUN pip install osqp && \
+    apt-get install -y ipython3 wget
 
 # add osqp-eigen
 WORKDIR /tmp
@@ -70,9 +70,9 @@ RUN git clone https://github.com/robotology/osqp-eigen.git
 WORKDIR /tmp/osqp-eigen
 RUN mkdir build 
 WORKDIR /tmp/osqp-eigen/build
-RUN cmake ../
-RUN make
-RUN make install
+RUN cmake ../  && \
+    make  && \
+    make install
 
 # lcm dependencies, notice ContactImplicitMPC.jl needs 2.68.3, we try 2.64.6 first
 RUN apt-cache madison libglib2.0-dev
@@ -195,9 +195,9 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2
 RUN tar -zxvf cmake-3.20.2.tar.gz
 RUN ls
 WORKDIR /tmp/cmake-3.20.2
-RUN ./bootstrap
-RUN make -j$(USE_PROC)
-RUN make install
+RUN ./bootstrap && \
+    make -j$(USE_PROC) && \
+    make install
 
 
 # install glib 2.68
@@ -208,9 +208,9 @@ RUN wget https://mirror.umd.edu/gnome/sources/glib/2.68/glib-2.68.3.tar.xz
 RUN tar xf glib-2.68.3.tar.xz
 
 WORKDIR /tmp/glib-2.68.3
-RUN meson --prefix /usr _build
-RUN ninja -C _build
-RUN ninja -C _build install
+RUN meson --prefix /usr _build  && \
+    ninja -C _build  && \
+    ninja -C _build install
 
 # Install odrive 
 RUN sudo pip3 install --upgrade odrive
@@ -283,18 +283,18 @@ ENV UNITREE_LEGGED_SDK_PATH=${SUPPORT_WS}/unitree_legged_sdk
 ENV ALIENGO_SDK_PATH=${SUPPORT_WS}/aliengo_sdk
 ENV UNITREE_PLATFORM=amd64
 # compile just unitree ros unitree_legged_msgs
-RUN ls $UNITREE_WS/src/unitree_ros
-RUN /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; catkin build unitree_legged_msgs;"
+RUN ls $UNITREE_WS/src/unitree_ros && \
+    /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; catkin build unitree_legged_msgs;"
 
 
 # casadi 
 WORKDIR $SUPPORT_WS
-RUN git clone https://github.com/casadi/casadi.git
-RUN cd ${SUPPORT_WS}/casadi && git checkout tags/3.5.5
-RUN mkdir ${SUPPORT_WS}/casadi/build && cd ${SUPPORT_WS}/casadi/build
-RUN cmake -DWITH_CPLEX=OFF -DWITH_KNITRO=OFF -DWITH_OOQP=OFF -DWITH_SNOPT=OFF ${SUPPORT_WS}/casadi
-RUN make -j$(USE_PROC)
-RUN sudo make install
+RUN git clone https://github.com/casadi/casadi.git && \
+    cd ${SUPPORT_WS}/casadi && git checkout tags/3.5.5 && \
+    mkdir ${SUPPORT_WS}/casadi/build && cd ${SUPPORT_WS}/casadi/build && \
+    cmake -DWITH_CPLEX=OFF -DWITH_KNITRO=OFF -DWITH_OOQP=OFF -DWITH_SNOPT=OFF ${SUPPORT_WS}/casadi && \
+    make -j$(USE_PROC) && \
+    sudo make install
 # /usr/local/lib/casadi/
 # /usr/local/include/casadi
 
@@ -302,12 +302,12 @@ RUN sudo make install
 WORKDIR $SUPPORT_WS
 RUN git clone https://github.com/ShuoYangRobotics/gram_savitzky_golay.git
 WORKDIR ${SUPPORT_WS}/gram_savitzky_golay 
-RUN git submodule init
-RUN git submodule update
-RUN mkdir build 
+RUN git submodule init && \
+    git submodule update && \
+    mkdir build 
 WORKDIR ${SUPPORT_WS}/gram_savitzky_golay/build
-RUN cmake -DCMAKE_BUILD_TYPE=Release ../
-RUN make -j$(USE_PROC) && sudo make install
+RUN cmake -DCMAKE_BUILD_TYPE=Release ../ && \
+    make -j$(USE_PROC) && sudo make install
 
 # Install vicon dependency
 RUN sudo apt install ros-noetic-mocap-optitrack

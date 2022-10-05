@@ -25,8 +25,8 @@ namespace legged
         // at the moment of reset, stance foot keep holding its position
         // swing foot move to the saved target position
         if (s == SWING) {
-            FSM_foot_pos_target_abs = swing_end_foot_pos_abs;
-            FSM_foot_vel_target_abs.setZero();
+            FSM_foot_pos_target_world = swing_end_foot_pos_world;
+            FSM_foot_vel_target_world.setZero();
         }
 
         s = gait_state_pattern[gait_pattern_index];
@@ -35,15 +35,15 @@ namespace legged
         not_first_call = false;
     }
 
-    void LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_abs, Eigen::Vector3d  foot_pos_target_abs, bool foot_force_flag) {
+    void LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag) {
 
         // the update is called first time in the main loop, record target position
         // in helper variables
         if (not_first_call == false) {
-            swing_start_foot_pos_abs = foot_pos_cur_abs;
-            swing_end_foot_pos_abs = foot_pos_target_abs;
-            FSM_foot_pos_target_abs = foot_pos_target_abs;
-            FSM_foot_vel_target_abs.setZero();
+            swing_start_foot_pos_world = foot_pos_cur_world;
+            swing_end_foot_pos_world = foot_pos_target_world;
+            FSM_foot_pos_target_world = foot_pos_target_world;
+            FSM_foot_vel_target_world.setZero();
             not_first_call = true;
         }
 
@@ -52,8 +52,8 @@ namespace legged
         // state transition
         if (s == STANCE) {
             if (gait_phase >= cur_state_end_time) {
-                stance_exit();
-                swing_enter(foot_pos_cur_abs);
+                stance_exit(foot_pos_cur_world);
+                swing_enter(foot_pos_cur_world);
                 s = SWING;
             }
         } else if (s == SWING) {
@@ -62,11 +62,11 @@ namespace legged
                 // then we should switch to stance phase immediately
                 s = STANCE;
                 swing_exit();
-                stance_enter(foot_pos_cur_abs);
+                stance_enter(foot_pos_cur_world);
             } else if (percent_in_state()>=1.0) {
                 s = STANCE;
                 swing_exit();
-                stance_enter(foot_pos_cur_abs);
+                stance_enter(foot_pos_cur_world);
             }
         }
         if (gait_phase > 1.0) {
@@ -75,12 +75,19 @@ namespace legged
 
         // state update 
         if (s == STANCE) {
-            // do nothing
+            // stance leg holds its position
             stance_update(dt, foot_force_flag);
         } else if (s == SWING) {
-            swing_update(dt, foot_pos_target_abs);
+            // swing leg moves to the target position
+            swing_update(dt, foot_pos_target_world);
         }
 
+    }
+
+    void LeggedContactFSM::stance_exit(Eigen::Vector3d foot_pos_cur_world) {
+
+        // record the height when we leave stance phase
+        terrain_height = foot_pos_cur_world[2];
     }
 
     // TODO: add a function to load a gaite pattern from a file
@@ -135,43 +142,41 @@ namespace legged
         gait_freeze_counter = 0;
     }
 
-    void LeggedContactFSM::swing_enter(Eigen::Vector3d foot_pos_cur_abs) {
+    void LeggedContactFSM::swing_enter(Eigen::Vector3d foot_pos_cur_world) {
         common_enter();
-        swing_start_foot_pos_abs << foot_pos_cur_abs;
-        swing_extend_foot_pos_abs.setZero();
+        swing_start_foot_pos_world << foot_pos_cur_world;
+        swing_extend_foot_pos_world.setZero();
     }
-    void LeggedContactFSM::stance_enter(Eigen::Vector3d foot_pos_cur_abs) {
+    void LeggedContactFSM::stance_enter(Eigen::Vector3d foot_pos_cur_world) {
         common_enter();
-        FSM_foot_pos_target_abs << foot_pos_cur_abs;
-        FSM_foot_vel_target_abs.setZero();
-
-        // record the height when we enter stance phase
-        terrain_height = foot_pos_cur_abs[2];
+        FSM_foot_pos_target_world << foot_pos_cur_world;
+        FSM_foot_vel_target_world.setZero();
     }
 
-    void LeggedContactFSM::swing_update(double dt, Eigen::Vector3d foot_pos_target_abs) {
+    void LeggedContactFSM::swing_update(double dt, Eigen::Vector3d foot_pos_target_world) {
         // generate swing trajectory
         double t = percent_in_state();
         Eigen::Matrix<double, 6,1> foot_pos_vel_target = 
             bezierUtils.get_foot_pos_curve(t,
-                    swing_start_foot_pos_abs,
-                    foot_pos_target_abs+swing_extend_foot_pos_abs, 0.0);
+                    swing_start_foot_pos_world,
+                    foot_pos_target_world+swing_extend_foot_pos_world, 0.0);
 
-        swing_end_foot_pos_abs = foot_pos_target_abs;       
-        FSM_prev_foot_pos_target_abs = FSM_foot_pos_target_abs;             
-        FSM_foot_pos_target_abs = foot_pos_vel_target.segment(0,3);
-        FSM_foot_vel_target_abs = (FSM_foot_pos_target_abs - FSM_prev_foot_pos_target_abs)/dt;
+        swing_end_foot_pos_world = foot_pos_target_world;       
+        FSM_prev_foot_pos_target_world = FSM_foot_pos_target_world;             
+        FSM_foot_pos_target_world = foot_pos_vel_target.segment(0,3);
+        FSM_foot_vel_target_world = (FSM_foot_pos_target_world - FSM_prev_foot_pos_target_world)/dt;
     }
 
     void LeggedContactFSM::stance_update(double dt, bool foot_force_flag) {
         // in stance phase, if do not have foot force flag, we should push down the foot to the ground
+        // TODO: make these parameters configurable
         if (!foot_force_flag) {
-            if (FSM_foot_pos_target_abs[2] > -0.4) { // there is a threshold to prevent the foot from going too deep
-                FSM_foot_pos_target_abs[2] -= 0.2*dt;
-                FSM_foot_vel_target_abs[2] = -0.2;
+            if (FSM_foot_pos_target_world[2] > -0.4) { // there is a threshold to prevent the foot from going too deep
+                FSM_foot_pos_target_world[2] -= 0.2*dt;
+                FSM_foot_vel_target_world[2] = -0.2;
             }
         } else {
-            FSM_foot_vel_target_abs.setZero();
+            FSM_foot_vel_target_world.setZero();
         }
     }
 

@@ -101,9 +101,12 @@ bool GazeboInterface::send_cmd() {
         low_cmd.motorCmd[i].dq =  0;
         low_cmd.motorCmd[i].Kp =  0;
         low_cmd.motorCmd[i].Kd =  0;
-        low_cmd.motorCmd[i].tau = 5 * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
-                                + 3 * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
+        low_cmd.motorCmd[i].tau = 0.5 * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
+                                + 0.3 * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
                                 + legged_state.ctrl.joint_tau_tgt(i, 0);
+
+        // TODO: simulate a motor delay here?
+                                        
         pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
     }
 
