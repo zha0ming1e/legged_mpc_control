@@ -93,6 +93,8 @@ class LeggedCtrl {
     Eigen::Matrix<double, NUM_DOF, 1> joint_vel_tgt;
     Eigen::Matrix<double, NUM_DOF, 1> joint_tau_tgt;
 
+    Eigen::Matrix<double, NUM_DOF, 1> prev_joint_ang_tgt; // to calculate joint_vel_tgt
+
 
     double movement_mode = 0;
 };
