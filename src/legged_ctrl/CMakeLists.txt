@@ -178,6 +178,13 @@ target_link_libraries(main
         ${pinocchio_LIBRARIES}
 )
 
+add_executable(test_inv_kin
+        src/test/test_inv_kin.cpp
+)
+
+target_link_libraries(test_inv_kin
+        utils_lib
+)
 
 add_executable(wbc_test
         src/test/test_wbc.cpp

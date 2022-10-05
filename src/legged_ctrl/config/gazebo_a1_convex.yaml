@@ -39,14 +39,14 @@ q_weights_2:  0.0 # yaw
 
 q_weights_3:  0.0 # pos x
 q_weights_4:  0.0 # pos y
-q_weights_5:  700.0 # pos z
+q_weights_5:  500.0 # pos z
 
 q_weights_6:  0.05 # omega x
 q_weights_7:  0.05 # omega y
 q_weights_8:  10.0 # omega z
 
-q_weights_9:  50.0 # vel x
-q_weights_10: 50.0 # vel y
+q_weights_9:  25.0 # vel x
+q_weights_10: 25.0 # vel y
 q_weights_11: 15.0 # vel z
 
 q_weights_12: 0.0
