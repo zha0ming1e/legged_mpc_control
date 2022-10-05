@@ -45,8 +45,8 @@ q_weights_6:  0.05 # omega x
 q_weights_7:  0.05 # omega y
 q_weights_8:  10.0 # omega z
 
-q_weights_9:  25.0 # vel x
-q_weights_10: 25.0 # vel y
+q_weights_9:  5.0 # vel x
+q_weights_10: 5.0 # vel y
 q_weights_11: 15.0 # vel z
 
 q_weights_12: 0.0
