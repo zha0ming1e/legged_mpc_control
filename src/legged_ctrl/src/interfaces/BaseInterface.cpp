@@ -323,17 +323,36 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
                 legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) += joint_kin; 
             }
 
-            legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), legged_state.fbk.joint_pos.segment<3>(i*3), rho_opt_list[i], rho_fix_list[i]);
-            // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = jac.lu().solve(foot_vel_target_rel.block<3, 1>(0, i));
+            legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
+            Eigen::Vector3d joint_ang_tgt = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), legged_state.fbk.joint_pos.segment<3>(i*3), rho_opt_list[i], rho_fix_list[i]);
+            if ((isnan(joint_ang_tgt[0])) || (isnan(joint_ang_tgt[1])) || (isnan(joint_ang_tgt[2]))) {
+                legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
+                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
+            } else {
+                legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = joint_ang_tgt;
+            }
+
+            Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3)) / dt;
+            if ((isnan(joint_vel_tgt[0])) || (isnan(joint_vel_tgt[1])) || (isnan(joint_vel_tgt[2]))) {
+                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
+            } else {
+                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
+            }
+            
+            // legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
+            // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
+        }   else {
+            legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
+            legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
         }
-    }
+    } 
     
     std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
     std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
     std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
     
     // legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
-    legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
+    // legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
     
     return true;
 }
