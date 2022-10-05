@@ -318,11 +318,11 @@ Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::VectorXd rho_opt
     return q;
 }
 
-Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::VectorXd rho_opt, Eigen::VectorXd rho_fix)
+Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::Vector3d cur_q, Eigen::VectorXd rho_opt, Eigen::VectorXd rho_fix)
 {
     double ox = rho_fix[0];
     double oy = rho_fix[1];
-    double d = rho_fix[2];
+    double d =  rho_fix[2];
     double lt = rho_fix[3];
     double lc = rho_fix[4];
 
@@ -337,21 +337,75 @@ Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::VectorXd rho_opt
     double L = sqrt(L_square);
 
     double t1 = 0.0;
+    double t1_candidate = 0.0;
     double t2 = 0.0;
     double t3 = 0.0;
 
+    double cur_t1 = cur_q[0];
+    double cur_t2 = cur_q[1];
+    double cur_t3 = cur_q[2];
+
     // calculate t1
     if (oy > 0) { // if FL or RL
-        if (Yf_ > 0) { // if the foot is outside the body
-            t1 = atan2(L, d) + atan2(Zf, Yf_);
-        } else { // if the foot is inside the body
-            t1 = atan2(L, d) + atan2(Zf, Yf_) - PI;
+        if (Zf > 0) { // if the foot position is higher than the torso
+            if (Yf_ > 0) {
+                t1 = atan2(Zf, Yf_) - atan2(L, d);
+            } else if (Yf_ == 0) {
+                t1 = M_PI/2 - atan2(L, d);
+            } else if (Yf_ < 0) {
+                t1 = M_PI - atan2(Zf, -Yf_) - atan2(L, d);
+            }
+            // calculate another possible t1
+            t1_candidate = atan2(Zf, Yf_) + atan2(L, d);
+        } else if (Zf < 0) { // if the foot position is lower than the torso
+            if (Yf_ > 0) {
+                t1 = atan2(Zf, Yf_) + atan2(L, d);
+            } else if (Yf_ == 0) {
+                t1 = -M_PI/2 + atan2(L, d);
+            } else if (Yf_ < 0) {
+                t1 = -M_PI - atan2(Zf, -Yf_) + atan2(L, d);
+            }
+            // calculate another possible t1
+            t1_candidate = atan2(Zf, Yf_) - atan2(L, d);
+        } else {
+            t1 = atan2(L, d);
+            t1_candidate = -atan2(L, d);
+        }
+
+        // compare t1 and t1_candidate
+        if (abs(t1 - cur_t1) < abs(t1_candidate - cur_t1)) {
+            t1 = t1;
+        } else {
+            t1 = t1_candidate;
         }
     } else { // if FR or RR
-        if (Yf_ < 0) { // if the foot is outside the body
-            t1 = atan2(L, d) + atan2(Zf, Yf_);
+        if (Zf > 0) {
+            if (Yf_ < 0) {
+                t1 = -atan2(Zf, -Yf_) + atan2(L, -d);
+            } else if (Yf_ == 0) {
+                t1 = -M_PI/2 + atan2(L, -d);
+            } else if (Yf_ > 0) {
+                t1 = -M_PI + atan2(Zf, Yf_) + atan2(L, -d);
+            }
+            // calculate another possible t1
+            t1_candidate = -atan2(L, -d) - atan2(Zf, -Yf_);
+        } else if (Zf < 0) {
+            if (Yf_ < 0) {
+                t1 = atan2(-Zf, -Yf_) - atan2(L, -d);
+            } else if (Yf_ == 0) {
+                t1 = -M_PI/2 - atan2(L, -d);
+            } else if (Yf_ > 0) {
+                t1 = M_PI - atan2(-Zf, Yf_) - atan2(L, -d);
+            }
+            // calculate another possible t1
+            t1_candidate = atan2(-Zf, -Yf_) + atan2(L, -d);
+        }
+
+        // compare t1 and t1_candidate
+        if (abs(t1 - cur_t1) < abs(t1_candidate - cur_t1)) {
+            t1 = t1;
         } else {
-            t1 = atan2(L, d) + atan2(Zf, Yf_) + PI;
+            t1 = t1_candidate;
         }
     }
 
@@ -359,34 +413,33 @@ Eigen::Vector3d A1Kinematics::inv_kin(Eigen::Vector3d p, Eigen::VectorXd rho_opt
     double cos_beta = (lt*lt + lc*lc - Xf_*Xf_ - L*L) / (2*lt*lc);
     double beta = 0;
     if (abs(cos_beta + 1) < 0.001) { // if cos_beta is around -1
-        beta = PI;
+        beta = M_PI;
     } else if (abs(cos_beta - 1) < 0.001) { // if cos_alpha is around 1
         beta = 0;
     } else {
         beta = std::acos(cos_beta);
     }
-    std::cout << "cos_beta = " << cos_beta << std::endl;
-    // std::cout << "beta = " << beta << std::endl;
 
-    double cos_alpha = (Xf_*Xf_ + L*L + lt*lt - lc*lc) / (2*lt*sqrt(Xf_*Xf_ + L*L));
-    double alpha = 0;
-    if (abs(cos_alpha + 1) < 0.001) { // if cos_alpha is around -1
-        alpha = PI;
-    } else if (abs(cos_alpha - 1) < 0.001) { // if cos_alpha is around 1
-        alpha = 0;
-    } else {
-        alpha = std::acos(cos_alpha);
+    t3 = beta - M_PI;
+
+    // calculate the z position of joint 2
+    double joint_2_z = d * sin(t1);
+    if (Zf > joint_2_z) {
+        L = -L;
     }
-    std::cout << "cos_alpha = " << cos_alpha << std::endl;
-    // std::cout << "alpha = " << alpha << std::endl;
-
     double gamma = atan2(-Xf_, L);
     // std::cout << "gamma = " << gamma << std::endl;
+
+    double alpha = atan2(lc * sin(-t3), lt + lc * cos(-t3));
     
     t2 = gamma + alpha;
-    t3 = beta - PI;
 
-    // return
+    if (t2 < -60 * M_PI / 180) {
+        t2 = t2 + 2 * M_PI;
+    } else if (t2 > 240 * M_PI / 180) {
+        t2 = t2 - 2 * M_PI;
+    }
+
     Eigen::Vector3d inv_kin_sol;
     inv_kin_sol << t1, t2, t3;
     return inv_kin_sol;
