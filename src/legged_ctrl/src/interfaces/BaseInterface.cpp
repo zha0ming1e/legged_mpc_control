@@ -302,9 +302,9 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
         if (legged_state.ctrl.movement_mode > 0) {
             // foot target force assignment
             foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
-                (legged_state.ctrl.optimized_state.segment<3>(i*3 + 6) - legged_state.fbk.root_pos);
+                (legged_state.ctrl.optimized_state.segment<3>(6 + 3 * i)  - legged_state.fbk.root_pos);
             foot_vel_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
-                (legged_state.ctrl.optimized_input.segment<3>(i*3+12) - legged_state.fbk.root_lin_vel); 
+                (legged_state.ctrl.optimized_input.segment<3>(12 + 3 * i) - legged_state.fbk.root_lin_vel); 
 
             foot_pos_error_rel.block<3, 1>(0, i) = 
                 foot_pos_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
