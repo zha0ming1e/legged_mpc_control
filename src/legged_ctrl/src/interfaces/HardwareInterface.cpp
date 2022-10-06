@@ -3,8 +3,8 @@
 namespace legged
 {
     HardwareInterface::HardwareInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile)
-    :safe(UNITREE_LEGGED_SDK::LeggedType::A1), 
-     udp(UNITREE_LEGGED_SDK::LOWLEVEL),
+    :safe(UNITREE_LEGGED_SDK::LeggedType::Go1),
+     udp(UNITREE_LEGGED_SDK::LOWLEVEL, 8090, "192.168.123.10", 8007),
      BaseInterface(_nh, taskFile, urdfFile, referenceFile) {
 
         // for state estimation
@@ -83,12 +83,12 @@ namespace legged
         // notice cmd uses order FR, FL, RR, RL
         cmd.levelFlag = UNITREE_LEGGED_SDK::LOWLEVEL;
         for (int i = 0; i < NUM_DOF; i++) {
-            cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
-            cmd.motorCmd[i].q = UNITREE_LEGGED_SDK::PosStopF; // shut down position control
-            cmd.motorCmd[i].Kp = 0;
-            cmd.motorCmd[i].dq = UNITREE_LEGGED_SDK::VelStopF; // shut down velocity control
-            cmd.motorCmd[i].Kd = 0;
             int swap_i = swap_joint_indices(i);
+            cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
+            cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i); // shut down position control
+            cmd.motorCmd[i].Kp = 5;
+            cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
+            cmd.motorCmd[i].Kd = 0.08;
             cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(swap_i);
         }
 
@@ -135,10 +135,17 @@ namespace legged
             legged_state.fbk.joint_pos[i] = unitree_state.motorState[swap_i].q;
         }
 
+        if (legged_state.fbk.foot_force_bias_record == false) {
+            for (int i = 0; i < NUM_LEG; ++i) {
+                int swap_i = swap_foot_indices(i);
+                legged_state.fbk.foot_force_bias[i] = unitree_state.footForce[swap_i];
+            }
+            legged_state.fbk.foot_force_bias_record = true;
+        }
         // foot force, add a filter here
         for (int i = 0; i < NUM_LEG; ++i) {
             int swap_i = swap_foot_indices(i);
-            double value = static_cast<double>(unitree_state.footForce[swap_i]);
+            double value = static_cast<double>(unitree_state.footForce[swap_i]-legged_state.fbk.foot_force_bias[i]);
             legged_state.fbk.foot_force[i] = foot_force_filters[i].CalculateAverage(value);
         }
 

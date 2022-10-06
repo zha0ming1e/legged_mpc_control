@@ -255,11 +255,11 @@ RUN git clone https://github.com/lcm-proj/lcm.git && \
     make -j$(USE_PROC) && \
     sudo make install 
 
-# notice we must use v3.2 
-ENV UNITREE_SDK_VERSION=3_2
+# notice we must use v3.8 for go1 
+ENV UNITREE_SDK_VERSION=3_8
 WORKDIR $SUPPORT_WS
 RUN git clone https://github.com/unitreerobotics/unitree_legged_sdk.git && \
-    cd ${SUPPORT_WS}/unitree_legged_sdk && git checkout v3.2 && \
+    cd ${SUPPORT_WS}/unitree_legged_sdk && git checkout v3.8.0 && \
     mkdir build && \
     cd build && \
     cmake .. && \

@@ -85,8 +85,7 @@ int main(int argc, char **argv) {
     } else if (use_sim_time == false && robot_type == 1) {
         // TODO: use Go1 urdf
         urdfFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/urdf/a1_description/urdf/a1.urdf";
-        std::cout << "not implemented yet " << std::endl;
-        return -1;
+        intef = std::unique_ptr<legged::HardwareInterface>(new legged::HardwareInterface(nh, taskFile, urdfFile, referenceFile)); 
 
     } else {
         std::cout << "undefined run type and robot type combination" << std::endl;

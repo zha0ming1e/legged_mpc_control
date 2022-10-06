@@ -70,8 +70,8 @@ link_directories(${EmbeddedLciMpc_LIB_DIRS})
 include_directories(
         $ENV{UNITREE_LEGGED_SDK_PATH}/include
 )
-link_directories($ENV{UNITREE_LEGGED_SDK_PATH}/lib)
-set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
+link_directories($ENV{UNITREE_LEGGED_SDK_PATH}/lib/cpp/amd64)
+set(UNITREE_LIBS -pthread libunitree_legged_sdk.a lcm)
 
 # Find altro
 # find_package(AltroCpp REQUIRED)
@@ -86,12 +86,12 @@ set(EXTRA_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
 
 
 # add unitree hardware library, these flags must be correctly set
-include_directories(
-        $ENV{UNITREE_LEGGED_SDK_PATH}/include
-)
+# include_directories(
+#         $ENV{UNITREE_LEGGED_SDK_PATH}/include
+# )
 
-link_directories($ENV{UNITREE_LEGGED_SDK_PATH}/lib)
-set(UNITREE_LIBS -pthread libunitree_legged_sdk_amd64.so lcm)
+# link_directories($ENV{UNITREE_LEGGED_SDK_PATH}/lib/cpp/amd64)
+# set(UNITREE_LIBS -pthread libunitree_legged_sdk.a lcm)
 
 # test ocs2 
 add_library(wbc_ctrl_lib
