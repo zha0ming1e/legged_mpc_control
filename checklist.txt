@@ -1,0 +1,39 @@
+
+update submodules:
+    (make sure to first remove submodule folders)
+    git submodule update --init
+
+build controller:
+    source ~/ocs2_ws/devel/setup.bash
+    source devel/setup.bash
+    echo "source devel/setup.bash" >> ~/.bashrc
+    CI-MPC:     roslaunch legged_ctrl main_ctrl.launch
+    or 
+    convex-MPC: roslaunch legged_ctrl gazebo_a1_convex.launch
+
+
+gazebo docker:
+    docker start a1_unitree_gazebo_docker
+    docker attach a1_unitree_gazebo_docker
+    roslaunch unitree_gazebo normal.launch rname:=a1 wname:=earth
+
+resetting in sim:
+    cd ~/legged_ctrl_ws/src/legged_ctrl/scripts
+    python resetRobot.py 
+
+joystick
+    rosrun joy joy_node
+
+
+setting up julia for CI-MPC:
+    cd ~/legged_ctrl_ws/src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/EmbeddedLciMpc.jl
+    pkg> activate .
+    pkg> instantiate 
+    pkg> rm ContactImplicitMPC.jl
+    pkg> dev ../ContactImplicitMPC.jl/
+    Check 
+        pkg> status ContactImplicitMPC 
+        is local 
+    julia> include("scripts/precompile_sysimage.jl") 
+
+    
