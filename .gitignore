@@ -36,6 +36,7 @@
 devel/
 logs/
 build/
+bags/
 bin/
 msg_gen/
 srv_gen/
