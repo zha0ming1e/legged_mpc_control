@@ -13,6 +13,7 @@ build controller:
 
 
 gazebo docker:
+    xhost +
     docker start a1_unitree_gazebo_docker
     docker attach a1_unitree_gazebo_docker
     roslaunch unitree_gazebo normal.launch rname:=a1 wname:=earth
