@@ -59,6 +59,12 @@ namespace legged
             
         // bool wbc_run = wbc_update(t, dt);
         
+
+        // std::cout << "debug"<< std::endl;
+        // std::cout << legged_state.fbk.root_pos.transpose() << std::endl;
+        // std::cout << legged_state.ctrl.root_pos_d.transpose() << std::endl;
+
+
         // send to hardware
         bool safe_flag = safety_checker.is_safe(legged_state);
         if (safe_flag) {

@@ -355,9 +355,11 @@ RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash; catkin config -DCMAKE_B
 RUN /bin/bash -c "source ${OCS2_WS}/devel/setup.bash" && echo "source /home/${USERNAME}/legged_ctrl_ws/devel/setup.bash" >> ~/.bashrc  
 
 # install altro-cpp
-RUN sudo apt-get update \
-    && sudo apt-get install -y libfmt-dev
-WORKDIR $SUPPORT_WS
-RUN git clone https://github.com/bjack205/altro.git && cd altro && \
-   mkdir build && cd build && \
-   cmake -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local ../ && cmake --build . -j4 && sudo cmake --install .
+# RUN sudo apt-get update \
+#     && sudo apt-get install -y libfmt-dev
+# WORKDIR $SUPPORT_WS
+# RUN git clone https://github.com/bjack205/altro.git && cd altro && \
+#    mkdir build && cd build && \
+#    cmake -D BUILD_SHARED_LIBS=ON -D CMAKE_INSTALL_PREFIX=/usr/local ../ && cmake --build . -j4 && sudo cmake --install .
+
+ENV SHELL /bin/bash

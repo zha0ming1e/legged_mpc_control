@@ -67,7 +67,7 @@ namespace legged
         for (int i = 0; i < NUM_LEG; ++i) {
             foot_forces_grf_world.block<3, 1>(0, i) = qp_solution.segment<3>(i * 3);
         }
-        std::cout << foot_forces_grf_world << std::endl;
+        // std::cout << foot_forces_grf_world << std::endl;
         return true;
     }
 

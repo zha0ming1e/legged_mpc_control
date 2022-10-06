@@ -112,10 +112,11 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
         legged_state.joy.ctrl_state_change_request = true;
     }
 
+    // xbox controller mapping
     // right updown
-    legged_state.joy.velx = joy_msg->axes[5] * JOY_CMD_VELX_MAX;
+    legged_state.joy.velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
     // right horiz
-    legged_state.joy.vely = joy_msg->axes[2] * JOY_CMD_VELY_MAX;
+    legged_state.joy.vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
     // left horiz
     legged_state.joy.yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
     // up-down button
