@@ -1,7 +1,7 @@
 [submodule "src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/EmbeddedLciMpc.jl"]
 	path = src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/EmbeddedLciMpc.jl
 	url = https://github.com/RoboticExplorationLab/EmbeddedLciMpc.jl.git
-	branch = a1_baseline
+	branch = lci_mpc_dev
 [submodule "src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/ContactImplicitMPC.jl"]
 	path = src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/ContactImplicitMPC.jl
 	url = https://github.com/johnzhang3/ContactImplicitMPC.jl.git

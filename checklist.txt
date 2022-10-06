@@ -1,7 +1,7 @@
 
 update submodules:
     (make sure to first remove submodule folders)
-    git submodule update --init
+    git submodule update
 
 build controller:
     source ~/ocs2_ws/devel/setup.bash
