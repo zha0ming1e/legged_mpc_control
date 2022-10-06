@@ -86,10 +86,14 @@ bool GazeboInterface::update(double t, double dt) {
     // bool wbc_run = wbc_update(t, dt);
     
     
+    bool safe_flag = safety_checker.is_safe(legged_state);
 
-    send_cmd();
-
-    return joy_run;
+    if (safe_flag) {
+        send_cmd();
+    } else {
+        std::cout << "safety check failed, terminate the controller! " << std::endl;
+    }
+    return joy_run && safe_flag;
 }
 
 bool GazeboInterface::send_cmd() {

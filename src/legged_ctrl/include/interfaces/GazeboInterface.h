@@ -14,6 +14,7 @@
 #include "LeggedState.h"
 #include "interfaces/BaseInterface.h"
 #include "utils/MovingWindowFilter.hpp"
+#include "utils/LeggedSafetyChecker.hpp"
 
 namespace legged
 {
@@ -96,6 +97,8 @@ private:
     MovingWindowFilter quat_x;
     MovingWindowFilter quat_y;
     MovingWindowFilter quat_z;
+
+    LeggedSafetyChecker safety_checker;
 };
 
 }  // namespace legged
