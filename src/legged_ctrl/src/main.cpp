@@ -166,6 +166,7 @@ int main(int argc, char **argv) {
         ros::Time prev = ros::Time::now();
         ros::Time now = ros::Time::now();  // bool res = app.exec();
         ros::Duration dt(0);
+        ros::Duration dt_solver_time_in_ros(0);
 
         if (mpc_type == 0) {
             // wait for LCI MPC controller to load julia stuff
@@ -175,17 +176,12 @@ int main(int argc, char **argv) {
         }
 
         while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
-            auto t3 = std::chrono::high_resolution_clock::now();
-
-            ros::Duration(LOW_LEVEL_CTRL_FREQUENCY / 1000).sleep();
-
             // get t and dt
             now = ros::Time::now();
             dt = now - prev;
             prev = now;
             ros::Duration elapsed = now - start;
 
-            std::cout << "run "  << elapsed.toSec() << std::endl;
             bool main_update_running = intef->update(elapsed.toSec(), dt.toSec());
             
             if (!main_update_running) {
@@ -193,6 +189,11 @@ int main(int argc, char **argv) {
                 ros::shutdown();
                 std::terminate();
                 break;
+            }
+
+            dt_solver_time_in_ros = ros::Time::now() - now;
+            if (dt_solver_time_in_ros.toSec() < LOW_LEVEL_CTRL_FREQUENCY / 1000) {    
+                ros::Duration( LOW_LEVEL_CTRL_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec() ).sleep();
             }
         }
     });

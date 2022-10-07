@@ -94,10 +94,15 @@ public:
         pub_root_pose_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/odom", 100); 
         pub_euler_ = nh_.advertise<geometry_msgs::Vector3Stamped>(prefix + "/euler", 100); 
         pub_joint_data_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/joint", 100); 
+        pub_joint_data_d_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/joint_d", 100); 
         joint_data_.name = {"FL_hip", "FL_thigh", "FL_calf", "FR_hip", "FR_thigh", "FR_calf", "RL_hip", "RL_thigh", "RL_calf", "RR_hip", "RR_thigh", "RR_calf"};
         joint_data_.effort.resize(12); 
         joint_data_.position.resize(12); 
         joint_data_.velocity.resize(12); 
+        joint_data_d_.name = {"FL_hip", "FL_thigh", "FL_calf", "FR_hip", "FR_thigh", "FR_calf", "RL_hip", "RL_thigh", "RL_calf", "RR_hip", "RR_thigh", "RR_calf"};
+        joint_data_d_.effort.resize(12); 
+        joint_data_d_.position.resize(12); 
+        joint_data_d_.velocity.resize(12); 
 
         // Initialize desired state publisher
         pub_root_pose_d_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/odom_d", 100); 
@@ -192,13 +197,17 @@ public:
             joint_data_.position[i*3+1] = state.fbk.joint_pos[i*3+1]; 
             joint_data_.position[i*3+2] = state.fbk.joint_pos[i*3+2]; 
 
-            joint_data_.effort[i*3] = state.ctrl.joint_tau_tgt[i*3]; 
-            joint_data_.effort[i*3+1] = state.ctrl.joint_tau_tgt[i*3+1];
-            joint_data_.effort[i*3+2] = state.ctrl.joint_tau_tgt[i*3+2]; 
-
             joint_data_.velocity[i*3] = state.fbk.joint_vel[i*3]; 
             joint_data_.velocity[i*3+1] = state.fbk.joint_vel[i*3+1]; 
             joint_data_.velocity[i*3+2] = state.fbk.joint_vel[i*3+2]; 
+
+            joint_data_d_.position[i*3] = state.ctrl.joint_ang_tgt[i*3]; 
+            joint_data_d_.position[i*3+1] = state.ctrl.joint_ang_tgt[i*3+1];
+            joint_data_d_.position[i*3+2] = state.ctrl.joint_ang_tgt[i*3+2]; 
+
+            joint_data_d_.velocity[i*3] = state.ctrl.joint_vel_tgt[i*3]; 
+            joint_data_d_.velocity[i*3+1] = state.ctrl.joint_vel_tgt[i*3+1];
+            joint_data_d_.velocity[i*3+2] = state.ctrl.joint_vel_tgt[i*3+2]; 
 
             // grf_msg_.effort[i*3] = state.fbk.foot_forces_grf(0, i); 
             // grf_msg_.effort[i*3+1] = state.fbk.foot_forces_grf(1, i); 
@@ -226,6 +235,7 @@ public:
         pub_euler_d_.publish(euler_d_); 
         pub_grf_.publish(grf_msg_); 
         pub_joint_data_.publish(joint_data_); 
+        pub_joint_data_d_.publish(joint_data_d_); 
         pub_contact_forces_.publish(contact_forces_msg_); 
         pub_mpc_contact_forces_.publish(mpc_contact_forces_msg_); 
         pub_swing_forces_.publish(swing_forces_msg_); 
@@ -256,8 +266,10 @@ private:
     // Publish desired root state 
     ros::Publisher pub_root_pose_d_; // desired rigidbody state 
     ros::Publisher pub_euler_d_;     // desired angle pose 
+    ros::Publisher pub_joint_data_d_;  // desired joint data
     nav_msgs::Odometry odom_d_;      
     geometry_msgs::Vector3Stamped euler_d_; 
+    sensor_msgs::JointState joint_data_d_;  
 
     // Publish ground reaction forces 
     ros::Publisher pub_grf_;           // ground reactions forces 

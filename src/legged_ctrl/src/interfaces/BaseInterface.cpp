@@ -305,66 +305,28 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
             // foot target force assignment
             foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
                 (legged_state.ctrl.optimized_state.segment<3>(6 + 3 * i)  - legged_state.fbk.root_pos);
-            foot_vel_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
-                (legged_state.ctrl.optimized_input.segment<3>(12 + 3 * i) - legged_state.fbk.root_lin_vel); 
 
-            // foot_pos_error_rel.block<3, 1>(0, i) = 
-            //     foot_pos_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
-            // foot_vel_error_rel.block<3, 1>(0, i) = 
-            //     foot_vel_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
-            
-            // Eigen::Vector3d tmp = foot_pos_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kp_foot.block<3, 1>(0, i)) + foot_vel_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kd_foot.block<3, 1>(0, i)); 
-                     
-            // foot_forces_kin.block<3, 1>(0, i) = legged_state.param.km_foot.cwiseProduct(tmp);        
-
-            // Eigen::Vector3d joint_kin = jac.lu().solve( foot_forces_kin.block<3, 1>(0, i) );
-            // if ((isnan(joint_kin[0])) || (isnan(joint_kin[1])) || (isnan(joint_kin[2]))) {
-            //     //nan
-            // } else {
-            //     legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) += joint_kin; 
-            // }
-
-            legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
             Eigen::Vector3d joint_ang_tgt = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), legged_state.fbk.joint_pos.segment<3>(i*3), rho_opt_list[i], rho_fix_list[i]);
             if ((isnan(joint_ang_tgt[0])) || (isnan(joint_ang_tgt[1])) || (isnan(joint_ang_tgt[2]))) {
+                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
                 legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
-                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             } else {
+                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
                 legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = joint_ang_tgt;
             }
-
             Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3)) / dt;
-            if ((isnan(joint_vel_tgt[0])) || (isnan(joint_vel_tgt[1])) || (isnan(joint_vel_tgt[2]))) {
-                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
-            } else {
-                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
-            }
-            
-            // legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
-            // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
+            legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
         }   else {
+            legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
         }
 
-        Eigen::Vector3d joint_feedback = 
-            legged_state.param.kp_foot.block<3, 1>(0, i).cwiseProduct(
-                legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.fbk.joint_pos.segment<3>(i*3)) 
-           +legged_state.param.kd_foot.block<3, 1>(0, i).cwiseProduct(
-                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) - legged_state.fbk.joint_vel.segment<3>(i*3));
-
-        for (int j = 0; j < 3; j++) {
-            if (joint_feedback[j] > 33) joint_feedback[j] = 33;
-            if (joint_feedback[j] < -33) joint_feedback[j] = -33;
-        }
-
-        legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) += joint_feedback;
-           
     } 
     
-    std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
-    std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
-    std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
+    // std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
+    // std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
+    // std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
     
     // legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     // legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;
