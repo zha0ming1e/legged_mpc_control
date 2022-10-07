@@ -19,7 +19,7 @@
 #define JOY_CMD_ROLL_MAX 0.4            // rad
 
 // mpc
-#define PLAN_HORIZON 20
+#define PLAN_HORIZON 30
 #define MPC_STATE_DIM 13
 #define MPC_STATE_DIM_SPARSE 12
 #define MPC_CONSTRAINT_DIM 20
@@ -36,7 +36,7 @@
 #define FOOT_FORCE_HIGH 80.0
 
 #define FOOT_SWING_CLEARANCE1 0.0f
-#define FOOT_SWING_CLEARANCE2 0.3f
+#define FOOT_SWING_CLEARANCE2 0.1f
 
 #define FOOT_DELTA_X_LIMIT 0.8
 #define FOOT_DELTA_Y_LIMIT 0.8

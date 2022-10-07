@@ -30,6 +30,10 @@ namespace legged
         for (int i = 0; i < NUM_LEG; i++) {
             foot_force_filters[i] = MovingWindowFilter(FOOT_FILTER_WINDOW_SIZE);
         }
+
+        for (int i = 0; i < NUM_DOF; i++) {
+            joint_vel_filters[i] = MovingWindowFilter(10);
+        }
     }
 
     bool HardwareInterface::update(double t, double dt) {
@@ -45,12 +49,12 @@ namespace legged
         }
         bool joy_run = joy_update(t, dt);
         // debug print some variables 
-        std::cout << legged_state.joy.ctrl_state << std::endl;
+        // std::cout << legged_state.joy.ctrl_state << std::endl;
 
         /*
         * get sensor feedback & update state estimator
         */
-        receive_low_state();
+        receive_low_state(dt);
 
         bool sensor_run = sensor_update(t, dt);
 
@@ -84,9 +88,19 @@ namespace legged
         cmd.levelFlag = UNITREE_LEGGED_SDK::LOWLEVEL;
         for (int i = 0; i < NUM_DOF; i++) {
             int swap_i = swap_joint_indices(i);
+            // int swap_leg = swap_foot_indices(i/NUM_DOF_PER_LEG);
+            // cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
+
+            // cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i);  // shut down position control
+            // cmd.motorCmd[i].Kp = legged_state.param.kp_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
+
+            // cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
+            // cmd.motorCmd[i].Kd = legged_state.param.kd_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
+
+            // cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(swap_i);
             cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
             cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i); // shut down position control
-            cmd.motorCmd[i].Kp = 5;
+            cmd.motorCmd[i].Kp = 20;
             cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
             cmd.motorCmd[i].Kd = 0.08;
             cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(swap_i);
@@ -105,9 +119,9 @@ namespace legged
         cmd.levelFlag = UNITREE_LEGGED_SDK::LOWLEVEL;
         for (int i = 0; i < NUM_DOF; i++) {
             cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
-            cmd.motorCmd[i].q = UNITREE_LEGGED_SDK::PosStopF;        // 禁止位置环
+            cmd.motorCmd[i].q = UNITREE_LEGGED_SDK::PosStopF;        // shut down position control
             cmd.motorCmd[i].Kp = 0;
-            cmd.motorCmd[i].dq = UNITREE_LEGGED_SDK::VelStopF;        // 禁止速度环
+            cmd.motorCmd[i].dq = UNITREE_LEGGED_SDK::VelStopF;       // shut down velocity control
             cmd.motorCmd[i].Kd = 0;
             cmd.motorCmd[i].tau = 0;
         }
@@ -116,7 +130,7 @@ namespace legged
         udp.Send();
     }
 
-    void HardwareInterface::receive_low_state() {
+    void HardwareInterface::receive_low_state(double dt) {
         udp.Recv();
         udp.GetRecv(unitree_state);        
 
@@ -130,8 +144,8 @@ namespace legged
 
         for (int i = 0; i < NUM_DOF; ++i) {
             int swap_i = swap_joint_indices(i);
-            legged_state.fbk.joint_vel[i] = unitree_state.motorState[swap_i].dq;
-            // legged_state.fbk.joint_vel[i] = (unitree_state.motorState[swap_i].q - legged_state.fbk.joint_pos[i])/dt_s;
+            legged_state.fbk.joint_vel[i] = joint_vel_filters[i].CalculateAverage(unitree_state.motorState[swap_i].dq);
+            // legged_state.fbk.joint_vel[i] = (unitree_state.motorState[swap_i].q - legged_state.fbk.joint_pos[i])/dt;
             legged_state.fbk.joint_pos[i] = unitree_state.motorState[swap_i].q;
         }
 
