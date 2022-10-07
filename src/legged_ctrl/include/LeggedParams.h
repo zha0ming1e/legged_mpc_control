@@ -4,7 +4,7 @@
 
 #pragma once
 // control time related
-#define MPC_UPDATE_FREQUENCY     10.0  // ms       100Hz
+#define MPC_UPDATE_FREQUENCY     5.0  // ms        200Hz
 #define LOW_LEVEL_CTRL_FREQUENCY 1.25  // ms       800Hz
 
 // constant define
@@ -36,7 +36,7 @@
 #define FOOT_FORCE_HIGH 80.0
 
 #define FOOT_SWING_CLEARANCE1 0.0f
-#define FOOT_SWING_CLEARANCE2 0.3f
+#define FOOT_SWING_CLEARANCE2 0.1f
 
 #define FOOT_DELTA_X_LIMIT 0.8
 #define FOOT_DELTA_Y_LIMIT 0.8

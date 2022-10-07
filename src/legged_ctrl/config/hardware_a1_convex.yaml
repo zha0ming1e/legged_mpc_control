@@ -12,41 +12,41 @@ low_level_type: 0 # 0: basic tau ctrl
                   # 1: whole body control 
 
 # default foothold position in robot body frame (varialbes with "_rel" in the code)
-default_foot_pos_FL_x: 0.17
-default_foot_pos_FL_y: 0.15
+default_foot_pos_FL_x: 0.20
+default_foot_pos_FL_y: 0.13
 default_foot_pos_FL_z: -0.3
 
-default_foot_pos_FR_x: 0.17
-default_foot_pos_FR_y: -0.15
+default_foot_pos_FR_x: 0.20
+default_foot_pos_FR_y: -0.13
 default_foot_pos_FR_z: -0.3
 
-default_foot_pos_RL_x: -0.17
-default_foot_pos_RL_y: 0.15
+default_foot_pos_RL_x: -0.19
+default_foot_pos_RL_y: 0.13
 default_foot_pos_RL_z: -0.3
 
-default_foot_pos_RR_x: -0.17
-default_foot_pos_RR_y: -0.15
+default_foot_pos_RR_x: -0.19
+default_foot_pos_RR_y: -0.13
 default_foot_pos_RR_z: -0.3
 
 # gait speed in phase per second
-gait_counter_speed: 2.3    # 3 gait cycle per second
+gait_counter_speed: 2.5    # 3 gait cycle per second
 
 # convex MPC parameters
 
-q_weights_0:  50.0 # roll
-q_weights_1:  150.0 # pitch
+q_weights_0:  200.0 # roll
+q_weights_1:  300.0 # pitch
 q_weights_2:  0.0 # yaw
 
 q_weights_3:  0.0 # pos x
 q_weights_4:  0.0 # pos y
 q_weights_5:  300.0 # pos z
 
-q_weights_6:  0.02 # omega x
-q_weights_7:  0.08 # omega y
+q_weights_6:  0.03 # omega x
+q_weights_7:  0.03 # omega y
 q_weights_8:  100.0 # omega z
 
-q_weights_9:  3.0 # vel x
-q_weights_10: 3.0 # vel y
+q_weights_9:  5.0 # vel x
+q_weights_10: 5.0 # vel y
 q_weights_11: 5.0 # vel z
 
 q_weights_12: 0.0
@@ -68,13 +68,13 @@ r_weights_10: 0.0001
 r_weights_11: 0.0001
 
 # swing leg parameters
-kp_foot_x: 32
-kp_foot_y: 32
-kp_foot_z: 32
+kp_foot_x: 30
+kp_foot_y: 30
+kp_foot_z: 30
 
-kd_foot_x: 0.2
-kd_foot_y: 0.2
-kd_foot_z: 0.2
+kd_foot_x: 0.08
+kd_foot_y: 0.08
+kd_foot_z: 0.08
 
 km_foot_x: 0.1
 km_foot_y: 0.1

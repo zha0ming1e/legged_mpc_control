@@ -108,7 +108,7 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
 
     //A
     if (joy_msg->buttons[0] == 1) {
-        std::cout << std::endl << "You have requested to chaneg state!" << std::endl << std::endl;
+        std::cout << std::endl << "You have requested to chaneg legged_state!" << std::endl << std::endl;
         legged_state.joy.ctrl_state_change_request = true;
     }
 
@@ -277,11 +277,54 @@ bool BaseInterface::sensor_update(double t, double dt) {
 
     estimation_update(t, dt);
 
+
+    // always calculate Raibert Heuristic, calculate foothold position
+    // update foot plan: legged_state.foot_pos_target_world
+    Eigen::Vector3d lin_vel_abs = legged_state.fbk.root_lin_vel; lin_vel_abs[2] = 0;// world frame linear velocity, cannot regulate z velocity so we set it to 0
+    // desired abs frame linear velocity
+    Eigen::Vector3d lin_vel_d_abs = legged_state.fbk.root_rot_mat_z * legged_state.ctrl.root_lin_vel_d_rel; // robot body frame linear velocity
+
+    // foothold target 
+    legged_state.ctrl.foot_pos_target_abs = legged_state.fbk.root_rot_mat_z * legged_state.param.default_foot_pos_rel;
+    for (int i = 0; i < NUM_LEG; ++i) {
+        double delta_x =
+                std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
+                (1/legged_state.param.gait_counter_speed/2) / 2.0 *
+                lin_vel_d_abs(0);
+        double delta_y =
+                std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
+                (1/legged_state.param.gait_counter_speed/2) / 2.0 *
+                lin_vel_d_abs(1);
+
+        if (delta_x < -FOOT_DELTA_X_LIMIT) {
+            delta_x = -FOOT_DELTA_X_LIMIT;
+        }
+        if (delta_x > FOOT_DELTA_X_LIMIT) {
+            delta_x = FOOT_DELTA_X_LIMIT;
+        }
+        if (delta_y < -FOOT_DELTA_Y_LIMIT) {
+            delta_y = -FOOT_DELTA_Y_LIMIT;
+        }
+        if (delta_y > FOOT_DELTA_Y_LIMIT) {
+            delta_y = FOOT_DELTA_Y_LIMIT;
+        }
+
+        // modify abs frame foothold target
+        legged_state.ctrl.foot_pos_target_abs(0, i) += delta_x;
+        legged_state.ctrl.foot_pos_target_abs(1, i) += delta_y;
+
+        // dont really use this but still calculate it
+        legged_state.ctrl.foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * legged_state.ctrl.foot_pos_target_abs.block<3, 1>(0, i);
+
+        // swing leg need to use foot_pos_target_world
+        legged_state.ctrl.foot_pos_target_world.block<3, 1>(0, i) = legged_state.ctrl.foot_pos_target_abs.block<3, 1>(0, i) + legged_state.fbk.root_pos;
+    }
+
     return true;
 }
 
 bool BaseInterface::estimation_update(double t, double dt) {
-    // state estimation EKF
+    // legged_state estimation EKF
     if (!kf.is_inited()) {
         kf.init_state(legged_state);
     } else {
@@ -300,6 +343,7 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
 
         Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3,3>(3*i, 3*i); 
         legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) = -jac.transpose() * foot_forces_grf_rel.block<3,1>(0,i);  
+        // TODO: add dynamics feedforward
 
         if (legged_state.ctrl.movement_mode > 0) {
             // foot target force assignment
@@ -315,6 +359,8 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
                 legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = joint_ang_tgt;
             }
             Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3)) / dt;
+            // cascade PD
+            // Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.fbk.joint_pos.segment<3>(i*3))*2.5;
             legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
         }   else {
             legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
