@@ -34,6 +34,8 @@ class LeggedFeedback {
     Eigen::Vector3d root_acc;
 
     Eigen::Vector4d foot_force;
+    Eigen::Vector4d foot_force_bias;
+    bool foot_force_bias_record = false;
     Eigen::Matrix<double, NUM_DOF, 1> joint_pos;
     Eigen::Matrix<double, NUM_DOF, 1> joint_vel;
 

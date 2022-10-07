@@ -83,11 +83,11 @@ namespace legged
         state.ctrl.foot_pos_target_abs = state.fbk.root_rot_mat_z * state.param.default_foot_pos_rel;
         for (int i = 0; i < NUM_LEG; ++i) {
             double delta_x =
-                    std::sqrt(std::abs(state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
+                    std::sqrt(std::abs(state.fbk.root_pos(2)) / 9.8) * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
                     (1/state.param.gait_counter_speed) / 2.0 *
                     lin_vel_d_abs(0);
             double delta_y =
-                    std::sqrt(std::abs(state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
+                    std::sqrt(std::abs(state.fbk.root_pos(2)) / 9.8) * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
                     (1/state.param.gait_counter_speed) / 2.0 *
                     lin_vel_d_abs(1);
 

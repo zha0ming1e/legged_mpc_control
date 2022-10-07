@@ -12,14 +12,14 @@
 #define JOY_CMD_BODY_HEIGHT_MAX 0.32     // m
 #define JOY_CMD_BODY_HEIGHT_MIN 0.05     // m
 #define JOY_CMD_BODY_HEIGHT_VEL 0.1    // m/s
-#define JOY_CMD_VELX_MAX 0.5         // m/s
-#define JOY_CMD_VELY_MAX 0.1            // m/s
+#define JOY_CMD_VELX_MAX 0.9         // m/s
+#define JOY_CMD_VELY_MAX 0.3            // m/s
 #define JOY_CMD_YAW_MAX 0.8             // rad
 #define JOY_CMD_PITCH_MAX 0.4           // rad
 #define JOY_CMD_ROLL_MAX 0.4            // rad
 
 // mpc
-#define PLAN_HORIZON 20
+#define PLAN_HORIZON 35
 #define MPC_STATE_DIM 13
 #define MPC_STATE_DIM_SPARSE 12
 #define MPC_CONSTRAINT_DIM 20

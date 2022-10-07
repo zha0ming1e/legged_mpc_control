@@ -83,12 +83,12 @@ namespace legged
         // notice cmd uses order FR, FL, RR, RL
         cmd.levelFlag = UNITREE_LEGGED_SDK::LOWLEVEL;
         for (int i = 0; i < NUM_DOF; i++) {
-            cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
-            cmd.motorCmd[i].q = UNITREE_LEGGED_SDK::PosStopF; // shut down position control
-            cmd.motorCmd[i].Kp = 0;
-            cmd.motorCmd[i].dq = UNITREE_LEGGED_SDK::VelStopF; // shut down velocity control
-            cmd.motorCmd[i].Kd = 0;
             int swap_i = swap_joint_indices(i);
+            cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
+            cmd.motorCmd[i].q = UNITREE_LEGGED_SDK::PosStopF;        // 禁止位置环
+            cmd.motorCmd[i].Kp = 0;
+            cmd.motorCmd[i].dq = UNITREE_LEGGED_SDK::VelStopF;        // 禁止速度环
+            cmd.motorCmd[i].Kd = 0;
             cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(swap_i);
         }
 
@@ -135,10 +135,17 @@ namespace legged
             legged_state.fbk.joint_pos[i] = unitree_state.motorState[swap_i].q;
         }
 
+        if (legged_state.fbk.foot_force_bias_record == false) {
+            for (int i = 0; i < NUM_LEG; ++i) {
+                int swap_i = swap_foot_indices(i);
+                legged_state.fbk.foot_force_bias[i] = unitree_state.footForce[swap_i];
+            }
+            legged_state.fbk.foot_force_bias_record = true;
+        }
         // foot force, add a filter here
         for (int i = 0; i < NUM_LEG; ++i) {
             int swap_i = swap_foot_indices(i);
-            double value = static_cast<double>(unitree_state.footForce[swap_i]);
+            double value = static_cast<double>(unitree_state.footForce[swap_i]-legged_state.fbk.foot_force_bias[i]);
             legged_state.fbk.foot_force[i] = foot_force_filters[i].CalculateAverage(value);
         }
 

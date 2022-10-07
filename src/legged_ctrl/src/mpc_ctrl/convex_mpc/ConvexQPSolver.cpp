@@ -22,7 +22,7 @@ namespace legged
         friction_constraint_size_(PLAN_HORIZON * 4 * NUM_LEG), 
         bound_constraint_size_(PLAN_HORIZON * 4) {
         //TODO: make this configurable
-        mu_ = 0.6;     
+        mu_ = 0.4;     
         mpc_dt_ = MPC_UPDATE_FREQUENCY/1000.0;
 
         // Initialize hessian (only once)
