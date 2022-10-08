@@ -4,12 +4,12 @@
 
 #pragma once
 // control time related
-#define MPC_UPDATE_FREQUENCY     5.0  // ms        200Hz
-#define LOW_LEVEL_CTRL_FREQUENCY 1.25  // ms       800Hz
+#define MPC_UPDATE_FREQUENCY     2.5  // ms        400Hz
+#define LOW_LEVEL_CTRL_FREQUENCY 1.0  // ms       1000Hz
 
 // constant define
 // joy stick command interprate
-#define JOY_CMD_BODY_HEIGHT_MAX 0.32     // m
+#define JOY_CMD_BODY_HEIGHT_MAX 0.30     // m
 #define JOY_CMD_BODY_HEIGHT_MIN 0.05     // m
 #define JOY_CMD_BODY_HEIGHT_VEL 0.1    // m/s
 #define JOY_CMD_VELX_MAX 1.5         // m/s
@@ -19,7 +19,7 @@
 #define JOY_CMD_ROLL_MAX 0.4            // rad
 
 // mpc
-#define PLAN_HORIZON 35
+#define PLAN_HORIZON 30
 #define MPC_STATE_DIM 13
 #define MPC_STATE_DIM_SPARSE 12
 #define MPC_CONSTRAINT_DIM 20
@@ -36,7 +36,7 @@
 #define FOOT_FORCE_HIGH 80.0
 
 #define FOOT_SWING_CLEARANCE1 0.0f
-#define FOOT_SWING_CLEARANCE2 0.1f
+#define FOOT_SWING_CLEARANCE2 0.23f
 
 #define FOOT_DELTA_X_LIMIT 0.8
 #define FOOT_DELTA_Y_LIMIT 0.8

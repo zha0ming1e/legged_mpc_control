@@ -289,11 +289,11 @@ bool BaseInterface::sensor_update(double t, double dt) {
     for (int i = 0; i < NUM_LEG; ++i) {
         double delta_x =
                 std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
-                (1/legged_state.param.gait_counter_speed/2) / 2.0 *
+                (1.0/legged_state.param.gait_counter_speed/2.0) / 2.0 *
                 lin_vel_d_abs(0);
         double delta_y =
                 std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
-                (1/legged_state.param.gait_counter_speed/2) / 2.0 *
+                (1.0/legged_state.param.gait_counter_speed/2.0) / 2.0 *
                 lin_vel_d_abs(1);
 
         if (delta_x < -FOOT_DELTA_X_LIMIT) {
@@ -346,9 +346,13 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
         // TODO: add dynamics feedforward
 
         if (legged_state.ctrl.movement_mode > 0) {
-            // foot target force assignment
+            // foot target pos/vel assignment
             foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
                 (legged_state.ctrl.optimized_state.segment<3>(6 + 3 * i)  - legged_state.fbk.root_pos);
+
+
+            foot_vel_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
+                (legged_state.ctrl.optimized_input.segment<3>(12 + 3 * i)  - legged_state.fbk.root_lin_vel);
 
             Eigen::Vector3d joint_ang_tgt = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), legged_state.fbk.joint_pos.segment<3>(i*3), rho_opt_list[i], rho_fix_list[i]);
             if ((isnan(joint_ang_tgt[0])) || (isnan(joint_ang_tgt[1])) || (isnan(joint_ang_tgt[2]))) {
@@ -358,10 +362,12 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
                 legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
                 legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = joint_ang_tgt;
             }
-            Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3)) / dt;
-            // cascade PD
-            // Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.fbk.joint_pos.segment<3>(i*3))*2.5;
-            legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
+            Eigen::Vector3d joint_vel_tgt = jac.lu().solve(foot_vel_target_rel.block<3, 1>(0, i));
+            if ((isnan(joint_vel_tgt[0])) || (isnan(joint_vel_tgt[1])) || (isnan(joint_vel_tgt[2]))) {
+                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
+            } else {
+                legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
+            }
         }   else {
             legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);

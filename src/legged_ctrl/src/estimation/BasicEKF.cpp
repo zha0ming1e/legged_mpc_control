@@ -83,7 +83,7 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
     } else {  // walk
         for (int i = 0; i < NUM_LEG; ++i) {
             // estimated_contacts[i] = std::min(std::max((state.fbk.foot_force(i)) / (70.0 - 0.0), 0.0), 1.0);
-            estimated_contacts[i] = 1.0/(1.0+std::exp(-(state.fbk.foot_force(i)-100)));
+            estimated_contacts[i] = 1.0/(1.0+std::exp(-(state.fbk.foot_force(i)-110)));
         }
     }
     // update Q
