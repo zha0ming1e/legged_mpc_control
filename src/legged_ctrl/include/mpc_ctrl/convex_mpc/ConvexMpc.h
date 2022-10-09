@@ -44,6 +44,10 @@ private:
     LeggedContactFSM leg_FSM[NUM_LEG];
 
     ConvexQPSolver fastConvex;
+
+    // filter for velocity command 
+    MovingWindowFilter root_lin_vel_d_rel_filter_x;
+    MovingWindowFilter root_lin_vel_d_rel_filter_y;
 }; 
 
 

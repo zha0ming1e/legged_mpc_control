@@ -14,6 +14,10 @@ namespace legged
         // notice we scale weights by control dt
         fastConvex = ConvexQPSolver(state.param.q_weights, 
                                     state.param.r_weights); 
+
+        root_lin_vel_d_rel_filter_x = MovingWindowFilter(200);
+        root_lin_vel_d_rel_filter_y = MovingWindowFilter(200);
+
     }
 
     bool ConvexMpc::update(LeggedState &state, double t, double dt)
@@ -26,8 +30,9 @@ namespace legged
         }
         // read joy command 
         state.ctrl.root_pos_d[2] = state.joy.body_height;
-        state.ctrl.root_lin_vel_d_rel[0] = state.joy.velx;
-        state.ctrl.root_lin_vel_d_rel[1] = state.joy.vely;
+        // TODO: add a filter here for lin_vel_d_rel
+        state.ctrl.root_lin_vel_d_rel[0] = root_lin_vel_d_rel_filter_x.CalculateAverage(state.joy.velx);
+        state.ctrl.root_lin_vel_d_rel[1] = root_lin_vel_d_rel_filter_y.CalculateAverage(state.joy.vely);
         state.ctrl.root_ang_vel_d_rel[2] = state.joy.yaw_rate;
         state.ctrl.root_euler_d[2] += state.joy.yaw_rate * dt;
 
