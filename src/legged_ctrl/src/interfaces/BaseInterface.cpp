@@ -275,6 +275,30 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // std::cout << legged_state.fbk.foot_pos_rel.block<3, 1>(0, 3).transpose() << " ---pos_rel3--- " << pos_measured[3].transpose() << std::endl;
     // std::cout << "---------------------------------" << std::endl;
 
+    // a dynamic model for foot contact thresholding
+    // TODO: make some parameters configurable
+    for (int i = 0; i < NUM_LEG; ++i) {
+           double force_mag = legged_state.fbk.foot_force[i];
+
+            if (force_mag < legged_state.fbk.foot_force_min[i])
+            {
+                legged_state.fbk.foot_force_min[i] = 0.9 * legged_state.fbk.foot_force_min[i] + 0.1 * force_mag;
+            }
+            if (force_mag > legged_state.fbk.foot_force_max[i])
+            {
+                legged_state.fbk.foot_force_max[i] = 0.9 * legged_state.fbk.foot_force_max[i] + 0.1 * force_mag;
+            }
+            // exponential decay, max force decays faster
+            legged_state.fbk.foot_force_min[i] *= 0.9991;
+            legged_state.fbk.foot_force_max[i] *= 0.997;
+            legged_state.fbk.foot_force_contact_threshold[i] = 
+                legged_state.fbk.foot_force_min[i] + 0.5 * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
+
+            legged_state.fbk.foot_contact_flag[i] = 
+                1.0 / (1 + exp(-10 * (force_mag - legged_state.fbk.foot_force_contact_threshold[i])));        
+    }
+
+
     estimation_update(t, dt);
 
 

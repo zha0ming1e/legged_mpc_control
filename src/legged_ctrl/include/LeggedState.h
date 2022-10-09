@@ -35,6 +35,13 @@ class LeggedFeedback {
 
     Eigen::Vector4d foot_force;
     Eigen::Vector4d foot_force_bias;
+
+    // process foot force to get contact 
+    Eigen::Vector4d foot_force_min;
+    Eigen::Vector4d foot_force_max;
+    Eigen::Vector4d foot_force_contact_threshold;
+    Eigen::Vector4d foot_contact_flag;
+
     bool foot_force_bias_record = false;
     Eigen::Matrix<double, NUM_DOF, 1> joint_pos;
     Eigen::Matrix<double, NUM_DOF, 1> joint_vel;

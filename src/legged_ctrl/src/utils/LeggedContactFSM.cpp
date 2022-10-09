@@ -57,7 +57,7 @@ namespace legged
                 s = SWING;
             }
         } else if (s == SWING) {
-            if (percent_in_state() > 0.7 && foot_force_flag) {
+            if (percent_in_state() > 0.9 && foot_force_flag) {
                 // if we are in the second half of the swing phase and we have early contact
                 // then we should switch to stance phase immediately
                 s = STANCE;
