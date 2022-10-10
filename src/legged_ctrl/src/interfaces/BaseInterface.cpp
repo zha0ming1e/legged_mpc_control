@@ -282,15 +282,15 @@ bool BaseInterface::sensor_update(double t, double dt) {
 
             if (force_mag < legged_state.fbk.foot_force_min[i])
             {
-                legged_state.fbk.foot_force_min[i] = 0.9 * legged_state.fbk.foot_force_min[i] + 0.1 * force_mag;
+                legged_state.fbk.foot_force_min[i] = 0;
             }
             if (force_mag > legged_state.fbk.foot_force_max[i])
             {
-                legged_state.fbk.foot_force_max[i] = 0.9 * legged_state.fbk.foot_force_max[i] + 0.1 * force_mag;
+                legged_state.fbk.foot_force_max[i] = 300;
             }
             // exponential decay, max force decays faster
-            legged_state.fbk.foot_force_min[i] *= 0.9991;
-            legged_state.fbk.foot_force_max[i] *= 0.997;
+            // legged_state.fbk.foot_force_min[i] *= 0.9991;
+            // legged_state.fbk.foot_force_max[i] *= 0.997;
             legged_state.fbk.foot_force_contact_threshold[i] = 
                 legged_state.fbk.foot_force_min[i] + 0.5 * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
 
