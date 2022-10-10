@@ -24,11 +24,7 @@ namespace legged
                     std::cout << "LeggedSafetyChecker: robot pitch is too large " << std::endl;
                     return false;
                 }
-<<<<<<< HEAD
                 if (legged_state.fbk.joint_vel.maxCoeff() > 30.0) {
-=======
-                if (legged_state.fbk.joint_vel.maxCoeff() > 25.0) {
->>>>>>> 8067aaad9fe48aabf03b7fcd1f642776cd6710a4
                     std::cout << "LeggedSafetyChecker: joint velocity is too large " << std::endl;
                     return false;
                 }
