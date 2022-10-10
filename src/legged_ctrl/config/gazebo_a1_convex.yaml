@@ -28,7 +28,7 @@ default_foot_pos_RR_y: -0.12
 default_foot_pos_RR_z: -0.3
 
 # gait speed in phase per second
-gait_counter_speed: 5.4    # 3 gait cycle per second
+gait_counter_speed: 4.0    # 3 gait cycle per second
 
 # convex MPC parameters
 

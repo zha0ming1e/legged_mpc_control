@@ -22,6 +22,14 @@
             /a1_debug/odom 
             /a1_debug/euler_d
             /a1_debug/odom_d 
+            /a1_debug/FL_pose 
+            /a1_debug/FL_pose_d 
+            /a1_debug/FR_pose 
+            /a1_debug/FR_pose_d 
+            /a1_debug/RL_pose 
+            /a1_debug/RL_pose_d 
+            /a1_debug/RR_pose 
+            /a1_debug/RR_pose_d 
             /hardware_a1/imu
             /hardware_a1/joint_foot
         " />

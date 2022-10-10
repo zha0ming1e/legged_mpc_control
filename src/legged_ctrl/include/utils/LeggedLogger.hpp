@@ -104,6 +104,16 @@ public:
         joint_data_d_.position.resize(12); 
         joint_data_d_.velocity.resize(12); 
 
+        // foot poses
+        pub_FL_pose_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/FL_pose", 100);
+        pub_FR_pose_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/FR_pose", 100);
+        pub_RL_pose_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/RL_pose", 100);
+        pub_RR_pose_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/RR_pose", 100);
+        pub_FL_pose_d_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/FL_pose_d", 100);
+        pub_FR_pose_d_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/FR_pose_d", 100);
+        pub_RL_pose_d_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/RL_pose_d", 100);
+        pub_RR_pose_d_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/RR_pose_d", 100);
+
         // Initialize desired state publisher
         pub_root_pose_d_ = nh_.advertise<nav_msgs::Odometry>(prefix + "/odom_d", 100); 
         pub_euler_d_ = nh_.advertise<geometry_msgs::Vector3Stamped>(prefix + "/euler_d", 100); 
@@ -162,6 +172,72 @@ public:
         euler_.vector.x = state.fbk.root_euler(0); 
         euler_.vector.y = state.fbk.root_euler(1); 
         euler_.vector.z = state.fbk.root_euler(2); 
+
+        // foot poses
+        FL_pose_msg_.header.stamp = stamp_now; 
+        FL_pose_msg_.pose.pose.position.x = state.fbk.foot_pos_world(0, 0);
+        FL_pose_msg_.pose.pose.position.y = state.fbk.foot_pos_world(1, 0);
+        FL_pose_msg_.pose.pose.position.z = state.fbk.foot_pos_world(2, 0); 
+        FL_pose_msg_.twist.twist.linear.x = state.fbk.foot_vel_world(0, 0);
+        FL_pose_msg_.twist.twist.linear.y = state.fbk.foot_vel_world(1, 0);
+        FL_pose_msg_.twist.twist.linear.z = state.fbk.foot_vel_world(2, 0);
+
+        FR_pose_msg_.header.stamp = stamp_now; 
+        FR_pose_msg_.pose.pose.position.x = state.fbk.foot_pos_world(0, 1);
+        FR_pose_msg_.pose.pose.position.y = state.fbk.foot_pos_world(1, 1);
+        FR_pose_msg_.pose.pose.position.z = state.fbk.foot_pos_world(2, 1); 
+        FR_pose_msg_.twist.twist.linear.x = state.fbk.foot_vel_world(0, 1);
+        FR_pose_msg_.twist.twist.linear.y = state.fbk.foot_vel_world(1, 1);
+        FR_pose_msg_.twist.twist.linear.z = state.fbk.foot_vel_world(2, 1);
+
+        RL_pose_msg_.header.stamp = stamp_now; 
+        RL_pose_msg_.pose.pose.position.x = state.fbk.foot_pos_world(0, 2);
+        RL_pose_msg_.pose.pose.position.y = state.fbk.foot_pos_world(1, 2);
+        RL_pose_msg_.pose.pose.position.z = state.fbk.foot_pos_world(2, 2); 
+        RL_pose_msg_.twist.twist.linear.x = state.fbk.foot_vel_world(0, 2);
+        RL_pose_msg_.twist.twist.linear.y = state.fbk.foot_vel_world(1, 2);
+        RL_pose_msg_.twist.twist.linear.z = state.fbk.foot_vel_world(2, 2);
+
+        RR_pose_msg_.header.stamp = stamp_now; 
+        RR_pose_msg_.pose.pose.position.x = state.fbk.foot_pos_world(0, 3);
+        RR_pose_msg_.pose.pose.position.y = state.fbk.foot_pos_world(1, 3);
+        RR_pose_msg_.pose.pose.position.z = state.fbk.foot_pos_world(2, 3); 
+        RR_pose_msg_.twist.twist.linear.x = state.fbk.foot_vel_world(0, 3);
+        RR_pose_msg_.twist.twist.linear.y = state.fbk.foot_vel_world(1, 3);
+        RR_pose_msg_.twist.twist.linear.z = state.fbk.foot_vel_world(2, 3);
+
+        // desired foot poses
+        FL_pose_msg_d_.header.stamp = stamp_now; 
+        FL_pose_msg_d_.pose.pose.position.x = state.ctrl.optimized_state(6 + 0);
+        FL_pose_msg_d_.pose.pose.position.y = state.ctrl.optimized_state(6 + 1);
+        FL_pose_msg_d_.pose.pose.position.z = state.ctrl.optimized_state(6 + 2);
+        FL_pose_msg_d_.twist.twist.linear.x = state.ctrl.optimized_input(12 + 0);
+        FL_pose_msg_d_.twist.twist.linear.y = state.ctrl.optimized_input(12 + 1);
+        FL_pose_msg_d_.twist.twist.linear.z = state.ctrl.optimized_input(12 + 2);
+
+        FR_pose_msg_d_.header.stamp = stamp_now; 
+        FR_pose_msg_d_.pose.pose.position.x = state.ctrl.optimized_state(6 + 3);
+        FR_pose_msg_d_.pose.pose.position.y = state.ctrl.optimized_state(6 + 4);
+        FR_pose_msg_d_.pose.pose.position.z = state.ctrl.optimized_state(6 + 5); 
+        FR_pose_msg_d_.twist.twist.linear.x = state.ctrl.optimized_input(12 + 3);
+        FR_pose_msg_d_.twist.twist.linear.y = state.ctrl.optimized_input(12 + 4);
+        FR_pose_msg_d_.twist.twist.linear.z = state.ctrl.optimized_input(12 + 5);
+
+        RL_pose_msg_d_.header.stamp = stamp_now; 
+        RL_pose_msg_d_.pose.pose.position.x = state.ctrl.optimized_state(6 + 6);
+        RL_pose_msg_d_.pose.pose.position.y = state.ctrl.optimized_state(6 + 7);
+        RL_pose_msg_d_.pose.pose.position.z = state.ctrl.optimized_state(6 + 8);
+        RL_pose_msg_d_.twist.twist.linear.x = state.ctrl.optimized_input(12 + 6);
+        RL_pose_msg_d_.twist.twist.linear.y = state.ctrl.optimized_input(12 + 7);
+        RL_pose_msg_d_.twist.twist.linear.z = state.ctrl.optimized_input(12 + 8);
+
+        RR_pose_msg_d_.header.stamp = stamp_now; 
+        RR_pose_msg_d_.pose.pose.position.x = state.ctrl.optimized_state(6 + 9);
+        RR_pose_msg_d_.pose.pose.position.y = state.ctrl.optimized_state(6 + 10);
+        RR_pose_msg_d_.pose.pose.position.z = state.ctrl.optimized_state(6 + 11);
+        RR_pose_msg_d_.twist.twist.linear.x = state.ctrl.optimized_input(12 + 9);
+        RR_pose_msg_d_.twist.twist.linear.y = state.ctrl.optimized_input(12 + 10);
+        RR_pose_msg_d_.twist.twist.linear.z = state.ctrl.optimized_input(12 + 11);
 
         // fill out desired pose
         odom_d_.header.stamp = stamp_now; 
@@ -238,6 +314,16 @@ public:
         // publish 
         pub_root_pose_.publish(odom_); 
         pub_root_pose_d_.publish(odom_d_); 
+
+        pub_FL_pose_.publish(FL_pose_msg_); 
+        pub_FL_pose_d_.publish(FL_pose_msg_d_); 
+        pub_FR_pose_.publish(FR_pose_msg_); 
+        pub_FR_pose_d_.publish(FR_pose_msg_d_); 
+        pub_RL_pose_.publish(RL_pose_msg_); 
+        pub_RL_pose_d_.publish(RL_pose_msg_d_); 
+        pub_RR_pose_.publish(RR_pose_msg_); 
+        pub_RR_pose_d_.publish(RR_pose_msg_d_); 
+
         pub_euler_.publish(euler_); 
         pub_euler_d_.publish(euler_d_); 
         pub_grf_.publish(grf_msg_); 
@@ -278,6 +364,24 @@ private:
     nav_msgs::Odometry odom_d_;      
     geometry_msgs::Vector3Stamped euler_d_; 
     sensor_msgs::JointState joint_data_d_;  
+
+    // Publish foot poses
+    ros::Publisher pub_FL_pose_; // foot FL pose
+    ros::Publisher pub_FR_pose_; // foot FR pose
+    ros::Publisher pub_RL_pose_; // foot RL pose
+    ros::Publisher pub_RR_pose_; // foot RL pose
+    ros::Publisher pub_FL_pose_d_; // desired foot FL pose
+    ros::Publisher pub_FR_pose_d_; // desired foot FR pose
+    ros::Publisher pub_RL_pose_d_; // desired foot RL pose
+    ros::Publisher pub_RR_pose_d_; // desired foot RL pose
+    nav_msgs::Odometry FL_pose_msg_;      
+    nav_msgs::Odometry FR_pose_msg_;      
+    nav_msgs::Odometry RL_pose_msg_;      
+    nav_msgs::Odometry RR_pose_msg_;      
+    nav_msgs::Odometry FL_pose_msg_d_;      
+    nav_msgs::Odometry FR_pose_msg_d_;      
+    nav_msgs::Odometry RL_pose_msg_d_;      
+    nav_msgs::Odometry RR_pose_msg_d_;      
 
     // Publish ground reaction forces 
     ros::Publisher pub_grf_;           // ground reactions forces 

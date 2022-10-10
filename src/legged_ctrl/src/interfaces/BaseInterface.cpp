@@ -260,7 +260,10 @@ bool BaseInterface::sensor_update(double t, double dt) {
         legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
 
         legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) + legged_state.fbk.root_pos;
-        legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) + legged_state.fbk.root_lin_vel;
+
+        legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = 
+            legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) + legged_state.fbk.root_lin_vel 
+          + legged_state.fbk.root_rot_mat * Utils::skew(legged_state.fbk.imu_ang_vel) * legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
     }
     // std::cout << "---------------------------------" << std::endl;
     // //compare
@@ -320,13 +323,15 @@ bool BaseInterface::sensor_update(double t, double dt) {
 
     // foothold target 
     legged_state.ctrl.foot_pos_target_abs = legged_state.fbk.root_rot_mat_z * legged_state.param.default_foot_pos_rel;
+    double k = std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8);
+    // double k = 0.03;
     for (int i = 0; i < NUM_LEG; ++i) {
         double delta_x =
-                std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
+                k * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
                 (1.0/legged_state.param.gait_counter_speed/2.0) / 2.0 *
                 lin_vel_d_abs(0);
         double delta_y =
-                std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
+                k * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
                 (1.0/legged_state.param.gait_counter_speed/2.0) / 2.0 *
                 lin_vel_d_abs(1);
 
