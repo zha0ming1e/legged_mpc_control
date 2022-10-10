@@ -298,6 +298,16 @@ bool BaseInterface::sensor_update(double t, double dt) {
                 1.0 / (1 + exp(-10 * (force_mag - legged_state.fbk.foot_force_contact_threshold[i])));        
     }
 
+    // after we got leg jacobians, convert tauEst to foot force estimation
+    // tau = J^T * F, so F = J^T^-1 * tau
+    for (int i = 0; i < NUM_LEG; ++i) {
+        Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i).transpose();
+        // robot frame foot force estimation
+        Eigen::Vector3d force_rel = jac.lu().solve(legged_state.fbk.joint_tauEst.segment<3>(3 * i));
+        // world frame foot force estimation
+        legged_state.fbk.foot_force_tauEst.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * force_rel;
+
+    }
 
     estimation_update(t, dt);
 
