@@ -80,7 +80,8 @@ int main(int argc, char **argv) {
         // TODO: use Go1 urdf
         urdfFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/urdf/a1_description/urdf/a1.urdf";
         std::cout << "not implemented yet " << std::endl;
-        return -1;
+        intef = std::unique_ptr<legged::GazeboInterface>(new legged::GazeboInterface(nh, taskFile, urdfFile, referenceFile)); 
+        // return -1;
 
     } else if (use_sim_time == false && robot_type == 1) {
         // TODO: use Go1 urdf

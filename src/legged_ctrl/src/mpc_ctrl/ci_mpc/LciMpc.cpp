@@ -24,7 +24,7 @@ LciMpc::LciMpc() {
     // standing_policy_ = (jl_value_t*) jl_eval_string("tvlqr_policy");
     walking_policy_ = (jl_value_t*) jl_eval_string("p_walk"); 
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_pace_forward");
-    walking_policy_ = (jl_value_t*) jl_eval_string("p_reach"); 
+    // walking_policy_ = (jl_value_t*) jl_eval_string("p_reach"); 
     policy_function_ = jl_get_function(julia_mpc_module_, "exec_policy");
     // update_velocity_function_ = jl_get_function(jl_main_module, "update_velocity");
 

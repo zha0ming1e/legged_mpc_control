@@ -1,0 +1,11 @@
+<launch>
+    <arg name="run_type" default="gazebo"/>
+    <arg name="robot_type" default="go1"/>
+    <arg name="mpc_type" default="lci"/>
+
+    <!-- Loading Config files -->
+    <rosparam file="$(find legged_ctrl)/config/$(arg run_type)_$(arg robot_type)_$(arg mpc_type).yaml" command="load"/>
+
+    <!-- Load actual executables -->
+    <node pkg="legged_ctrl" type="main" name="main" output="screen"/>
+</launch>
