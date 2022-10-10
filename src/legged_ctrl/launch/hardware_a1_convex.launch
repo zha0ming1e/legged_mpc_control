@@ -15,6 +15,7 @@
         args="record -o /home/REXOperator/legged_ctrl_ws/bags/ 
             /a1_debug/contact_forces
             /a1_debug/mpc_contact_forces
+            /a1_debug/tauEst_contact_forces
             /a1_debug/joint 
             /a1_debug/joint_d 
             /a1_debug/euler

@@ -144,6 +144,7 @@ namespace legged
             legged_state.fbk.joint_vel[i] = joint_vel_filters[i].CalculateAverage(unitree_state.motorState[swap_i].dq);
             // legged_state.fbk.joint_vel[i] = (unitree_state.motorState[swap_i].q - legged_state.fbk.joint_pos[i])/dt;
             legged_state.fbk.joint_pos[i] = unitree_state.motorState[swap_i].q;
+            legged_state.fbk.joint_tauEst[i] = unitree_state.motorState[swap_i].tauEst;
         }
 
         if (legged_state.fbk.foot_force_bias_record == false) {

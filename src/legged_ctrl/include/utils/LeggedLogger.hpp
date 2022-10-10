@@ -130,6 +130,11 @@ public:
         mpc_contact_forces_msg_.velocity.resize(4);
         mpc_contact_forces_msg_.effort.resize(4);
 
+        pub_foot_force_tauEst_ = nh_.advertise<sensor_msgs::JointState>(prefix + "/tauEst_contact_forces", 100);
+        foot_force_tauEst_msg_.name = {"FL", "FR", "RL", "RR"};
+        foot_force_tauEst_msg_.position.resize(4);
+        foot_force_tauEst_msg_.velocity.resize(4);
+        foot_force_tauEst_msg_.effort.resize(4);
 
     }
 
@@ -182,6 +187,7 @@ public:
         grf_msg_.header.stamp = stamp_now; 
         contact_forces_msg_.header.stamp = stamp_now; 
         mpc_contact_forces_msg_.header.stamp = stamp_now;
+        foot_force_tauEst_msg_.header.stamp = stamp_now;
         swing_forces_msg_.header.stamp = stamp_now; 
         for(size_t i = 0; i < NUM_LEG; ++i) {
             foot_marker_[i].header.stamp = stamp_now; 
@@ -222,6 +228,7 @@ public:
 
             contact_forces_msg_.effort[i] = state.fbk.foot_force[i]; 
             mpc_contact_forces_msg_.effort[i] = state.ctrl.optimized_input.segment<3>(i*3).norm();
+            foot_force_tauEst_msg_.effort[i] = state.fbk.foot_force_tauEst.block<3,1>(0,i).norm();
         }
         // contact_forces_msg_.quaternion.w = state.ctrl.plan_contacts[0]; 
         // contact_forces_msg_.quaternion.x = state.ctrl.plan_contacts[1]; 
@@ -238,6 +245,7 @@ public:
         pub_joint_data_d_.publish(joint_data_d_); 
         pub_contact_forces_.publish(contact_forces_msg_); 
         pub_mpc_contact_forces_.publish(mpc_contact_forces_msg_); 
+        pub_foot_force_tauEst_.publish(foot_force_tauEst_msg_); 
         pub_swing_forces_.publish(swing_forces_msg_); 
 
         // publish tf
@@ -286,8 +294,10 @@ private:
     // publish contact info 
     ros::Publisher pub_contact_forces_; 
     ros::Publisher pub_mpc_contact_forces_;
+    ros::Publisher pub_foot_force_tauEst_;
     sensor_msgs::JointState contact_forces_msg_; 
     sensor_msgs::JointState mpc_contact_forces_msg_; 
+    sensor_msgs::JointState foot_force_tauEst_msg_; 
 
     // Foot name mapping 
     unordered_map<int, string> foot_name_map_{{0, "/FL"},

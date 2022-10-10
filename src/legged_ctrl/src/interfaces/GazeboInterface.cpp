@@ -159,64 +159,76 @@ void GazeboInterface::imu_callback(const sensor_msgs::Imu::ConstPtr &imu) {
 void GazeboInterface::FL_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[0] = a1_joint_state.q;
     legged_state.fbk.joint_vel[0] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[0] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::FL_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[1] = a1_joint_state.q;
     legged_state.fbk.joint_vel[1] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[1] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::FL_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[2] = a1_joint_state.q;
     legged_state.fbk.joint_vel[2] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[2] = a1_joint_state.tauEst;
 }
 
 // FR
 void GazeboInterface::FR_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[3] = a1_joint_state.q;
     legged_state.fbk.joint_vel[3] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[3] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::FR_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[4] = a1_joint_state.q;
     legged_state.fbk.joint_vel[4] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[4] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::FR_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[5] = a1_joint_state.q;
     legged_state.fbk.joint_vel[5] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[5] = a1_joint_state.tauEst;
 }
 
 // RL
 void GazeboInterface::RL_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[6] = a1_joint_state.q;
     legged_state.fbk.joint_vel[6] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[6] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::RL_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[7] = a1_joint_state.q;
     legged_state.fbk.joint_vel[7] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[7] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::RL_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[8] = a1_joint_state.q;
     legged_state.fbk.joint_vel[8] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[8] = a1_joint_state.tauEst;
 }
 
 // RR
 void GazeboInterface::RR_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[9] = a1_joint_state.q;
     legged_state.fbk.joint_vel[9] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[9] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::RR_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[10] = a1_joint_state.q;
     legged_state.fbk.joint_vel[10] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[10] = a1_joint_state.tauEst;
 }
 
 void GazeboInterface::RR_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
     legged_state.fbk.joint_pos[11] = a1_joint_state.q;
     legged_state.fbk.joint_vel[11] = a1_joint_state.dq;
+    legged_state.fbk.joint_tauEst[11] = a1_joint_state.tauEst;
 }
 
 // foot contact force, we just use norm 
