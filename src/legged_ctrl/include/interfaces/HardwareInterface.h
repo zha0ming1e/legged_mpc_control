@@ -48,7 +48,7 @@ private:
 
     void udp_init_send();
 
-    void receive_low_state();
+    void receive_low_state(double dt);
 
     // a1 hardware switch foot order
     Eigen::Matrix<int, NUM_DOF, 1> swap_joint_indices;
@@ -56,6 +56,9 @@ private:
 
     // a1 hardware foot force filter
     MovingWindowFilter foot_force_filters[NUM_LEG];
+
+    // hardware joint vel filter
+    MovingWindowFilter joint_vel_filters[NUM_DOF];
 
     // a1 hardware safety checker
     LeggedSafetyChecker safety_checker;
