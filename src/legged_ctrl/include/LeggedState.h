@@ -33,11 +33,20 @@ class LeggedFeedback {
     Eigen::Vector3d root_ang_vel;
     Eigen::Vector3d root_acc;
 
-    Eigen::Vector4d foot_force;
-    Eigen::Vector4d foot_force_bias;
+    Eigen::Vector4d foot_force;             // the force we get from foot contact sensor, drifts a lot
+    Eigen::Vector4d foot_force_bias;       // since the foot contact sensor is not accurate, we need to record an initial bias
+    Eigen::Matrix<double, 3, NUM_LEG> foot_force_tauEst; // a foot force estimation based on joint torque feedback 
+
+    // process foot force to get contact 
+    Eigen::Vector4d foot_force_min;
+    Eigen::Vector4d foot_force_max;
+    Eigen::Vector4d foot_force_contact_threshold;
+    Eigen::Vector4d foot_contact_flag;
+
     bool foot_force_bias_record = false;
     Eigen::Matrix<double, NUM_DOF, 1> joint_pos;
     Eigen::Matrix<double, NUM_DOF, 1> joint_vel;
+    Eigen::Matrix<double, NUM_DOF, 1> joint_tauEst; // unitree sdk's tauEst is the torque feedback from the motor
 
     Eigen::Matrix<double, 3, NUM_LEG> foot_pos_world; // in the world frame
     Eigen::Matrix<double, 3, NUM_LEG> foot_pos_abs;   // in a frame which centered at the robot frame's origin but parallels to the world frame
