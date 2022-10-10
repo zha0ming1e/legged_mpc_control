@@ -348,9 +348,9 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
         }
     } 
     
-    std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
-    std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
-    std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
+    // std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
+    // std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
+    // std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
     
     // legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     // legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;

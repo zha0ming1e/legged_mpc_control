@@ -7,6 +7,7 @@ build controller:
     source ~/ocs2_ws/devel/setup.bash
     source devel/setup.bash
     echo "source devel/setup.bash" >> ~/.bashrc
+    catkin build
     CI-MPC:     roslaunch legged_ctrl main_ctrl.launch
     or 
     convex-MPC: roslaunch legged_ctrl gazebo_a1_convex.launch

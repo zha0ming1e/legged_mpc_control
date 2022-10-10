@@ -95,7 +95,7 @@ bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
     Eigen::VectorXd v_des(6); 
     v_des << legged_state.ctrl.root_lin_vel_d_rel, legged_state.ctrl.root_ang_vel_d_rel; 
     JuliaVector1d v_des_jl(v_des); 
-    std::cout << v_des.transpose() << std::endl; 
+    // std::cout << v_des.transpose() << std::endl; 
     velocity_args_[1] = (jl_value_t*) v_des_jl.toJArray(); 
     // jl_call(update_velocity_function_, velocity_args_.data(), velocity_args_.size()); 
 

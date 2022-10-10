@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
             prev = now;
             ros::Duration elapsed = now - start;
 
-            std::cout << "run "  << elapsed.toSec() << std::endl;
+            // std::cout << "run "  << elapsed.toSec() << std::endl;
             bool main_update_running = intef->update(elapsed.toSec(), dt.toSec());
             
             if (!main_update_running) {

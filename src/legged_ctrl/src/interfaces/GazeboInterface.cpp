@@ -73,7 +73,7 @@ bool GazeboInterface::update(double t, double dt) {
     }
     bool joy_run = joy_update(t, dt);
     // debug print some variables 
-    std::cout << legged_state.joy.ctrl_state << std::endl;
+    // std::cout << legged_state.joy.ctrl_state << std::endl;
 
     /*
      * get sensor feedback & update state estimator
