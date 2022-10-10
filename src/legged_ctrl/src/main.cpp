@@ -185,6 +185,8 @@ int main(int argc, char **argv) {
             bool main_update_running = intef->update(elapsed.toSec(), dt.toSec());
             
             if (!main_update_running) {
+                std::cout << "Thread 2 loop is terminated because of errors." << std::endl;
+                ros::shutdown();
                 std::terminate();
                 break;
             }

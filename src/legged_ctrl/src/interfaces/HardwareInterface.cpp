@@ -88,27 +88,17 @@ namespace legged
         cmd.levelFlag = UNITREE_LEGGED_SDK::LOWLEVEL;
         for (int i = 0; i < NUM_DOF; i++) {
             int swap_i = swap_joint_indices(i);
-            // int swap_leg = swap_foot_indices(i/NUM_DOF_PER_LEG);
-            // cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
-
-            // cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i);  // shut down position control
-            // cmd.motorCmd[i].Kp = legged_state.param.kp_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
-            // cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
-            // cmd.motorCmd[i].Kd = legged_state.param.kd_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
-
+            int swap_leg = swap_foot_indices(i/NUM_DOF_PER_LEG);
             cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
-            cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i); // shut down position control
-            cmd.motorCmd[i].Kp = 20;
-            cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
-            cmd.motorCmd[i].Kd = 0.08;
-
-            // int swap_leg = swap_foot_indices(i/NUM_DOF_PER_LEG);
-            // cmd.motorCmd[i].mode = 0x0A;   // motor switch to servo (PMSM) mode
+            // cmd.motorCmd[i].q = UNITREE_LEGGED_SDK::PosStopF;
+            // cmd.motorCmd[i].Kp = 0;
+            // cmd.motorCmd[i].dq = UNITREE_LEGGED_SDK::VelStopF;
+            // cmd.motorCmd[i].Kd = 0;
             
-            // cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i); // shut down position control
-            // cmd.motorCmd[i].Kp = legged_state.param.kp_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
-            // cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
-            // cmd.motorCmd[i].Kd = legged_state.param.kd_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
+            cmd.motorCmd[i].q = legged_state.ctrl.joint_ang_tgt(swap_i); // shut down position control
+            cmd.motorCmd[i].Kp = legged_state.param.kp_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
+            cmd.motorCmd[i].dq = legged_state.ctrl.joint_vel_tgt(swap_i); // shut down velocity control
+            cmd.motorCmd[i].Kd = legged_state.param.kd_foot(swap_i%NUM_DOF_PER_LEG, swap_leg);
 
             cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(swap_i);
         }

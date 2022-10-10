@@ -68,13 +68,13 @@ r_weights_10: 0.0001
 r_weights_11: 0.0001
 
 # swing leg parameters
-kp_foot_x: 20.0
-kp_foot_y: 20.0
-kp_foot_z: 20.0
+kp_foot_x: 30.0
+kp_foot_y: 30.0
+kp_foot_z: 30.0
 
-kd_foot_x: 1.0
-kd_foot_y: 1.0
-kd_foot_z: 1.0
+kd_foot_x: 1.5
+kd_foot_y: 1.5
+kd_foot_z: 1.5
 
 km_foot_x: 0.1
 km_foot_y: 0.1
