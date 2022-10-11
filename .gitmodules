@@ -4,4 +4,4 @@
 	branch = lci_mpc_dev
 [submodule "src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/ContactImplicitMPC.jl"]
 	path = src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/ContactImplicitMPC.jl
-	url = https://github.com/johnzhang3/ContactImplicitMPC.jl.git
+	url = https://github.com/RoboticExplorationLab/ContactImplicitMPC.jl.git
