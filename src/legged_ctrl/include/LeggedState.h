@@ -33,8 +33,8 @@ class LeggedFeedback {
     Eigen::Vector3d root_ang_vel;
     Eigen::Vector3d root_acc;
 
-    Eigen::Vector4d foot_force;             // the force we get from foot contact sensor, drifts a lot
-    Eigen::Vector4d foot_force_bias;       // since the foot contact sensor is not accurate, we need to record an initial bias
+    Eigen::Vector4d foot_force_sensor;             // the force we get from foot contact sensor, drifts a lot
+    Eigen::Vector4d foot_sensor_bias;       // since the foot contact sensor is not accurate, we need to record an initial bias
     Eigen::Matrix<double, 3, NUM_LEG> foot_force_tauEst; // a foot force estimation based on joint torque feedback 
 
     // process foot force to get contact 

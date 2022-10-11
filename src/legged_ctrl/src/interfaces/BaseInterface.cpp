@@ -281,7 +281,7 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // a dynamic model for foot contact thresholding
     // TODO: make some parameters configurable
     for (int i = 0; i < NUM_LEG; ++i) {
-           double force_mag = legged_state.fbk.foot_force[i];
+           double force_mag = legged_state.fbk.foot_force_sensor[i];
 
             if (force_mag < legged_state.fbk.foot_force_min[i])
             {
@@ -363,7 +363,7 @@ bool BaseInterface::sensor_update(double t, double dt) {
 }
 
 bool BaseInterface::estimation_update(double t, double dt) {
-    // legged_state estimation EKF
+    // legged_state estimation KF
     if (!kf.is_inited()) {
         kf.init_state(legged_state);
     } else {

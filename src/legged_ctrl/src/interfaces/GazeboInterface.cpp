@@ -234,22 +234,22 @@ void GazeboInterface::RR_calf_state_callback(const unitree_legged_msgs::MotorSta
 // foot contact force, we just use norm 
 void GazeboInterface::FL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[0] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[0] = force_vec.norm();
 }
 
 void GazeboInterface::FR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[1] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[1] = force_vec.norm();
 }
 
 void GazeboInterface::RL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[2] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[2] = force_vec.norm();
 }
 
 void GazeboInterface::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[3] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[3] = force_vec.norm();
 }
 
 

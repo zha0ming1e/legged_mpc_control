@@ -14,7 +14,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include "LeggedState.h"
-#include "estimation/BasicEKF.h"
+#include "estimation/BasicKF.h"
 #include "wbc_ctrl/wbc.h"
 #include "utils/LeggedIKSolver.h"
 #include "utils/A1Kinematics.h"
@@ -94,7 +94,7 @@ private:
     ros::Subscriber sub_joy_msg;
 
     // KF state estimator
-    BasicEKF kf;
+    BasicKF kf;
 
     // old a1 kinematics
     double leg_offset_x[4] = {};
