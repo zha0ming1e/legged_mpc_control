@@ -18,6 +18,7 @@
 #include "wbc_ctrl/wbc.h"
 #include "utils/LeggedIKSolver.h"
 #include "utils/A1Kinematics.h"
+#include "CasadiEKF/A1KFCombineLOWithFootTerrain.h"
 
 namespace legged
 {
@@ -95,6 +96,8 @@ private:
 
     // KF state estimator
     BasicKF kf;
+    // Casadi EKF state estimator
+    A1KFCombineLOWithFootTerrain ekf;
 
     // old a1 kinematics
     double leg_offset_x[4] = {};

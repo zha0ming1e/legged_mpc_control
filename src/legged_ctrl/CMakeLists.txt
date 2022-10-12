@@ -121,6 +121,21 @@ target_link_libraries(utils_lib
 target_compile_options(utils_lib PUBLIC ${OCS2_CXX_FLAGS})   
 
 
+# add casadi library and CasadiEKF
+find_package(casadi REQUIRED)
+find_package(gram_savitzky_golay REQUIRED)
+add_subdirectory(src/estimation/CasadiEKF)
+
+add_library(casadi_ekf_lib
+        src/estimation/CasadiEKF/A1KF.hpp
+        src/estimation/CasadiEKF/A1KFCombineLOWithFootTerrain.cpp
+)
+include_directories(
+        src/estimation/
+)
+set_target_properties(casadi_ekf_lib PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(casadi_ekf_lib casadi gram_savitzky_golay)
+
 add_library(interfaces_lib
         src/interfaces/BaseInterface.cpp
         src/interfaces/GazeboInterface.cpp
@@ -137,6 +152,7 @@ target_link_libraries(interfaces_lib
         ${catkin_LIBRARIES}
         ${pinocchio_LIBRARIES}
         ${UNITREE_LIBS}
+        casadi_ekf_lib
         )
 
 target_compile_options(interfaces_lib PUBLIC ${OCS2_CXX_FLAGS})   
