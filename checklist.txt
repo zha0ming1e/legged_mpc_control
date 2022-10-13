@@ -8,7 +8,8 @@ build controller:
     source devel/setup.bash
     echo "source devel/setup.bash" >> ~/.bashrc
     catkin build
-    CI-MPC:     roslaunch legged_ctrl main_ctrl.launch
+    CI-MPC:     roslaunch legged_ctrl gazebo_a1_cimpc.launch
+                roslaunch legged_ctrl hardware_go1_cimpc.launch
     or 
     convex-MPC: roslaunch legged_ctrl gazebo_a1_convex.launch
 
