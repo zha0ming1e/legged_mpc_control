@@ -91,15 +91,15 @@ public:
     vector_t prev_pos_des;
     vector_t vel_des;
 
-
-private:
-    ros::Subscriber sub_joy_msg;
-
     // KF state estimator
     BasicKF kf;
     // Casadi EKF state estimator
     A1SensorData ekf_data; 
     A1KFCombineLOWithFootTerrain ekf;
+
+private:
+    ros::Subscriber sub_joy_msg;
+
 
     // old a1 kinematics
     double leg_offset_x[4] = {};

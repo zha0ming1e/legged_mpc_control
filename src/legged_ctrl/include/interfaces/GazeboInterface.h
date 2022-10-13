@@ -97,6 +97,14 @@ private:
     MovingWindowFilter quat_x;
     MovingWindowFilter quat_y;
     MovingWindowFilter quat_z;
+
+    // simulate opti track
+    int DROP_COUNT = 10;   // drop the first 10 data
+    int current_count = 0;
+    bool first_mocap_received = false;
+    double opti_t_prev;
+    Eigen::Vector3d initial_opti_euler;  // the data we input to the filter is the difference between the current and initial euler angles
+    Eigen::Vector3d initial_opti_pos;    // the data we input to the filter is the difference between the current and initial position
 };
 
 }  // namespace legged
