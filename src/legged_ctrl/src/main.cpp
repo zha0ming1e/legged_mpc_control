@@ -92,6 +92,9 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    // wait for the ROS clock to be ready
+    ros::Duration(1.5).sleep();
+
     std::atomic<bool> control_execute{};
     control_execute.store(true, std::memory_order_release);
 
@@ -182,7 +185,7 @@ int main(int argc, char **argv) {
             prev = now;
             ros::Duration elapsed = now - start;
 
-            bool main_update_running = intef->update(elapsed.toSec(), dt.toSec());
+            bool main_update_running = intef->ctrl_update(elapsed.toSec(), dt.toSec());
             
             if (!main_update_running) {
                 std::cout << "Thread 2 loop is terminated because of errors." << std::endl;
@@ -194,6 +197,47 @@ int main(int argc, char **argv) {
             dt_solver_time_in_ros = ros::Time::now() - now;
             if (dt_solver_time_in_ros.toSec() < LOW_LEVEL_CTRL_FREQUENCY / 1000) {    
                 ros::Duration( LOW_LEVEL_CTRL_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec() ).sleep();
+            }
+        }
+    });
+
+    // Thread 3: get feedback
+    std::cout << "Start thread 3: get feedback"
+              << std::endl;
+    std::thread feedback_thread([&]() {
+        // prepare variables to monitor time and control the while loop
+        ros::Time start = ros::Time::now();
+        ros::Time prev = ros::Time::now();
+        ros::Time now = ros::Time::now();  // bool res = app.exec();
+        ros::Duration dt(0);
+        ros::Duration dt_solver_time_in_ros(0);
+
+        if (mpc_type == 0) {
+            // wait for LCI MPC controller to load julia stuff
+            ros::Duration(1.5).sleep();
+            lci_init_mutex.lock();
+            lci_init_mutex.unlock();
+        }
+
+        while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
+            // get t and dt
+            now = ros::Time::now();
+            dt = now - prev;
+            prev = now;
+            ros::Duration elapsed = now - start;
+
+            bool main_update_running = intef->fbk_update(elapsed.toSec(), dt.toSec());
+            
+            if (!main_update_running) {
+                std::cout << "Thread 3 loop is terminated because of errors." << std::endl;
+                ros::shutdown();
+                std::terminate();
+                break;
+            }
+
+            dt_solver_time_in_ros = ros::Time::now() - now;
+            if (dt_solver_time_in_ros.toSec() < FEEDBACK_FREQUENCY / 1000) {    
+                ros::Duration( FEEDBACK_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec() ).sleep();
             }
         }
     });

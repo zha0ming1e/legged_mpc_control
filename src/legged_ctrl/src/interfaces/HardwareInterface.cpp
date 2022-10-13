@@ -36,27 +36,16 @@ namespace legged
         }
     }
 
-    bool HardwareInterface::update(double t, double dt) {
+    bool HardwareInterface::ctrl_update(double t, double dt) {
 
-        // let callbacks run a little bit
-        if (t < 0.1) {
-            legged_state.estimation_inited = false;
+        if (legged_state.estimation_inited == false) {
+            std::cout << "fbk_update not called! " << std::endl;
             return true;
-        }
-        if (t >= 0.1) {
-            // this variable make the MPC control loop wait for sensor data to fill up and estimator runs 
-            legged_state.estimation_inited = true;
         }
         bool joy_run = joy_update(t, dt);
         // debug print some variables 
         // std::cout << legged_state.joy.ctrl_state << std::endl;
 
-        /*
-        * get sensor feedback & update state estimator
-        */
-        receive_low_state(dt);
-
-        bool sensor_run = sensor_update(t, dt);
 
         // run low level control 
         bool basic_run = tau_ctrl_update(t, dt);
@@ -77,7 +66,17 @@ namespace legged
             std::cout << "safety check failed, terminate the controller! " << std::endl;
         }
 
-        return joy_run && sensor_run && basic_run && safe_flag;
+        return joy_run && basic_run && safe_flag;
+    }
+
+    bool HardwareInterface::fbk_update(double t, double dt) {
+        /*
+        * get sensor feedback & update state estimator
+        */
+        receive_low_state(dt);
+
+        bool sensor_run = sensor_update(t, dt);
+        return sensor_run;
     }
 
 

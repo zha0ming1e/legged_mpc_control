@@ -61,6 +61,31 @@ Eigen::Vector3d Utils::quat_to_rotVec(Eigen::Quaterniond quat) {
 
 }
 
+Eigen::Quaterniond Utils::euler_to_quat(Eigen::Vector3d euler) {
+    Eigen::Quaterniond rst;
+    
+    double roll = euler(0);
+    double pitch = euler(1);
+    double yaw = euler(2);
+
+    roll /= 2;
+    pitch /= 2;
+    yaw /= 2;
+
+    double cos_half_yaw = cos(yaw);
+    double sin_half_yaw = sin(yaw);
+    double cos_half_pitch = cos(pitch);
+    double sin_half_pitch = sin(pitch);
+    double cos_half_roll = cos(roll);
+    double sin_half_roll = sin(roll);
+
+    rst.w() = cos_half_yaw * cos_half_pitch * cos_half_roll + sin_half_yaw * sin_half_pitch * sin_half_roll;
+    rst.x() = cos_half_yaw * cos_half_pitch * sin_half_roll - sin_half_yaw * sin_half_pitch * cos_half_roll;
+    rst.y() = cos_half_yaw * sin_half_pitch * cos_half_roll + sin_half_yaw * cos_half_pitch * sin_half_roll;
+    rst.z() = sin_half_yaw * cos_half_pitch * cos_half_roll - cos_half_yaw * sin_half_pitch * sin_half_roll;
+    return rst;
+}
+
 Eigen::Matrix3d Utils::skew(Eigen::Vector3d vec) {
     Eigen::Matrix3d rst; rst.setZero();
     rst <<            0, -vec(2),  vec(1),

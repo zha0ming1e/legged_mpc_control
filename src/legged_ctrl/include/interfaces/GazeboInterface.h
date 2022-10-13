@@ -24,7 +24,8 @@ class GazeboInterface : public BaseInterface {
 public:
     GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
 
-    bool update(double t, double dt);
+    bool ctrl_update(double t, double dt);
+    bool fbk_update(double t, double dt);
     
     bool send_cmd();
 

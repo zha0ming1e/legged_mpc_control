@@ -60,25 +60,16 @@ GazeboInterface::GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFi
     quat_z = MovingWindowFilter(5);
 
 }
-bool GazeboInterface::update(double t, double dt) {
+bool GazeboInterface::ctrl_update(double t, double dt) {
 
-    // let callbacks run a little bit
-    if (t < 0.1) {
-        legged_state.estimation_inited = false;
+    if (legged_state.estimation_inited == false) {
+        std::cout << "fbk_update not called! " << std::endl;
         return true;
     }
-    if (t >= 0.1) {
-        // this variable make the MPC control loop wait for sensor data to fill up and estimator runs 
-        legged_state.estimation_inited = true;
-    }
+
     bool joy_run = joy_update(t, dt);
     // debug print some variables 
     std::cout << legged_state.joy.ctrl_state << std::endl;
-
-    /*
-     * get sensor feedback & update state estimator
-     */
-    bool sensor_run = sensor_update(t, dt);
 
     // run low level control 
     bool basic_run = tau_ctrl_update(t, dt);
@@ -90,6 +81,15 @@ bool GazeboInterface::update(double t, double dt) {
     send_cmd();
 
     return joy_run;
+}
+
+
+bool GazeboInterface::fbk_update(double t, double dt) {
+    /*
+     * get sensor feedback & update state estimator
+     */
+    bool sensor_run = sensor_update(t, dt);
+    return sensor_run;
 }
 
 bool GazeboInterface::send_cmd() {

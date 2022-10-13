@@ -34,7 +34,8 @@ public:
      */
     BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
     virtual ~BaseInterface() {}
-    virtual bool update(double t, double dt) = 0;
+    virtual bool ctrl_update(double t, double dt) = 0;
+    virtual bool fbk_update(double t, double dt) = 0;
     
     virtual bool send_cmd() = 0;
 
@@ -97,6 +98,7 @@ private:
     // KF state estimator
     BasicKF kf;
     // Casadi EKF state estimator
+    A1SensorData ekf_data; 
     A1KFCombineLOWithFootTerrain ekf;
 
     // old a1 kinematics
