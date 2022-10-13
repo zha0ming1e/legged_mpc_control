@@ -32,21 +32,21 @@ gait_counter_speed: 4.0    # 3 gait cycle per second
 
 # convex MPC parameters
 
-q_weights_0:  50.0 # roll
+q_weights_0:  60.0 # roll
 q_weights_1:  100.0 # pitch
 q_weights_2:  0.0 # yaw
 
 q_weights_3:  0.0 # pos x
 q_weights_4:  0.0 # pos y
-q_weights_5:  3500.0 # pos z
+q_weights_5:  550.0 # pos z
 
-q_weights_6:  0.01 # omega x
-q_weights_7:  0.01 # omega y
-q_weights_8:  10.0 # omega z
+q_weights_6:  0.15 # omega x
+q_weights_7:  0.15 # omega y
+q_weights_8:  100.0 # omega z
 
-q_weights_9:  15.0 # vel x
-q_weights_10: 15.0 # vel y
-q_weights_11: 20.0 # vel z
+q_weights_9:  3.0 # vel x
+q_weights_10: 3.0  # vel y
+q_weights_11: 5.0 # vel z
 
 q_weights_12: 0.0
 
@@ -67,13 +67,13 @@ r_weights_10: 0.0001
 r_weights_11: 0.0001
 
 # swing leg parameters
-kp_foot_x: 0.5
-kp_foot_y: 0.5
-kp_foot_z: 0.5
+kp_foot_x: 10
+kp_foot_y: 10
+kp_foot_z: 10
 
-kd_foot_x: 0.3
-kd_foot_y: 0.3
-kd_foot_z: 0.3
+kd_foot_x: 0.1
+kd_foot_y: 0.1
+kd_foot_z: 0.1
 
 km_foot_x: 0.1
 km_foot_y: 0.1

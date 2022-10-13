@@ -138,9 +138,6 @@ int main(int argc, char **argv) {
             std::chrono::duration<double, std::milli> ms_double = t2 - t1;
             std::cout << "MPC solution is updated in " << ms_double.count() << "ms" << std::endl;
 
-            
-            // Logging 
-            logger->publish_state(intef->get_legged_state(), elapsed.toSec()); 
 
             if (!running) {
                 std::cout << "Thread 1 loop is terminated because of errors." << std::endl;
@@ -227,6 +224,9 @@ int main(int argc, char **argv) {
             ros::Duration elapsed = now - start;
 
             bool main_update_running = intef->fbk_update(elapsed.toSec(), dt.toSec());
+            
+            // Logging 
+            logger->publish_state(intef->get_legged_state(), elapsed.toSec()); 
             
             if (!main_update_running) {
                 std::cout << "Thread 3 loop is terminated because of errors." << std::endl;
