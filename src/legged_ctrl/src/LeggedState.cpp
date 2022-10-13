@@ -160,6 +160,33 @@ bool LeggedParam::load(ros::NodeHandle &_nh) {
     a1_trunk_inertia << a1_trunk_inertia_xx, a1_trunk_inertia_xy, a1_trunk_inertia_xz,
             a1_trunk_inertia_xy, a1_trunk_inertia_yy, a1_trunk_inertia_yz,
             a1_trunk_inertia_xz, a1_trunk_inertia_yz, a1_trunk_inertia_zz;
+
+
+    // joystick mapping 
+    _nh.param("/joystick_left_updown_axis", joystick_left_updown_axis, 1);     
+    _nh.param("/joystick_left_horiz_axis", joystick_left_horiz_axis, 0);  
+    _nh.param("/joystick_right_updown_axis", joystick_right_updown_axis, 4);  
+    _nh.param("/joystick_right_horiz_axis", joystick_right_horiz_axis, 3);  
+    _nh.param("/joystick_mode_switch_button", joystick_mode_switch_button, 0);  
+    _nh.param("/joystick_exit_button", joystick_exit_button, 4);  
+
+    // joystick parameters
+    _nh.param("/joystick_velx_scale", joystick_velx_scale, 2.5);     
+    _nh.param("/joystick_vely_scale", joystick_vely_scale, 0.4);  
+    _nh.param("/joystick_height_vel", joystick_height_vel, 0.1);  
+    _nh.param("/joystick_max_height", joystick_max_height, 0.3);  
+    _nh.param("/joystick_min_height", joystick_min_height, 0.03);  
+    _nh.param("/joystick_yaw_rate_scale", joystick_yaw_rate_scale, 0.8);  
+    _nh.param("/joystick_roll_rate_scale", joystick_roll_rate_scale, 0.4);
+    _nh.param("/joystick_pitch_rate_scale", joystick_pitch_rate_scale, 0.4);
+
+
+    // contact detection flags
+    _nh.param("/foot_sensor_max_value", foot_sensor_max_value, 300.0);     
+    _nh.param("/foot_sensor_min_value", foot_sensor_min_value, 0.0);  
+    _nh.param("/foot_sensor_ratio", foot_sensor_ratio, 0.5);  
+
+
     return true;
 }
 

@@ -162,6 +162,30 @@ class LeggedParam {
     double robot_mass;
     Eigen::Matrix3d a1_trunk_inertia;
 
+    // joystick mapping 
+    int joystick_left_updown_axis;
+    int joystick_left_horiz_axis;
+    int joystick_right_updown_axis;
+    int joystick_right_horiz_axis;
+    int joystick_mode_switch_button;
+    int joystick_exit_button;
+
+    // joystick parameters
+    double joystick_velx_scale;
+    double joystick_vely_scale;
+    double joystick_height_vel;
+    double joystick_max_height;
+    double joystick_min_height;
+    
+    double joystick_yaw_rate_scale;
+    double joystick_roll_rate_scale;
+    double joystick_pitch_rate_scale;
+
+    // contact detection flags
+    double foot_sensor_max_value;
+    double foot_sensor_min_value;
+    double foot_sensor_ratio;
+
 };
 
 class LeggedState {

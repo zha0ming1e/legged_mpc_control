@@ -101,31 +101,26 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
 }
 
 
-void BaseInterface::
-joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
+void BaseInterface::joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     // left updown
-    legged_state.joy.velz = joy_msg->axes[1] * JOY_CMD_BODY_HEIGHT_VEL;
+    legged_state.joy.velz = joy_msg->axes[legged_state.param.joystick_left_updown_axis] * legged_state.param.joystick_height_vel;
 
     //A
-    if (joy_msg->buttons[0] == 1) {
+    if (joy_msg->buttons[legged_state.param.joystick_mode_switch_button] == 1) {
         std::cout << std::endl << "You have requested to chaneg legged_state!" << std::endl << std::endl;
         legged_state.joy.ctrl_state_change_request = true;
     }
 
     // xbox controller mapping
     // right updown
-    legged_state.joy.velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
+    legged_state.joy.velx = joy_msg->axes[legged_state.param.joystick_right_updown_axis] * legged_state.param.joystick_velx_scale;
     // right horiz
-    legged_state.joy.vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
+    legged_state.joy.vely = joy_msg->axes[legged_state.param.joystick_right_horiz_axis] * legged_state.param.joystick_vely_scale;
     // left horiz
-    legged_state.joy.yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
-    // up-down button
-    // legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
-    // left-right button
-    // legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
+    legged_state.joy.yaw_rate = joy_msg->axes[legged_state.param.joystick_left_horiz_axis] * legged_state.param.joystick_yaw_rate_scale;
 
     // lb
-    if (joy_msg->buttons[4] == 1) {
+    if (joy_msg->buttons[legged_state.param.joystick_exit_button] == 1) {
         std::cout << "You have pressed the exit button!!!!" << std::endl;
         legged_state.joy.exit = true;
     }
@@ -140,11 +135,11 @@ bool BaseInterface::joy_update(double t, double dt) {
     // process joy cmd data to get desired height, velocity, yaw, etc
     // save the result into legged_state
     legged_state.joy.body_height += legged_state.joy.velz * dt;
-    if (legged_state.joy.body_height >= JOY_CMD_BODY_HEIGHT_MAX) {
-        legged_state.joy.body_height = JOY_CMD_BODY_HEIGHT_MAX;
+    if (legged_state.joy.body_height >= legged_state.param.joystick_max_height) {
+        legged_state.joy.body_height = legged_state.param.joystick_max_height;
     }
-    if (legged_state.joy.body_height <= JOY_CMD_BODY_HEIGHT_MIN) {
-        legged_state.joy.body_height = JOY_CMD_BODY_HEIGHT_MIN;
+    if (legged_state.joy.body_height <= legged_state.param.joystick_min_height) {
+        legged_state.joy.body_height = legged_state.param.joystick_min_height;
     }
 
     legged_state.joy.prev_ctrl_state = legged_state.joy.ctrl_state;
@@ -281,18 +276,13 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // a dynamic model for foot contact thresholding
     // TODO: make some parameters configurable
     for (int i = 0; i < NUM_LEG; ++i) {
-           double force_mag = legged_state.fbk.foot_force_sensor[i];
+            double force_mag = legged_state.fbk.foot_force_sensor[i];
 
-            if (force_mag < legged_state.fbk.foot_force_min[i])
-            {
-                legged_state.fbk.foot_force_min[i] = 0;
-            }
-            if (force_mag > legged_state.fbk.foot_force_max[i])
-            {
-                legged_state.fbk.foot_force_max[i] = 100;
-            }
+            legged_state.fbk.foot_force_min[i] = legged_state.param.foot_sensor_min_value;
+            legged_state.fbk.foot_force_max[i] = legged_state.param.foot_sensor_max_value;
+
             legged_state.fbk.foot_force_contact_threshold[i] = 
-                legged_state.fbk.foot_force_min[i] + 0.5 * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
+                legged_state.fbk.foot_force_min[i] + legged_state.param.foot_sensor_ratio * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
 
             legged_state.fbk.foot_contact_flag[i] = 
                 1.0 / (1 + exp(-10 * (force_mag - legged_state.fbk.foot_force_contact_threshold[i])));        
@@ -321,7 +311,6 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // foothold target 
     legged_state.ctrl.foot_pos_target_abs = legged_state.fbk.root_rot_mat_z * legged_state.param.default_foot_pos_rel;
     double k = std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8);
-    // double k = 0.03;
     for (int i = 0; i < NUM_LEG; ++i) {
         double delta_x =
                 k * (lin_vel_abs(0) - lin_vel_d_abs(0)) +

@@ -9,16 +9,6 @@
 #define FEEDBACK_FREQUENCY       1.0  // ms       1000Hz
 
 // constant define
-// joy stick command interprate
-#define JOY_CMD_BODY_HEIGHT_MAX 0.30     // m
-#define JOY_CMD_BODY_HEIGHT_MIN 0.03     // m
-#define JOY_CMD_BODY_HEIGHT_VEL 0.1    // m/s
-#define JOY_CMD_VELX_MAX 1.5         // m/s
-#define JOY_CMD_VELY_MAX 0.4            // m/s
-#define JOY_CMD_YAW_MAX 0.8             // rad
-#define JOY_CMD_PITCH_MAX 0.4           // rad
-#define JOY_CMD_ROLL_MAX 0.4            // rad
-
 // mpc
 #define PLAN_HORIZON 30
 #define MPC_STATE_DIM 13
