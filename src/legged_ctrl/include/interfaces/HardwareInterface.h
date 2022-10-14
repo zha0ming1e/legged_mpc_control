@@ -18,7 +18,7 @@
 #include "utils/MovingWindowFilter.hpp"
 #include "utils/LeggedSafetyChecker.hpp"
 
-#define FOOT_FILTER_WINDOW_SIZE 5
+#define FOOT_FILTER_WINDOW_SIZE 40
 namespace legged
 {
 using namespace ocs2;
