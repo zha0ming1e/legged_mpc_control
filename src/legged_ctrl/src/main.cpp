@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
     }
 
     // wait for the ROS clock to be ready
-    ros::Duration(1.5).sleep();
+    ros::Duration(0.5).sleep();
 
     std::atomic<bool> control_execute{};
     control_execute.store(true, std::memory_order_release);

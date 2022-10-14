@@ -5,8 +5,8 @@
 #pragma once
 // control time related
 #define MPC_UPDATE_FREQUENCY     5.0  // ms        200Hz
-#define LOW_LEVEL_CTRL_FREQUENCY 1.0  // ms       1000Hz
-#define FEEDBACK_FREQUENCY       1.0  // ms       1000Hz
+#define LOW_LEVEL_CTRL_FREQUENCY 1.25  // ms       800Hz
+#define FEEDBACK_FREQUENCY       1.25  // ms       800Hz
 
 // constant define
 // mpc

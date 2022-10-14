@@ -318,6 +318,9 @@ bool BaseInterface::sensor_update(double t, double dt) {
 
     estimation_update(t, dt);
 
+    // std::cout << "pos estimation" << legged_state.fbk.root_pos.transpose() << std::endl;
+    // std::cout << "euler estimation" << legged_state.fbk.root_euler.transpose() << std::endl;
+
 
     // always calculate Raibert Heuristic, calculate foothold position
     // update foot plan: legged_state.foot_pos_target_world
