@@ -186,6 +186,22 @@ bool LeggedParam::load(ros::NodeHandle &_nh) {
     _nh.param("/foot_sensor_min_value", foot_sensor_min_value, 0.0);  
     _nh.param("/foot_sensor_ratio", foot_sensor_ratio, 0.5);  
 
+    // casadi EKF parameters  
+    _nh.param("/ekf_inital_cov", ekf_inital_cov, 0.001);      
+    _nh.param("/ekf_noise_process_pos_xy", ekf_noise_process_pos_xy, 0.001);      
+    _nh.param("/ekf_noise_process_pos_z", ekf_noise_process_pos_z, 0.001);      
+    _nh.param("/ekf_noise_process_vel_xy", ekf_noise_process_vel_xy, 0.001);      
+    _nh.param("/ekf_noise_process_vel_z", ekf_noise_process_vel_z, 0.01);      
+    _nh.param("/ekf_noise_process_rot", ekf_noise_process_rot, 1e-6);      
+    _nh.param("/ekf_noise_process_foot", ekf_noise_process_foot, 0.001);      
+    _nh.param("/ekf_noise_measure_fk", ekf_noise_measure_fk, 0.01);      
+    _nh.param("/ekf_noise_measure_vel", ekf_noise_measure_vel, 0.01);      
+    _nh.param("/ekf_noise_measure_height", ekf_noise_measure_height, 0.0001);      
+    _nh.param("/ekf_noise_opti_pos", ekf_noise_opti_pos, 0.001);      
+    _nh.param("/ekf_noise_opti_vel", ekf_noise_opti_vel, 999.0);      
+    _nh.param("/ekf_noise_opti_yaw", ekf_noise_opti_yaw, 0.01);      
+
+
 
     return true;
 }

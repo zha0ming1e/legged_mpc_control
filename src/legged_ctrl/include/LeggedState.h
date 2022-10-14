@@ -176,7 +176,7 @@ class LeggedParam {
     double joystick_height_vel;
     double joystick_max_height;
     double joystick_min_height;
-    
+
     double joystick_yaw_rate_scale;
     double joystick_roll_rate_scale;
     double joystick_pitch_rate_scale;
@@ -185,6 +185,24 @@ class LeggedParam {
     double foot_sensor_max_value;
     double foot_sensor_min_value;
     double foot_sensor_ratio;
+
+    // casadi EKF related
+    double ekf_inital_cov;
+    double ekf_noise_process_pos_xy;
+    double ekf_noise_process_pos_z;
+    double ekf_noise_process_vel_xy;
+    double ekf_noise_process_vel_z;
+    double ekf_noise_process_rot;
+    double ekf_noise_process_foot;
+
+    double ekf_noise_measure_fk;
+    double ekf_noise_measure_vel;
+    double ekf_noise_measure_height;
+
+    double ekf_noise_opti_pos;
+    double ekf_noise_opti_vel;
+    double ekf_noise_opti_yaw;
+    
 
 };
 

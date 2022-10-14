@@ -98,6 +98,23 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
 
     // load parameter is very important 
     legged_state.param.load(_nh);
+
+    // set casadi ekf
+    ekf.set_noise_params(
+        legged_state.param.ekf_inital_cov,
+        legged_state.param.ekf_noise_process_pos_xy,
+        legged_state.param.ekf_noise_process_pos_z,
+        legged_state.param.ekf_noise_process_vel_xy,
+        legged_state.param.ekf_noise_process_vel_z,
+        legged_state.param.ekf_noise_process_rot,
+        legged_state.param.ekf_noise_process_foot,
+        legged_state.param.ekf_noise_measure_fk,
+        legged_state.param.ekf_noise_measure_vel,
+        legged_state.param.ekf_noise_measure_height,
+        legged_state.param.ekf_noise_opti_pos,
+        legged_state.param.ekf_noise_opti_vel,
+        legged_state.param.ekf_noise_opti_yaw
+    );
 }
 
 
