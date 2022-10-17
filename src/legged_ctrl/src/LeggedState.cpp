@@ -24,6 +24,8 @@ bool LeggedParam::load(ros::NodeHandle &_nh) {
     if (!_nh.getParam("/robot_type", robot_type)) return false;
     if (!_nh.getParam("/mpc_type", mpc_type)) return false;
     if (!_nh.getParam("/low_level_type", low_level_type)) return false;
+    if (!_nh.getParam("/kf_type", kf_type)) return false;
+    
 
     // params that are not critical, have default values
     _nh.param("/gait_counter_speed", gait_counter_speed, 3.0); 

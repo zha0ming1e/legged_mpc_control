@@ -370,43 +370,46 @@ bool BaseInterface::sensor_update(double t, double dt) {
 
 bool BaseInterface::estimation_update(double t, double dt) {
     // legged_state estimation KF
-    // if (!kf.is_inited()) {
-    //     kf.init_state(legged_state);
-    //     legged_state.estimation_inited = true;
-    // } else {
-    //     kf.update_estimation(legged_state, dt);
-    // }
 
-    // new casadi EKF
-    Eigen::Matrix<double, NUM_LEG, 1> contacts; 
-    if (legged_state.ctrl.movement_mode == 0) {  // stand
-        for (int i = 0; i < NUM_LEG; ++i) contacts[i] = 1.0;
-    } else {  // walk
-        for (int i = 0; i < NUM_LEG; ++i) {
-            contacts[i] = legged_state.fbk.foot_contact_flag[i];
+    if (legged_state.param.kf_type == 1) {
+        if (!kf.is_inited()) {
+            kf.init_state(legged_state);
+            legged_state.estimation_inited = true;
+        } else {
+            kf.update_estimation(legged_state, dt);
         }
-    }
-    ekf_data.input_dt(dt); 
-    ekf_data.input_imu(legged_state.fbk.imu_acc, legged_state.fbk.imu_ang_vel); 
-    ekf_data.input_leg(legged_state.fbk.joint_pos, legged_state.fbk.joint_vel, contacts); 
+    } else if (legged_state.param.kf_type == 2) {
+        // new casadi EKF
+        Eigen::Matrix<double, NUM_LEG, 1> contacts; 
+        if (legged_state.ctrl.movement_mode == 0) {  // stand
+            for (int i = 0; i < NUM_LEG; ++i) contacts[i] = 1.0;
+        } else {  // walk
+            for (int i = 0; i < NUM_LEG; ++i) {
+                contacts[i] = legged_state.fbk.foot_contact_flag[i];
+            }
+        }
+        ekf_data.input_dt(dt); 
+        ekf_data.input_imu(legged_state.fbk.imu_acc, legged_state.fbk.imu_ang_vel); 
+        ekf_data.input_leg(legged_state.fbk.joint_pos, legged_state.fbk.joint_vel, contacts); 
 
-    if (t < 0.1) {
-        std::cout << "do not run filter at beginning when ekf_data is not filled! " << std::endl;
-        return true;
+        if (t < 0.1) {
+            std::cout << "do not run filter at beginning when ekf_data is not filled! " << std::endl;
+            return true;
+        }
+        if(!ekf.is_inited()) {
+            ekf.init_filter(ekf_data); 
+            legged_state.estimation_inited = true;
+        } else {
+            ekf.update_filter(ekf_data); 
+        }
+        // get result 
+        Eigen::Matrix<double, EKF_STATE_SIZE, 1> kf_state = ekf.get_state(); 
+        Eigen::Vector3d root_euler_estimation = kf_state.segment<3>(6); 
+        Eigen::Quaterniond root_quat_estimation = Utils::euler_to_quat(root_euler_estimation);
+        legged_state.fbk.root_quat = root_quat_estimation;
+        legged_state.fbk.root_pos = kf_state.segment<3>(0); 
+        legged_state.fbk.root_lin_vel = kf_state.segment<3>(3); 
     }
-    if(!ekf.is_inited()) {
-        ekf.init_filter(ekf_data); 
-        legged_state.estimation_inited = true;
-    } else {
-        ekf.update_filter(ekf_data); 
-    }
-    // get result 
-    Eigen::Matrix<double, EKF_STATE_SIZE, 1> kf_state = ekf.get_state(); 
-    Eigen::Vector3d root_euler_estimation = kf_state.segment<3>(6); 
-    Eigen::Quaterniond root_quat_estimation = Utils::euler_to_quat(root_euler_estimation);
-    legged_state.fbk.root_quat = root_quat_estimation;
-    legged_state.fbk.root_pos = kf_state.segment<3>(0); 
-    legged_state.fbk.root_lin_vel = kf_state.segment<3>(3); 
 
     return true;
 }

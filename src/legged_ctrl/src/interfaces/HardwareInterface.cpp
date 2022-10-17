@@ -131,11 +131,14 @@ namespace legged
         udp.GetRecv(unitree_state);        
 
         // load state from unitree_state to legged_state
-        // use ekf output 
-        // legged_state.fbk.root_quat = Eigen::Quaterniond(unitree_state.imu.quaternion[0],
-        //                                                 unitree_state.imu.quaternion[1],
-        //                                                 unitree_state.imu.quaternion[2],
-        //                                                 unitree_state.imu.quaternion[3]);
+        if (legged_state.param.kf_type == 1) {
+            legged_state.fbk.root_quat = Eigen::Quaterniond(unitree_state.imu.quaternion[0],
+                                                            unitree_state.imu.quaternion[1],
+                                                            unitree_state.imu.quaternion[2],
+                                                            unitree_state.imu.quaternion[3]);
+        } else {
+            // use ekf output 
+        }
         legged_state.fbk.imu_acc = Eigen::Vector3d(unitree_state.imu.accelerometer[0], unitree_state.imu.accelerometer[1], unitree_state.imu.accelerometer[2]);
         legged_state.fbk.imu_ang_vel = Eigen::Vector3d(unitree_state.imu.gyroscope[0], unitree_state.imu.gyroscope[1], unitree_state.imu.gyroscope[2]);
 

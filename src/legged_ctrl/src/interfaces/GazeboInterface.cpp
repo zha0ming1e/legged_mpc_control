@@ -117,51 +117,59 @@ bool GazeboInterface::send_cmd() {
 // callback functions
 void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom) {
     // update
-    // legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
-    //                                               odom->pose.pose.orientation.x,
-    //                                               odom->pose.pose.orientation.y,
-    //                                               odom->pose.pose.orientation.z);                                              
-    // legged_state.fbk.root_pos << odom->pose.pose.position.x,
-    //         odom->pose.pose.position.y,
-    //         odom->pose.pose.position.z;
-    // // // make sure root_lin_vel is in world frame
-    // legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
-    //         odom->twist.twist.linear.y,
-    //         odom->twist.twist.linear.z;
+    if (legged_state.param.kf_type == 0) {
+        legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
+                                                    odom->pose.pose.orientation.x,
+                                                    odom->pose.pose.orientation.y,
+                                                    odom->pose.pose.orientation.z);   
+        legged_state.fbk.root_pos << odom->pose.pose.position.x,
+                odom->pose.pose.position.y,
+                odom->pose.pose.position.z;
+        // // make sure root_lin_vel is in world frame
+        legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
+                odom->twist.twist.linear.y,
+                odom->twist.twist.linear.z;
 
-    // // make sure root_ang_vel is in world frame
-    // legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,E
-    //         odom->twist.twist.angular.y,
-    //         odom->twist.twist.angular.z;
-
-    // simulate opti track data
-    current_count++;
-    if (current_count < DROP_COUNT) {
-        return;
+        // make sure root_ang_vel is in world frame
+        legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,
+                odom->twist.twist.angular.y,
+                odom->twist.twist.angular.z; 
+        legged_state.estimation_inited = true;
+    }  else if (legged_state.param.kf_type == 1) {
+        legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
+                                                    odom->pose.pose.orientation.x,
+                                                    odom->pose.pose.orientation.y,
+                                                    odom->pose.pose.orientation.z);  
     } else {
-        double opti_t = odom->header.stamp.toSec();
-        Eigen::Matrix<double, 3, 1> opti_pos; 
-        Eigen::Vector3d opti_euler; 
-        Eigen::Quaterniond opti_quat(odom->pose.pose.orientation.w, 
-                                    odom->pose.pose.orientation.x, 
-                                    odom->pose.pose.orientation.y,
-                                    odom->pose.pose.orientation.z); 
-        opti_euler = Utils::quat_to_euler(opti_quat); 
-        opti_pos << odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z;
-        if (first_mocap_received == false) {
-            opti_t_prev = opti_t;
-            initial_opti_euler = opti_euler;
-            initial_opti_pos = opti_pos;  initial_opti_pos[2] = 0.0; // height is still absolute
-            first_mocap_received = true;
+        // simulate opti track data
+        current_count++;
+        if (current_count < DROP_COUNT) {
+            return;
         } else {
-            double opti_dt = opti_t - opti_t_prev;
+            double opti_t = odom->header.stamp.toSec();
+            Eigen::Matrix<double, 3, 1> opti_pos; 
+            Eigen::Vector3d opti_euler; 
+            Eigen::Quaterniond opti_quat(odom->pose.pose.orientation.w, 
+                                        odom->pose.pose.orientation.x, 
+                                        odom->pose.pose.orientation.y,
+                                        odom->pose.pose.orientation.z); 
+            opti_euler = Utils::quat_to_euler(opti_quat); 
+            opti_pos << odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z;
+            if (first_mocap_received == false) {
+                opti_t_prev = opti_t;
+                initial_opti_euler = opti_euler;
+                initial_opti_pos = opti_pos;  initial_opti_pos[2] = 0.0; // height is still absolute
+                first_mocap_received = true;
+            } else {
+                double opti_dt = opti_t - opti_t_prev;
 
-            ekf_data.input_opti_dt(opti_dt); 
-            ekf_data.input_opti_pos(opti_pos - initial_opti_pos);
-            ekf_data.input_opti_euler(opti_euler - initial_opti_euler);    
-            ekf.update_filter_with_opti(ekf_data);      
+                ekf_data.input_opti_dt(opti_dt); 
+                ekf_data.input_opti_pos(opti_pos - initial_opti_pos);
+                ekf_data.input_opti_euler(opti_euler - initial_opti_euler);    
+                // ekf.update_filter_with_opti(ekf_data);      
+            }
+                
         }
-               
     }
 
     return;

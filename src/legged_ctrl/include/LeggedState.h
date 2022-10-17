@@ -146,6 +146,7 @@ class LeggedParam {
     int robot_type;           // a1(0) or go1(1)
     int mpc_type;             // lci_mpc (0) or convex mpc (1)
     int low_level_type;       // basic tau ctrl (0) or whole body control (1)
+    int kf_type;
 
     double gait_counter_speed;    // delta time
     Eigen::Matrix<double, 3, NUM_LEG> default_foot_pos_rel;

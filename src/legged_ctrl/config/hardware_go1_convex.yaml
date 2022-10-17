@@ -11,6 +11,10 @@ mpc_type: 1       # 0: CI-MPC
 low_level_type: 0 # 0: basic tau ctrl
                   # 1: whole body control 
 
+kf_type: 1        # 0: no kf ( only available in Gazebo)
+                  # 1: linear KF
+                  # 2: EKF
+                  
 # default foothold position in robot body frame (varialbes with "_rel" in the code)
 default_foot_pos_FL_x: 0.17
 default_foot_pos_FL_y: 0.15

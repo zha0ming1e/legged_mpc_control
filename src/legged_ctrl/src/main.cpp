@@ -92,6 +92,12 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    // some other critical check 
+    if (intef->legged_state.param.kf_type == 0 && use_sim_time == false) {
+        std::cout << "using hardware but kf_type is set to 0" << std::endl;
+        return -1;
+    }
+
     // wait for the ROS clock to be ready
     ros::Duration(0.5).sleep();
 
