@@ -309,8 +309,18 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // tau = J^T * F, so F = J^T^-1 * tau
     for (int i = 0; i < NUM_LEG; ++i) {
         Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i).transpose();
+        Eigen::Vector3d measure_tau = legged_state.fbk.joint_tauEst.segment<3>(3 * i);
+
+        // remove the joint command from measure_tau
+        measure_tau -= legged_state.param.kp_foot.block<3, 1>(0, i).cwiseProduct(
+            legged_state.ctrl.joint_ang_tgt.segment<3>(3 * i) - legged_state.fbk.joint_pos.segment<3>(3 * i)
+        );
+        measure_tau -= legged_state.param.kd_foot.block<3, 1>(0, i).cwiseProduct(
+            legged_state.ctrl.joint_vel_tgt.segment<3>(3 * i) - legged_state.fbk.joint_vel.segment<3>(3 * i)
+        );
+
         // robot frame foot force estimation
-        Eigen::Vector3d force_rel = jac.lu().solve(legged_state.fbk.joint_tauEst.segment<3>(3 * i));
+        Eigen::Vector3d force_rel = jac.lu().solve(measure_tau);
         // world frame foot force estimation
         legged_state.fbk.foot_force_tauEst.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * force_rel;
 
