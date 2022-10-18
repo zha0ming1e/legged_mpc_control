@@ -131,11 +131,13 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     }
 }
 
-
+double start_time = -1;
 bool BaseInterface::joy_update(double t, double dt) {
     if (legged_state.joy.exit) {
         return false;
     }
+
+    if (start_time == -1) start_time = t;
 
     // process joy cmd data to get desired height, velocity, yaw, etc
     // save the result into legged_state
@@ -164,6 +166,8 @@ bool BaseInterface::joy_update(double t, double dt) {
         // leave walking mode
         // lock current position, should just happen for one instance
         legged_state.ctrl.movement_mode = 0;
+    } else if (t - start_time > 2) {
+        legged_state.ctrl.movement_mode = 1;
     } else {
         legged_state.ctrl.movement_mode = 0;
     }    

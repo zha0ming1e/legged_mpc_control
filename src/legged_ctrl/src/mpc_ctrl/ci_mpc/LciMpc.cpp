@@ -14,9 +14,8 @@ LciMpc::LciMpc() {
 
     jl_eval_string("include(\"scripts/stand_policy.jl\")");
     jl_eval_string("include(\"scripts/trot_policy.jl\")");
-    // jl_eval_string("include(\"scripts/reach_policy.jl\")");
-    jl_eval_string("include(\"scripts/pace_forward_policy.jl\")");
-    // jl_eval_string("include(\"scripts/sidesteps_policy.jl\")");
+    jl_eval_string("include(\"scripts/centroidalWall_test.jl\")");
+    
     // Obtain mpc module from Julia 
     julia_mpc_module_ = (jl_module_t *)jl_eval_string("EmbeddedLciMpc");
 
@@ -24,7 +23,7 @@ LciMpc::LciMpc() {
     standing_policy_ = (jl_value_t*) jl_eval_string("p_stand");
     // standing_policy_ = (jl_value_t*) jl_eval_string("tvlqr_policy");
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_walk"); 
-    walking_policy_ = (jl_value_t*) jl_eval_string("p_pace_forward");
+    walking_policy_ = (jl_value_t*) jl_eval_string("p_wall");
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_reach"); 
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_sidesteps");
     policy_function_ = jl_get_function(julia_mpc_module_, "exec_policy");
