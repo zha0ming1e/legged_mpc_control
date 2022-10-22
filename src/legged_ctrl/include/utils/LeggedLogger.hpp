@@ -283,6 +283,10 @@ public:
             joint_data_.velocity[i*3+1] = state.fbk.joint_vel[i*3+1]; 
             joint_data_.velocity[i*3+2] = state.fbk.joint_vel[i*3+2]; 
 
+            joint_data_.effort[i*3] = state.fbk.joint_tauEst[i*3]; 
+            joint_data_.effort[i*3+1] = state.fbk.joint_tauEst[i*3+1]; 
+            joint_data_.effort[i*3+2] = state.fbk.joint_tauEst[i*3+2]; 
+
             joint_data_d_.position[i*3] = state.ctrl.joint_ang_tgt[i*3]; 
             joint_data_d_.position[i*3+1] = state.ctrl.joint_ang_tgt[i*3+1];
             joint_data_d_.position[i*3+2] = state.ctrl.joint_ang_tgt[i*3+2]; 

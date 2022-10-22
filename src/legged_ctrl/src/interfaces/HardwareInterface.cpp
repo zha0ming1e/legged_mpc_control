@@ -170,6 +170,7 @@ namespace legged
         for (int i = 0; i < NUM_DOF; ++i) {
             joint_foot_msg.position[i] = legged_state.fbk.joint_pos[i];
             joint_foot_msg.velocity[i] = legged_state.fbk.joint_vel[i];
+            joint_foot_msg.effort[i] = legged_state.fbk.joint_tauEst[i];
         }
         for (int i = 0; i < NUM_LEG; ++i) {
             // publish plan contacts to help state estimation
