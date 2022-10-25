@@ -14,7 +14,7 @@ LciMpc::LciMpc() {
 
     jl_eval_string("include(\"scripts/stand_policy.jl\")");
     jl_eval_string("include(\"scripts/trot_policy.jl\")");
-    jl_eval_string("include(\"scripts/centroidalWall_test.jl\")");
+    jl_eval_string("include(\"scripts/wall_walk_policy.jl\")");
     
     // Obtain mpc module from Julia 
     julia_mpc_module_ = (jl_module_t *)jl_eval_string("EmbeddedLciMpc");
