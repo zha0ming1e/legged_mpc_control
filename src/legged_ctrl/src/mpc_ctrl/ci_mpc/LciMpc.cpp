@@ -45,11 +45,24 @@ LciMpc::LciMpc() {
     }
 }
 
+double startTime = -1;
+double curMoveMode = 0;
 bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
     if (legged_state.estimation_inited == false) {
         std::cout << "the estimator in the low level loop is not inited properly!" << std::endl;
         return true;
     }
+
+    if (startTime == -1) {
+        startTime = t;
+        curMoveMode = legged_state.ctrl.movement_mode;
+    }
+
+    if (curMoveMode != legged_state.ctrl.movement_mode) {
+        startTime = t;
+        curMoveMode = legged_state.ctrl.movement_mode;
+    }
+
     // Populate state for the robot 
     // p : [position; rotation vector; FL foot; FR foot; RL foot ; RR foot]
     // v : [velocity; angular velocity; FL foot fel; FR foot vel, RL foot vel; RR foot vel]
@@ -103,7 +116,7 @@ bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
     // call the lci policy 
     JuliaVector1d x_jl(x); 
     policy_args_[1] = (jl_value_t*) x_jl.toJArray(); 
-    policy_args_[2] = (jl_value_t*) jl_box_float64(t); 
+    policy_args_[2] = (jl_value_t*) jl_box_float64(t - startTime); 
     JuliaVector1d result((jl_array_t*) jl_call(policy_function_, policy_args_.data(), policy_args_.size()));
 
     // Lci Mpc wrapper output [control_input; state_next; v_next]

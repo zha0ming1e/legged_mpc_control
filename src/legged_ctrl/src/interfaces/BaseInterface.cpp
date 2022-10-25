@@ -166,8 +166,8 @@ bool BaseInterface::joy_update(double t, double dt) {
         // leave walking mode
         // lock current position, should just happen for one instance
         legged_state.ctrl.movement_mode = 0;
-    } else if (t - start_time > 0.5) {
-        legged_state.ctrl.movement_mode = 1;
+    // } else if (t - start_time > 0.5) {
+    //     legged_state.ctrl.movement_mode = 1;
     } else {
         legged_state.ctrl.movement_mode = 0;
     }    
