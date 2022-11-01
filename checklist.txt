@@ -20,6 +20,8 @@ gazebo docker:
     docker attach a1_unitree_gazebo_docker
     roslaunch unitree_gazebo normal.launch rname:=a1 wname:=earth
 
+    docker exec -it a1_unitree_gazebo_docker bash
+
 resetting in sim:
     cd ~/legged_ctrl_ws/src/legged_ctrl/scripts
     python resetRobot.py 

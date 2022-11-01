@@ -149,9 +149,9 @@ int main(int argc, char **argv) {
             }
             dt_solver_time_in_ros = ros::Time::now() - now;
             if (dt_solver_time_in_ros.toSec() < MPC_UPDATE_FREQUENCY / 1000) {    
-                std::cout << "waiting...." << std::endl;
-                std::cout << "waiting time :" << MPC_UPDATE_FREQUENCY - dt_solver_time_in_ros.toSec()*1000<< "ms" << std::endl;
-                std::cout << "waiting...." << std::endl;
+                // std::cout << "waiting...." << std::endl;
+                // std::cout << "waiting time :" << MPC_UPDATE_FREQUENCY - dt_solver_time_in_ros.toSec()*1000<< "ms" << std::endl;
+                // std::cout << "waiting...." << std::endl;
                 ros::Duration( MPC_UPDATE_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec() ).sleep();
             }
         }
