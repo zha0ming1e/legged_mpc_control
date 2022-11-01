@@ -58,7 +58,7 @@ class ModelPublisher:
         self.model_state_msg.model_name = robot_name + "_gazebo"
         self.model_state_msg.pose.position.x = 0
         self.model_state_msg.pose.position.y = 0
-        self.model_state_msg.pose.position.z = 0.32 
+        self.model_state_msg.pose.position.z = 0.17
 
         self.model_state_msg.pose.orientation.x = 0
         self.model_state_msg.pose.orientation.y = 0
@@ -147,8 +147,12 @@ if __name__ == "__main__":
 
     position_d = np.array([[0.0, 0.67, -1.3], [-0.0, 0.67, -1.3], 
                           [0.0, 0.67, -1.3],  [-0.0, 0.67, -1.3]]).T
-    position_d = np.array([[0.5, 1.3, -2.5], [-0.5, 1.3, -2.5], 
-                          [0.5, 1.3, -2.5],  [-0.5, 1.3, -2.5]]).T
+    abd = 0.337
+    shift = -0.09
+    hip = 1.3
+    thigh = 2.5
+    position_d = np.array([[abd, hip + shift, -thigh], [-abd, hip + shift, -thigh], 
+                          [abd, hip - shift, -thigh],  [-abd, hip - shift, -thigh]]).T
     position_target = np.copy(position_d)
 
     rospy.init_node("model_reset")
