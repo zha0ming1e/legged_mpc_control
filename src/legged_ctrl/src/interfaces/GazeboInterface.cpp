@@ -89,7 +89,7 @@ bool GazeboInterface::update(double t, double dt) {
     bool safe_flag = safety_checker.is_safe(legged_state);
 
     if (safe_flag) {
-        send_cmd();
+        send_cmd(t);
     } else {
         std::cout << "safety check failed, terminate the controller! " << std::endl;
     }
@@ -99,19 +99,19 @@ bool GazeboInterface::update(double t, double dt) {
 bool GazeboInterface::send_cmd() {
     // send control cmd to robot via ros topic
     // have to manually do PD control because gazebo only accepts tau command
-    for (int i = 0; i < 12; i++) {
-        low_cmd.motorCmd[i].mode = 0x0A;
-        low_cmd.motorCmd[i].q =   0;
-        low_cmd.motorCmd[i].dq =  0;
-        low_cmd.motorCmd[i].Kp =  0;
-        low_cmd.motorCmd[i].Kd =  0;
-        low_cmd.motorCmd[i].tau = legged_state.param.kp_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG) * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
-                                + legged_state.param.kd_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG)  * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
-                                + legged_state.ctrl.joint_tau_tgt(i, 0);
+        for (int i = 0; i < 12; i++) {
+            low_cmd.motorCmd[i].mode = 0x0A;
+            low_cmd.motorCmd[i].q =   0;
+            low_cmd.motorCmd[i].dq =  0;
+            low_cmd.motorCmd[i].Kp =  0;
+            low_cmd.motorCmd[i].Kd =  0;
+            low_cmd.motorCmd[i].tau = legged_state.param.kp_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG) * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
+                                    + legged_state.param.kd_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG)  * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
+                                    + legged_state.ctrl.joint_tau_tgt(i, 0);
 
-        // TODO: simulate a motor delay here?
-                                        
-        pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
+            // TODO: simulate a motor delay here?
+                                            
+            pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
     }
 
     return true;

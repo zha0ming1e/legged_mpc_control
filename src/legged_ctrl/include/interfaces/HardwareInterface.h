@@ -30,7 +30,7 @@ public:
 
     bool update(double t, double dt);
     
-    bool send_cmd();
+    bool send_cmd(double t);
 
 
 private:

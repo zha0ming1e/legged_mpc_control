@@ -2,6 +2,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
+#include <std_msgs/Float64MultiArray.h>
 
 
 #include <ocs2_legged_robot/common/ModelSettings.h>
@@ -35,11 +36,12 @@ public:
     virtual ~BaseInterface() {}
     virtual bool update(double t, double dt) = 0;
     
-    virtual bool send_cmd() = 0;
+    virtual bool send_cmd(double t) = 0;
 
     LeggedState& get_legged_state() {return legged_state; }; 
 
     void joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg);
+    void gain_callback(const std_msgs::Float64MultiArray &gain_msg);
 
     // process joystick data
     bool joy_update(double t, double dt);
@@ -92,6 +94,7 @@ public:
 
 private:
     ros::Subscriber sub_joy_msg;
+    ros::Subscriber low_level_gains_msg;
 
     // KF state estimator
     BasicEKF kf;

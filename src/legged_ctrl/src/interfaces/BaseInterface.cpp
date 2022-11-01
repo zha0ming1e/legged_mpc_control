@@ -19,6 +19,7 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
     nh = _nh;
 
     sub_joy_msg = nh.subscribe("/joy", 1000, &BaseInterface::joy_callback, this);
+    low_level_gains_msg = nh.subscribe("/a1_debug/low_level_gains", 100, &BaseInterface::gain_callback, this);
 
     // pinnochio stuff
         bool verbose = true;
@@ -129,6 +130,23 @@ joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
         std::cout << "You have pressed the exit button!!!!" << std::endl;
         legged_state.joy.exit = true;
     }
+}
+
+void BaseInterface::
+gain_callback(const std_msgs::Float64MultiArray &gain_msg) {
+    std::cout << "RECEIVED GAIN UPDATE: ";
+    for (int i = 0; i < 6; i++) {
+        std::cout << gain_msg.data[i] << " ";
+    }
+    std::cout << std::endl;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 4; j++) {
+            legged_state.param.kp_foot(i, j) = gain_msg.data[i];
+            legged_state.param.kd_foot(i, j) = gain_msg.data[i + 3];
+        }
+    }
+    std::cout << legged_state.param.kp_foot << std::endl;
+    std::cout << legged_state.param.kd_foot << std::endl;
 }
 
 double start_time = -1;
@@ -365,7 +383,6 @@ bool BaseInterface::estimation_update(double t, double dt) {
 }
 
 bool BaseInterface::tau_ctrl_update(double t, double dt) {
-
     // test old control strategy
     for(int i = 0; i < NUM_LEG; ++i) {
         // Ground reaction forces assignment, world to body

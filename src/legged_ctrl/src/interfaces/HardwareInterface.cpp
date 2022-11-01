@@ -72,7 +72,7 @@ namespace legged
         // send to hardware
         bool safe_flag = safety_checker.is_safe(legged_state);
         if (safe_flag) {
-            send_cmd();
+            send_cmd(t);
         } else {
             std::cout << "safety check failed, terminate the controller! " << std::endl;
         }
@@ -81,10 +81,11 @@ namespace legged
     }
 
 
-    bool HardwareInterface::send_cmd() {
+    bool HardwareInterface::send_cmd(double t) {
         // send control cmd to robot via unitree hardware interface
         // notice a1_ctrl_states.joint_torques uses order FL, FR, RL, RR
         // notice cmd uses order FR, FL, RR, RL
+
         cmd.levelFlag = UNITREE_LEGGED_SDK::LOWLEVEL;
         for (int i = 0; i < NUM_DOF; i++) {
             int swap_i = swap_joint_indices(i);
