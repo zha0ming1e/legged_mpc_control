@@ -104,8 +104,14 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
         R.block<3, 3>(NUM_LEG * 3 + i * 3, NUM_LEG * 3 + i * 3)
                 = (1 + (1 - estimated_contacts[i]) * 1e3) * SENSOR_NOISE_VIMU_REL_FOOT * eye3;      // vel estimation
         if (assume_flat_ground) {
-            R(NUM_LEG * 6 + i, NUM_LEG * 6 + i)
+            if (i == 0 || i == 1) {
+                // quick hack for wall walking demo, do no use front two legs 
+                R(NUM_LEG * 6 + i, NUM_LEG * 6 + i)
+                    = (1 + 1e5) * SENSOR_NOISE_ZFOOT;
+            } else {
+                R(NUM_LEG * 6 + i, NUM_LEG * 6 + i)
                     = (1 + (1 - estimated_contacts[i]) * 1e3) * SENSOR_NOISE_ZFOOT;       // height z estimation
+            }
         }
     }
 

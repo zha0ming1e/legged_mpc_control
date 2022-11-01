@@ -96,7 +96,7 @@ bool GazeboInterface::update(double t, double dt) {
     return joy_run && safe_flag;
 }
 
-bool GazeboInterface::send_cmd() {
+bool GazeboInterface::send_cmd(double t) {
     // send control cmd to robot via ros topic
     // have to manually do PD control because gazebo only accepts tau command
         for (int i = 0; i < 12; i++) {
