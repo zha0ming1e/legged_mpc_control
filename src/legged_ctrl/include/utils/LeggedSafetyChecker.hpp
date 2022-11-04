@@ -20,7 +20,7 @@ namespace legged
                     std::cout << "LeggedSafetyChecker: robot roll is too large " << std::endl;
                     return false;
                 }
-                if (legged_state.fbk.root_euler[1] > 1 || legged_state.fbk.root_euler[1] < -1) {
+                if (legged_state.fbk.root_euler[1] > 3 || legged_state.fbk.root_euler[1] < -3) {
                     std::cout << "LeggedSafetyChecker: robot pitch is too large " << std::endl;
                     return false;
                 }

@@ -104,6 +104,10 @@ namespace legged
             cmd.motorCmd[i].tau = legged_state.ctrl.joint_tau_tgt(swap_i);
         }
 
+        if (legged_state.ctrl.movement_mode == 1) {
+            
+        }
+
         safe.PositionLimit(cmd);
         // TODO: make power level configurable
         safe.PowerProtect(cmd, unitree_state, 10);

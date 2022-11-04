@@ -14,6 +14,7 @@ LciMpc::LciMpc() {
 
     jl_eval_string("include(\"scripts/stand_policy.jl\")");
     jl_eval_string("include(\"scripts/trot_policy.jl\")");
+    jl_eval_string("include(\"scripts/wall_stand_policy.jl\")");
     jl_eval_string("include(\"scripts/wall_walk_policy.jl\")");
     
     // Obtain mpc module from Julia 
@@ -23,9 +24,9 @@ LciMpc::LciMpc() {
     standing_policy_ = (jl_value_t*) jl_eval_string("p_stand");
     // standing_policy_ = (jl_value_t*) jl_eval_string("tvlqr_policy");
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_walk"); 
-    walking_policy_ = (jl_value_t*) jl_eval_string("p_wall");
-    // walking_policy_ = (jl_value_t*) jl_eval_string("p_reach"); 
-    // walking_policy_ = (jl_value_t*) jl_eval_string("p_sidesteps");
+    // walking_policy_ = (jl_value_t*) jl_eval_string("p_wall");
+    wall_climb_policy_ = (jl_value_t*) jl_eval_string("p_wall_stand");
+    wall_walk_policy_ = (jl_value_t*) jl_eval_string("p_wall_walk");
     policy_function_ = jl_get_function(julia_mpc_module_, "exec_policy");
     // update_velocity_function_ = jl_get_function(jl_main_module, "update_velocity");
 
@@ -100,8 +101,11 @@ bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
     if(legged_state.ctrl.movement_mode == 0) {
         policy_args_[0] = (jl_value_t*) standing_policy_; 
         velocity_args_[0]= policy_args_[0]; 
+    } else if(legged_state.ctrl.movement_mode == 1) {
+        policy_args_[0] = (jl_value_t*) wall_climb_policy_; 
+        velocity_args_[0]= policy_args_[0]; 
     } else {
-        policy_args_[0] = (jl_value_t*) walking_policy_; 
+        policy_args_[0] = (jl_value_t*) wall_walk_policy_; 
         velocity_args_[0]= policy_args_[0]; 
     }
 
