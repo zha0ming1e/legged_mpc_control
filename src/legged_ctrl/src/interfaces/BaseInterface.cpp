@@ -186,7 +186,10 @@ bool BaseInterface::joy_update(double t, double dt) {
         legged_state.ctrl.movement_mode = 0;
     // } else if (t - start_time > 0.5) {
     //     legged_state.ctrl.movement_mode = 1;
-    } else {
+    } else if (legged_state.joy.ctrl_state == 2) {
+        legged_state.ctrl.movement_mode = 2;
+    }
+    else {
         legged_state.ctrl.movement_mode = 0;
     }    
 

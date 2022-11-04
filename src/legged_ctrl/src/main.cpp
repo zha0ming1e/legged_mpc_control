@@ -135,8 +135,8 @@ int main(int argc, char **argv) {
             
             std::chrono::duration<double, std::milli> ms_double = t2 - t1;
             std::cout << "MPC solution is updated in " << ms_double.count() << "ms" << std::endl;
-
-            
+            std::cout << intef->get_legged_state().ctrl.movement_mode<< std::endl;
+            std::cout << intef->get_legged_state().joy.ctrl_state << std::endl;
             // Logging 
             logger->publish_state(intef->get_legged_state(), elapsed.toSec()); 
 
