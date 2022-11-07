@@ -91,8 +91,9 @@ RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
       ros-${ROS_DISTRO}-gazebo-ros \
       ros-${ROS_DISTRO}-joy \
       ros-${ROS_DISTRO}-ros-controllers \
-      ros-${ROS_DISTRO}-robot-state-publisher
-
+      ros-${ROS_DISTRO}-robot-state-publisher\
+      ros-${ROS_DISTRO}-plotjuggler \
+      ros-${ROS_DISTRO}-plotjuggler-ros 
 
 # https://github.com/JetBrains/clion-remote/blob/master/Dockerfile.remote-cpp-env
 # ssh credentials (test user):
