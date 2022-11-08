@@ -5,3 +5,7 @@
 [submodule "src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/ContactImplicitMPC.jl"]
 	path = src/legged_ctrl/src/mpc_ctrl/ci_mpc/lib/ContactImplicitMPC.jl
 	url = https://github.com/RoboticExplorationLab/ContactImplicitMPC.jl.git
+[submodule "src/legged_ctrl/src/estimation/CasadiEKF"]
+	path = src/legged_ctrl/src/estimation/CasadiEKF
+	url = https://github.com/ShuoYangRobotics/legged-kalman-filter.git
+	branch = stable
