@@ -170,7 +170,7 @@ void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom)
                 ekf_data.input_opti_dt(opti_dt); 
                 ekf_data.input_opti_pos(opti_pos - initial_opti_pos);
                 ekf_data.input_opti_euler(opti_euler - initial_opti_euler);    
-                // ekf.update_filter_with_opti(ekf_data);      
+                ekf.update_filter_with_opti(ekf_data);      
             }
                 
         }
