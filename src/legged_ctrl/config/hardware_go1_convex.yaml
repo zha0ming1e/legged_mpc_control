@@ -110,7 +110,7 @@ joystick_pitch_rate_scale: 0.4  # rad/s
 
 # contact detection related 
 # the range of sensor of A1 and Go1 are pretty different
-foot_sensor_max_value: 600.0
+foot_sensor_max_value: 200.0
 foot_sensor_min_value:   0.0
 foot_sensor_ratio:       0.5
 
@@ -125,7 +125,7 @@ ekf_noise_process_foot:       0.01
 
 ekf_noise_measure_fk:         0.1
 ekf_noise_measure_vel:        0.5
-ekf_noise_measure_height:     0.01
+ekf_noise_measure_height:     0.4
 
 ekf_noise_opti_pos:           0.001
 ekf_noise_opti_vel:           999.0

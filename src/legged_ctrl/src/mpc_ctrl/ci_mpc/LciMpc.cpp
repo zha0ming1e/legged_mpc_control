@@ -26,7 +26,7 @@ LciMpc::LciMpc() {
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_walk"); 
     // walking_policy_ = (jl_value_t*) jl_eval_string("p_wall");
     wall_climb_policy_ = (jl_value_t*) jl_eval_string("p_wall_stand");
-    wall_walk_policy_ = (jl_value_t*) jl_eval_string("p_wall_walk");
+    // wall_walk_policy_ = (jl_value_t*) jl_eval_string("p_wall_walk");
     policy_function_ = jl_get_function(julia_mpc_module_, "exec_policy");
     // update_velocity_function_ = jl_get_function(jl_main_module, "update_velocity");
 
@@ -103,6 +103,7 @@ bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
         velocity_args_[0]= policy_args_[0]; 
     } else if(legged_state.ctrl.movement_mode == 1) {
         policy_args_[0] = (jl_value_t*) wall_climb_policy_; 
+        // policy_args_[0] = (jl_value_t*) walking_policy_; 
         velocity_args_[0]= policy_args_[0]; 
     } else {
         policy_args_[0] = (jl_value_t*) wall_walk_policy_; 
