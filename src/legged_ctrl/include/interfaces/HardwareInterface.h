@@ -18,7 +18,7 @@
 #include "utils/MovingWindowFilter.hpp"
 #include "utils/LeggedSafetyChecker.hpp"
 
-#define FOOT_FILTER_WINDOW_SIZE 5
+#define FOOT_FILTER_WINDOW_SIZE 40
 namespace legged
 {
 using namespace ocs2;
@@ -28,7 +28,8 @@ class HardwareInterface : public BaseInterface {
 public:
     HardwareInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
 
-    bool update(double t, double dt);
+    bool ctrl_update(double t, double dt);
+    bool fbk_update(double t, double dt);
     
     bool send_cmd(double t);
 

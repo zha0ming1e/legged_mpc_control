@@ -18,6 +18,7 @@ public:
     static Eigen::Vector3d quatToZyx(const Eigen::Quaterniond q);
     static double square(double a) { return a * a; }
     static Eigen::Vector3d quat_to_rotVec(Eigen::Quaterniond quat);
+    static Eigen::Quaterniond euler_to_quat(Eigen::Vector3d euler);
     static Eigen::Matrix3d skew(Eigen::Vector3d vec);
     static Eigen::Matrix3d pseudo_inverse(const Eigen::Matrix3d &mat);
     static double cal_dihedral_angle(Eigen::Vector3d surf_coef_1, Eigen::Vector3d surf_coef_2);

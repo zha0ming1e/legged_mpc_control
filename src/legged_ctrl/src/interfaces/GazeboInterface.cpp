@@ -60,25 +60,16 @@ GazeboInterface::GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFi
     quat_z = MovingWindowFilter(5);
 
 }
-bool GazeboInterface::update(double t, double dt) {
+bool GazeboInterface::ctrl_update(double t, double dt) {
 
-    // let callbacks run a little bit
-    if (t < 0.1) {
-        legged_state.estimation_inited = false;
+    if (legged_state.estimation_inited == false) {
+        std::cout << "fbk_update not called! " << std::endl;
         return true;
     }
-    if (t >= 0.1) {
-        // this variable make the MPC control loop wait for sensor data to fill up and estimator runs 
-        legged_state.estimation_inited = true;
-    }
+
     bool joy_run = joy_update(t, dt);
     // debug print some variables 
-    // std::cout << legged_state.joy.ctrl_state << std::endl;
-
-    /*
-     * get sensor feedback & update state estimator
-     */
-    bool sensor_run = sensor_update(t, dt);
+    std::cout << legged_state.joy.ctrl_state << std::endl;
 
     // run low level control 
     bool basic_run = tau_ctrl_update(t, dt);
@@ -96,22 +87,31 @@ bool GazeboInterface::update(double t, double dt) {
     return joy_run && safe_flag;
 }
 
+
+bool GazeboInterface::fbk_update(double t, double dt) {
+    /*
+     * get sensor feedback & update state estimator
+     */
+    bool sensor_run = sensor_update(t, dt);
+    return sensor_run;
+}
+
 bool GazeboInterface::send_cmd(double t) {
     // send control cmd to robot via ros topic
     // have to manually do PD control because gazebo only accepts tau command
-        for (int i = 0; i < 12; i++) {
-            low_cmd.motorCmd[i].mode = 0x0A;
-            low_cmd.motorCmd[i].q =   0;
-            low_cmd.motorCmd[i].dq =  0;
-            low_cmd.motorCmd[i].Kp =  0;
-            low_cmd.motorCmd[i].Kd =  0;
-            low_cmd.motorCmd[i].tau = legged_state.param.kp_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG) * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
-                                    + legged_state.param.kd_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG)  * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
-                                    + legged_state.ctrl.joint_tau_tgt(i, 0);
+    for (int i = 0; i < 12; i++) {
+        low_cmd.motorCmd[i].mode = 0x0A;
+        low_cmd.motorCmd[i].q =   0;
+        low_cmd.motorCmd[i].dq =  0;
+        low_cmd.motorCmd[i].Kp =  0;
+        low_cmd.motorCmd[i].Kd =  0;
+        low_cmd.motorCmd[i].tau = legged_state.param.kp_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG) * (legged_state.ctrl.joint_ang_tgt(i, 0) - legged_state.fbk.joint_pos(i, 0)) 
+                                + legged_state.param.kd_foot(i%NUM_DOF_PER_LEG, i/NUM_DOF_PER_LEG)  * (legged_state.ctrl.joint_vel_tgt(i, 0) - legged_state.fbk.joint_vel(i, 0))  
+                                + legged_state.ctrl.joint_tau_tgt(i, 0);
 
-            // TODO: simulate a motor delay here?
-                                            
-            pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
+        // TODO: simulate a motor delay here?
+                                        
+        pub_joint_cmd[i].publish(low_cmd.motorCmd[i]);
     }
 
     return true;
@@ -121,24 +121,62 @@ bool GazeboInterface::send_cmd(double t) {
 // callback functions
 void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom) {
     // update
-    // legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
-    //                                               odom->pose.pose.orientation.x,
-    //                                               odom->pose.pose.orientation.y,
-    //                                               odom->pose.pose.orientation.z);                                              
-    // legged_state.fbk.root_pos << odom->pose.pose.position.x,
-    //         odom->pose.pose.position.y,
-    //         odom->pose.pose.position.z;
-    // // // make sure root_lin_vel is in world frame
-    // legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
-    //         odom->twist.twist.linear.y,
-    //         odom->twist.twist.linear.z;
+    if (legged_state.param.kf_type == 0) {
+        legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
+                                                    odom->pose.pose.orientation.x,
+                                                    odom->pose.pose.orientation.y,
+                                                    odom->pose.pose.orientation.z);   
+        legged_state.fbk.root_pos << odom->pose.pose.position.x,
+                odom->pose.pose.position.y,
+                odom->pose.pose.position.z;
+        // // make sure root_lin_vel is in world frame
+        legged_state.fbk.root_lin_vel << odom->twist.twist.linear.x,
+                odom->twist.twist.linear.y,
+                odom->twist.twist.linear.z;
 
-    // // make sure root_ang_vel is in world frame
-    // legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,E
-    //         odom->twist.twist.angular.y,
-    //         odom->twist.twist.angular.z;
+        // make sure root_ang_vel is in world frame
+        legged_state.fbk.root_ang_vel << odom->twist.twist.angular.x,
+                odom->twist.twist.angular.y,
+                odom->twist.twist.angular.z; 
+        legged_state.estimation_inited = true;
+    }  else if (legged_state.param.kf_type == 1) {
+        legged_state.fbk.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
+                                                    odom->pose.pose.orientation.x,
+                                                    odom->pose.pose.orientation.y,
+                                                    odom->pose.pose.orientation.z);  
+    } else {
+        // simulate opti track data
+        current_count++;
+        if (current_count < DROP_COUNT) {
+            return;
+        } else {
+            double opti_t = odom->header.stamp.toSec();
+            Eigen::Matrix<double, 3, 1> opti_pos; 
+            Eigen::Vector3d opti_euler; 
+            Eigen::Quaterniond opti_quat(odom->pose.pose.orientation.w, 
+                                        odom->pose.pose.orientation.x, 
+                                        odom->pose.pose.orientation.y,
+                                        odom->pose.pose.orientation.z); 
+            opti_euler = Utils::quat_to_euler(opti_quat); 
+            opti_pos << odom->pose.pose.position.x, odom->pose.pose.position.y, odom->pose.pose.position.z;
+            if (first_mocap_received == false) {
+                opti_t_prev = opti_t;
+                initial_opti_euler = opti_euler;
+                initial_opti_pos = opti_pos;  initial_opti_pos[2] = 0.0; // height is still absolute
+                first_mocap_received = true;
+            } else {
+                double opti_dt = opti_t - opti_t_prev;
 
+                ekf_data.input_opti_dt(opti_dt); 
+                ekf_data.input_opti_pos(opti_pos - initial_opti_pos);
+                ekf_data.input_opti_euler(opti_euler - initial_opti_euler);    
+                // ekf.update_filter_with_opti(ekf_data);      
+            }
+                
+        }
+    }
 
+    return;
 
 }
 
@@ -238,22 +276,22 @@ void GazeboInterface::RR_calf_state_callback(const unitree_legged_msgs::MotorSta
 // foot contact force, we just use norm 
 void GazeboInterface::FL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[0] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[0] = force_vec.norm();
 }
 
 void GazeboInterface::FR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[1] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[1] = force_vec.norm();
 }
 
 void GazeboInterface::RL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[2] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[2] = force_vec.norm();
 }
 
 void GazeboInterface::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
     Eigen::Vector3d force_vec(force.wrench.force.x, force.wrench.force.y, force.wrench.force.z);
-    legged_state.fbk.foot_force[3] = force_vec.norm();
+    legged_state.fbk.foot_force_sensor[3] = force_vec.norm();
 }
 
 

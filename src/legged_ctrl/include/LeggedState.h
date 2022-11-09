@@ -33,8 +33,8 @@ class LeggedFeedback {
     Eigen::Vector3d root_ang_vel;
     Eigen::Vector3d root_acc;
 
-    Eigen::Vector4d foot_force;             // the force we get from foot contact sensor, drifts a lot
-    Eigen::Vector4d foot_force_bias;       // since the foot contact sensor is not accurate, we need to record an initial bias
+    Eigen::Vector4d foot_force_sensor;             // the force we get from foot contact sensor, drifts a lot
+    Eigen::Vector4d foot_sensor_bias;       // since the foot contact sensor is not accurate, we need to record an initial bias
     Eigen::Matrix<double, 3, NUM_LEG> foot_force_tauEst; // a foot force estimation based on joint torque feedback 
 
     // process foot force to get contact 
@@ -146,6 +146,7 @@ class LeggedParam {
     int robot_type;           // a1(0) or go1(1)
     int mpc_type;             // lci_mpc (0) or convex mpc (1)
     int low_level_type;       // basic tau ctrl (0) or whole body control (1)
+    int kf_type;
 
     double gait_counter_speed;    // delta time
     Eigen::Matrix<double, 3, NUM_LEG> default_foot_pos_rel;
@@ -161,6 +162,48 @@ class LeggedParam {
 
     double robot_mass;
     Eigen::Matrix3d a1_trunk_inertia;
+
+    // joystick mapping 
+    int joystick_left_updown_axis;
+    int joystick_left_horiz_axis;
+    int joystick_right_updown_axis;
+    int joystick_right_horiz_axis;
+    int joystick_mode_switch_button;
+    int joystick_exit_button;
+
+    // joystick parameters
+    double joystick_velx_scale;
+    double joystick_vely_scale;
+    double joystick_height_vel;
+    double joystick_max_height;
+    double joystick_min_height;
+
+    double joystick_yaw_rate_scale;
+    double joystick_roll_rate_scale;
+    double joystick_pitch_rate_scale;
+
+    // contact detection flags
+    double foot_sensor_max_value;
+    double foot_sensor_min_value;
+    double foot_sensor_ratio;
+
+    // casadi EKF related
+    double ekf_inital_cov;
+    double ekf_noise_process_pos_xy;
+    double ekf_noise_process_pos_z;
+    double ekf_noise_process_vel_xy;
+    double ekf_noise_process_vel_z;
+    double ekf_noise_process_rot;
+    double ekf_noise_process_foot;
+
+    double ekf_noise_measure_fk;
+    double ekf_noise_measure_vel;
+    double ekf_noise_measure_height;
+
+    double ekf_noise_opti_pos;
+    double ekf_noise_opti_vel;
+    double ekf_noise_opti_yaw;
+    
 
 };
 

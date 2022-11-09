@@ -101,50 +101,44 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
     legged_state.param.load(_nh);
 
     // set casadi ekf
-    // ekf.set_noise_params(
-    //     legged_state.param.ekf_inital_cov,
-    //     legged_state.param.ekf_noise_process_pos_xy,
-    //     legged_state.param.ekf_noise_process_pos_z,
-    //     legged_state.param.ekf_noise_process_vel_xy,
-    //     legged_state.param.ekf_noise_process_vel_z,
-    //     legged_state.param.ekf_noise_process_rot,
-    //     legged_state.param.ekf_noise_process_foot,
-    //     legged_state.param.ekf_noise_measure_fk,
-    //     legged_state.param.ekf_noise_measure_vel,
-    //     legged_state.param.ekf_noise_measure_height,
-    //     legged_state.param.ekf_noise_opti_pos,
-    //     legged_state.param.ekf_noise_opti_vel,
-    //     legged_state.param.ekf_noise_opti_yaw
-    // );
-
+    ekf.set_noise_params(
+        legged_state.param.ekf_inital_cov,
+        legged_state.param.ekf_noise_process_pos_xy,
+        legged_state.param.ekf_noise_process_pos_z,
+        legged_state.param.ekf_noise_process_vel_xy,
+        legged_state.param.ekf_noise_process_vel_z,
+        legged_state.param.ekf_noise_process_rot,
+        legged_state.param.ekf_noise_process_foot,
+        legged_state.param.ekf_noise_measure_fk,
+        legged_state.param.ekf_noise_measure_vel,
+        legged_state.param.ekf_noise_measure_height,
+        legged_state.param.ekf_noise_opti_pos,
+        legged_state.param.ekf_noise_opti_vel,
+        legged_state.param.ekf_noise_opti_yaw
+    );
 }
 
 
-void BaseInterface::
-joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
+void BaseInterface::joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     // left updown
-    legged_state.joy.velz = joy_msg->axes[1] * JOY_CMD_BODY_HEIGHT_VEL;
+    legged_state.joy.velz = joy_msg->axes[legged_state.param.joystick_left_updown_axis] * legged_state.param.joystick_height_vel;
 
     //A
-    if (joy_msg->buttons[0] == 1) {
-        std::cout << std::endl << "You have requested to change legged_state!" << std::endl << std::endl;
+    if (joy_msg->buttons[legged_state.param.joystick_mode_switch_button] == 1) {
+        std::cout << std::endl << "You have requested to chaneg legged_state!" << std::endl << std::endl;
         legged_state.joy.ctrl_state_change_request = true;
     }
 
     // xbox controller mapping
     // right updown
-    legged_state.joy.velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
+    legged_state.joy.velx = joy_msg->axes[legged_state.param.joystick_right_updown_axis] * legged_state.param.joystick_velx_scale;
     // right horiz
-    legged_state.joy.vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
+    legged_state.joy.vely = joy_msg->axes[legged_state.param.joystick_right_horiz_axis] * legged_state.param.joystick_vely_scale;
     // left horiz
-    legged_state.joy.yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
-    // up-down button
-    // legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
-    // left-right button
-    // legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
+    legged_state.joy.yaw_rate = joy_msg->axes[legged_state.param.joystick_left_horiz_axis] * legged_state.param.joystick_yaw_rate_scale;
 
     // lb
-    if (joy_msg->buttons[4] == 1) {
+    if (joy_msg->buttons[legged_state.param.joystick_exit_button] == 1) {
         std::cout << "You have pressed the exit button!!!!" << std::endl;
         legged_state.joy.exit = true;
     }
@@ -178,11 +172,11 @@ bool BaseInterface::joy_update(double t, double dt) {
     // process joy cmd data to get desired height, velocity, yaw, etc
     // save the result into legged_state
     legged_state.joy.body_height += legged_state.joy.velz * dt;
-    if (legged_state.joy.body_height >= JOY_CMD_BODY_HEIGHT_MAX) {
-        legged_state.joy.body_height = JOY_CMD_BODY_HEIGHT_MAX;
+    if (legged_state.joy.body_height >= legged_state.param.joystick_max_height) {
+        legged_state.joy.body_height = legged_state.param.joystick_max_height;
     }
-    if (legged_state.joy.body_height <= JOY_CMD_BODY_HEIGHT_MIN) {
-        legged_state.joy.body_height = JOY_CMD_BODY_HEIGHT_MIN;
+    if (legged_state.joy.body_height <= legged_state.param.joystick_min_height) {
+        legged_state.joy.body_height = legged_state.param.joystick_min_height;
     }
 
     legged_state.joy.prev_ctrl_state = legged_state.joy.ctrl_state;
@@ -322,12 +316,13 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // a dynamic model for foot contact thresholding
     // TODO: make some parameters configurable
     for (int i = 0; i < NUM_LEG; ++i) {
-           double force_mag = legged_state.fbk.foot_force[i];
+            double force_mag = legged_state.fbk.foot_force_sensor[i];
 
-            legged_state.fbk.foot_force_min[i] = 0;
-            legged_state.fbk.foot_force_max[i] = 50;
+            legged_state.fbk.foot_force_min[i] = legged_state.param.foot_sensor_min_value;
+            legged_state.fbk.foot_force_max[i] = legged_state.param.foot_sensor_max_value;
+
             legged_state.fbk.foot_force_contact_threshold[i] = 
-                legged_state.fbk.foot_force_min[i] + 0.5 * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
+                legged_state.fbk.foot_force_min[i] + legged_state.param.foot_sensor_ratio * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
 
             legged_state.fbk.foot_contact_flag[i] = 
                 1.0 / (1 + exp(-10 * (force_mag - legged_state.fbk.foot_force_contact_threshold[i])));        
@@ -337,15 +332,29 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // tau = J^T * F, so F = J^T^-1 * tau
     for (int i = 0; i < NUM_LEG; ++i) {
         Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i).transpose();
+        Eigen::Vector3d measure_tau = legged_state.fbk.joint_tauEst.segment<3>(3 * i);
+
+        // remove the joint command from measure_tau
+        measure_tau -= legged_state.param.kp_foot.block<3, 1>(0, i).cwiseProduct(
+            legged_state.ctrl.joint_ang_tgt.segment<3>(3 * i) - legged_state.fbk.joint_pos.segment<3>(3 * i)
+        );
+        measure_tau -= legged_state.param.kd_foot.block<3, 1>(0, i).cwiseProduct(
+            legged_state.ctrl.joint_vel_tgt.segment<3>(3 * i) - legged_state.fbk.joint_vel.segment<3>(3 * i)
+        );
+
         // robot frame foot force estimation
-        Eigen::Vector3d force_rel = jac.lu().solve(legged_state.fbk.joint_tauEst.segment<3>(3 * i));
+        Eigen::Vector3d force_rel = jac.lu().solve(measure_tau);
         // world frame foot force estimation
         legged_state.fbk.foot_force_tauEst.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * force_rel;
 
     }
 
     estimation_update(t, dt);
-    
+
+    // std::cout << "pos estimation" << legged_state.fbk.root_pos.transpose() << std::endl;
+    // std::cout << "euler estimation" << legged_state.fbk.root_euler.transpose() << std::endl;
+
+
     // always calculate Raibert Heuristic, calculate foothold position
     // update foot plan: legged_state.foot_pos_target_world
     Eigen::Vector3d lin_vel_abs = legged_state.fbk.root_lin_vel; lin_vel_abs[2] = 0;// world frame linear velocity, cannot regulate z velocity so we set it to 0
@@ -355,7 +364,6 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // foothold target 
     legged_state.ctrl.foot_pos_target_abs = legged_state.fbk.root_rot_mat_z * legged_state.param.default_foot_pos_rel;
     double k = std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8);
-    // double k = 0.03;
     for (int i = 0; i < NUM_LEG; ++i) {
         double delta_x =
                 k * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
@@ -394,12 +402,48 @@ bool BaseInterface::sensor_update(double t, double dt) {
 }
 
 bool BaseInterface::estimation_update(double t, double dt) {
-    // legged_state estimation EKF
-    if (!kf.is_inited()) {
-        kf.init_state(legged_state);
-    } else {
-        kf.update_estimation(legged_state, dt);
+    // legged_state estimation KF
+
+    if (legged_state.param.kf_type == 1) {
+        if (!kf.is_inited()) {
+            kf.init_state(legged_state);
+            legged_state.estimation_inited = true;
+        } else {
+            kf.update_estimation(legged_state, dt);
+        }
+    } else if (legged_state.param.kf_type == 2) {
+        // new casadi EKF
+        Eigen::Matrix<double, NUM_LEG, 1> contacts; 
+        if (legged_state.ctrl.movement_mode == 0) {  // stand
+            for (int i = 0; i < NUM_LEG; ++i) contacts[i] = 1.0;
+        } else {  // walk
+            for (int i = 0; i < NUM_LEG; ++i) {
+                contacts[i] = legged_state.fbk.foot_contact_flag[i];
+            }
+        }
+        ekf_data.input_dt(dt); 
+        ekf_data.input_imu(legged_state.fbk.imu_acc, legged_state.fbk.imu_ang_vel); 
+        ekf_data.input_leg(legged_state.fbk.joint_pos, legged_state.fbk.joint_vel, contacts); 
+
+        if (t < 0.1) {
+            std::cout << "do not run filter at beginning when ekf_data is not filled! " << std::endl;
+            return true;
+        }
+        if(!ekf.is_inited()) {
+            ekf.init_filter(ekf_data); 
+            legged_state.estimation_inited = true;
+        } else {
+            ekf.update_filter(ekf_data); 
+        }
+        // get result 
+        Eigen::Matrix<double, EKF_STATE_SIZE, 1> kf_state = ekf.get_state(); 
+        Eigen::Vector3d root_euler_estimation = kf_state.segment<3>(6); 
+        Eigen::Quaterniond root_quat_estimation = Utils::euler_to_quat(root_euler_estimation);
+        legged_state.fbk.root_quat = root_quat_estimation;
+        legged_state.fbk.root_pos = kf_state.segment<3>(0); 
+        legged_state.fbk.root_lin_vel = kf_state.segment<3>(3); 
     }
+
     return true;
 }
 

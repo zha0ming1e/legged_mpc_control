@@ -10,6 +10,11 @@ mpc_type: 1       # 0: CI-MPC
                   # 2: ocs2 nonlinear MPC
 low_level_type: 0 # 0: basic tau ctrl
                   # 1: whole body control 
+
+kf_type: 1        # 0: no kf ( only available in Gazebo)
+                  # 1: linear KF
+                  # 2: EKF
+
 # default foothold position in robot body frame (varialbes with "_rel" in the code)
 default_foot_pos_FL_x: 0.17
 default_foot_pos_FL_y: 0.12
@@ -32,21 +37,21 @@ gait_counter_speed: 4.0    # 3 gait cycle per second
 
 # convex MPC parameters
 
-q_weights_0:  50.0 # roll
+q_weights_0:  60.0 # roll
 q_weights_1:  100.0 # pitch
 q_weights_2:  0.0 # yaw
 
 q_weights_3:  0.0 # pos x
 q_weights_4:  0.0 # pos y
-q_weights_5:  3500.0 # pos z
+q_weights_5:  550.0 # pos z
 
-q_weights_6:  0.01 # omega x
-q_weights_7:  0.01 # omega y
-q_weights_8:  10.0 # omega z
+q_weights_6:  0.15 # omega x
+q_weights_7:  0.15 # omega y
+q_weights_8:  100.0 # omega z
 
-q_weights_9:  15.0 # vel x
-q_weights_10: 15.0 # vel y
-q_weights_11: 20.0 # vel z
+q_weights_9:  3.0 # vel x
+q_weights_10: 3.0  # vel y
+q_weights_11: 5.0 # vel z
 
 q_weights_12: 0.0
 
@@ -67,21 +72,64 @@ r_weights_10: 0.0001
 r_weights_11: 0.0001
 
 # swing leg parameters
-kp_foot_x: 0.5
-kp_foot_y: 0.5
-kp_foot_z: 0.5
+kp_foot_x: 10
+kp_foot_y: 10
+kp_foot_z: 10
 
-kd_foot_x: 0.3
-kd_foot_y: 0.3
-kd_foot_z: 0.3
+kd_foot_x: 0.1
+kd_foot_y: 0.1
+kd_foot_z: 0.1
 
 km_foot_x: 0.1
 km_foot_y: 0.1
 km_foot_z: 0.1
 
+# joystick mapping ( must change according to your joystick)
+# for example, 
+# - xbox controller has right updown axis as 4, right horizontal axis as 3
+# - nvidia controller has right updown axis as 5, right horizontal axis as 2
+joystick_left_updown_axis:   1
+joystick_left_horiz_axis:    0
+joystick_right_updown_axis:  5
+joystick_right_horiz_axis:   2
+joystick_mode_switch_button: 0
+joystick_exit_button:        4
 
 
+# joystick parameters
+joystick_velx_scale:  2.5   # m/s
+joystick_vely_scale:  0.4   # m/s
+joystick_height_vel:  0.1   # m/s
+joystick_max_height:  0.30  # m
+joystick_min_height:  0.03  # m
+joystick_yaw_rate_scale:   0.8  # rad/s
+joystick_roll_rate_scale:  0.4  # rad/s
+joystick_pitch_rate_scale: 0.4  # rad/s
 
+# contact detection related 
+# the range of sensor of A1 and Go1 are pretty different
+foot_sensor_max_value: 300.0
+foot_sensor_min_value:   0.0
+foot_sensor_ratio:       0.5
+
+# casadi EKF parameters
+ekf_inital_cov:               0.01  
+ekf_noise_process_pos_xy:     0.01
+ekf_noise_process_pos_z:      0.01
+ekf_noise_process_vel_xy:     0.01
+ekf_noise_process_vel_z:      0.01
+ekf_noise_process_rot:        0.000001
+ekf_noise_process_foot:       0.01
+
+ekf_noise_measure_fk:         0.001
+ekf_noise_measure_vel:        0.1
+ekf_noise_measure_height:     0.0001
+
+ekf_noise_opti_pos:           0.001
+ekf_noise_opti_vel:           999.0
+ekf_noise_opti_yaw:           0.01
+
+# robot parameters
 a1_robot_mass: 13.0
 
 a1_trunk_inertia_xx: 0.0158533

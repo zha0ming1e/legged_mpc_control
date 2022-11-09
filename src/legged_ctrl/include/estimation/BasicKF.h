@@ -23,10 +23,10 @@ namespace legged
 {
 // implement a basic error state KF to estimate robot pose
 // assume orientation is known from a IMU (state.root_rot_mat)
-class BasicEKF {
+class BasicKF {
 public:
-    BasicEKF ();
-    BasicEKF (bool assume_flat_ground_);
+    BasicKF ();
+    BasicKF (bool assume_flat_ground_);
     void init_state(LeggedState& state);
     void update_estimation(LeggedState& state, double dt);
     bool is_inited() {return filter_initialized;}

@@ -141,7 +141,7 @@ add_library(interfaces_lib
         src/interfaces/HardwareInterface.cpp
         src/LeggedState.cpp
         src/utils/Utils.cpp
-        src/estimation/BasicEKF.cpp
+        src/estimation/BasicKF.cpp
         src/wbc_ctrl/wbc.cpp
         src/wbc_ctrl/HoQp.cpp
         src/utils/LeggedIKSolver.cpp

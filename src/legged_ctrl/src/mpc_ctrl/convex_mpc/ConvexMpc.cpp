@@ -93,7 +93,7 @@ namespace legged
             for (int i = 0; i < NUM_LEG; i++) {
                 leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
                                     state.ctrl.foot_pos_target_world.block<3,1>(0,i), 
-                                    state.fbk.estimated_contacts[i]);
+                                    state.fbk.foot_contact_flag[i]);
 
                 // TODO: gait phase of each leg is individually controlled, so we may need to occasionally synchrinize them, for example if all leg are in contact, average their gait phase and set them to that value
             }        

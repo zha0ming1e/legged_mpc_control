@@ -283,6 +283,10 @@ public:
             joint_data_.velocity[i*3+1] = state.fbk.joint_vel[i*3+1]; 
             joint_data_.velocity[i*3+2] = state.fbk.joint_vel[i*3+2]; 
 
+            joint_data_.effort[i*3] = state.fbk.joint_tauEst[i*3]; 
+            joint_data_.effort[i*3+1] = state.fbk.joint_tauEst[i*3+1]; 
+            joint_data_.effort[i*3+2] = state.fbk.joint_tauEst[i*3+2]; 
+
             joint_data_d_.position[i*3] = state.ctrl.joint_ang_tgt[i*3]; 
             joint_data_d_.position[i*3+1] = state.ctrl.joint_ang_tgt[i*3+1];
             joint_data_d_.position[i*3+2] = state.ctrl.joint_ang_tgt[i*3+2]; 
@@ -302,7 +306,7 @@ public:
             pub_foot_pose_[i].publish(foot_marker_[i]); 
             pub_foot_pose_target_[i].publish(foot_marker_target_[i]); 
 
-            contact_forces_msg_.effort[i] = state.fbk.foot_force[i]; 
+            contact_forces_msg_.effort[i] = state.fbk.foot_force_sensor[i]; 
             mpc_contact_forces_msg_.effort[i] = state.ctrl.optimized_input.segment<3>(i*3).norm();
             foot_force_tauEst_msg_.effort[i] = state.fbk.foot_force_tauEst.block<3,1>(0,i).norm();
         }

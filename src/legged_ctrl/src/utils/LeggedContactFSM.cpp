@@ -170,14 +170,14 @@ namespace legged
     void LeggedContactFSM::stance_update(double dt, bool foot_force_flag) {
         // in stance phase, if do not have foot force flag, we should push down the foot to the ground
         // TODO: make these parameters configurable
-        if (!foot_force_flag) {
-            if (FSM_foot_pos_target_world[2] > -0.4) { // there is a threshold to prevent the foot from going too deep
-                FSM_foot_pos_target_world[2] -= 0.2*dt;
-                FSM_foot_vel_target_world[2] = -0.2;
-            }
-        } else {
-            FSM_foot_vel_target_world.setZero();
-        }
+        // if (!foot_force_flag) {
+        //     if (FSM_foot_pos_target_world[2] > -0.1) { // there is a threshold to prevent the foot from going too deep
+        //         FSM_foot_pos_target_world[2] -= 0.2*dt;
+        //         FSM_foot_vel_target_world[2] = -0.2;
+        //     }
+        // } else {
+        //     FSM_foot_vel_target_world.setZero();
+        // }
     }
 
     double LeggedContactFSM::percent_in_state() {
