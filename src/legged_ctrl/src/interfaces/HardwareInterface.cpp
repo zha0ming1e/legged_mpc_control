@@ -34,6 +34,9 @@ namespace legged
         for (int i = 0; i < NUM_DOF; i++) {
             joint_vel_filters[i] = MovingWindowFilter(10);
         }
+
+        // mocap callback 
+        mocap_sub = _nh.subscribe("/mocap_node/Robot_1/pose", 100, &HardwareInterface::opti_callback, this);
     }
 
     bool HardwareInterface::ctrl_update(double t, double dt) {
@@ -197,5 +200,31 @@ namespace legged
         pub_imu.publish(imu_msg);
     }
 
+    void HardwareInterface::opti_callback(const geometry_msgs::PoseStamped::ConstPtr& opti_msg) {
+        double opti_t = opti_msg->header.stamp.toSec();
+        Eigen::Matrix<double, 3, 1> opti_pos; 
+        opti_pos << opti_msg->pose.position.x, opti_msg->pose.position.y, opti_msg->pose.position.z;
+
+        Eigen::Vector3d opti_euler; 
+        Eigen::Quaterniond opti_quat(opti_msg->pose.orientation.w, 
+                                    opti_msg->pose.orientation.x, 
+                                    opti_msg->pose.orientation.y,
+                                    opti_msg->pose.orientation.z); 
+        opti_euler = Utils::quat_to_euler(opti_quat); 
+
+        if (first_mocap_received == false) {
+            opti_t_prev = opti_t;
+            initial_opti_euler = opti_euler;
+            initial_opti_pos = opti_pos;  initial_opti_pos[2] = 0.0; // height is still absolute
+            first_mocap_received = true;
+        } else {
+            double opti_dt = opti_t - opti_t_prev;
+
+            ekf_data.input_opti_dt(opti_dt); 
+            ekf_data.input_opti_pos(opti_pos - initial_opti_pos);
+            ekf_data.input_opti_euler(opti_euler - initial_opti_euler);    
+            ekf.update_filter_with_opti(ekf_data);      
+        }
+    }
 
 } // namespace legged

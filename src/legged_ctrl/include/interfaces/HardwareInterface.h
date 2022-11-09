@@ -6,6 +6,7 @@
 #include <sensor_msgs/JointState.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/PoseStamped.h>      // for reading mocap 
 #include <unitree_legged_msgs/MotorState.h>
 #include <unitree_legged_msgs/MotorCmd.h>
 #include <unitree_legged_msgs/LowCmd.h>
@@ -32,7 +33,6 @@ public:
     bool fbk_update(double t, double dt);
     
     bool send_cmd(double t);
-
 
 private:
 
@@ -63,6 +63,17 @@ private:
 
     // a1 hardware safety checker
     LeggedSafetyChecker safety_checker;
+
+    // process mocap data
+    int DROP_COUNT = 10;   // drop the first 10 data
+    int current_count = 0;
+    bool first_mocap_received = false;
+    double opti_t_prev;
+    Eigen::Vector3d initial_opti_euler;  // the data we input to the filter is the difference between the current and initial euler angles
+    Eigen::Vector3d initial_opti_pos;    // the data we input to the filter is the difference between the current and initial position
+
+    ros::Subscriber mocap_sub;
+    void opti_callback(const geometry_msgs::PoseStamped::ConstPtr& opti_msg);
 };
 
 }  // namespace legged
