@@ -310,10 +310,6 @@ WORKDIR ${SUPPORT_WS}/gram_savitzky_golay/build
 RUN cmake -DCMAKE_BUILD_TYPE=Release ../ && \
     make -j$(USE_PROC) && sudo make install
 
-# Install vicon dependency
-RUN sudo apt install ros-noetic-mocap-optitrack
-
-
 
 # config bash 
 CMD ["/bin/bash"]
