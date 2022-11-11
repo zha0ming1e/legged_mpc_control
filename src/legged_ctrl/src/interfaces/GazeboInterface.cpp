@@ -181,10 +181,10 @@ void GazeboInterface::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom)
 }
 
 void GazeboInterface::imu_callback(const sensor_msgs::Imu::ConstPtr &imu) {
-    legged_state.fbk.root_quat = Eigen::Quaterniond(quat_w.CalculateAverage(imu->orientation.w),
-                                                  quat_x.CalculateAverage(imu->orientation.x),
-                                                  quat_y.CalculateAverage(imu->orientation.y),
-                                                  quat_z.CalculateAverage(imu->orientation.z));
+    // legged_state.fbk.root_quat = Eigen::Quaterniond(quat_w.CalculateAverage(imu->orientation.w),
+    //                                               quat_x.CalculateAverage(imu->orientation.x),
+    //                                               quat_y.CalculateAverage(imu->orientation.y),
+    //                                               quat_z.CalculateAverage(imu->orientation.z));
     legged_state.fbk.imu_acc = Eigen::Vector3d(
             acc_x.CalculateAverage(imu->linear_acceleration.x),
             acc_y.CalculateAverage(imu->linear_acceleration.y),

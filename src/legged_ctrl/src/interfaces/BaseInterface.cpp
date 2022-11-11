@@ -442,6 +442,7 @@ bool BaseInterface::estimation_update(double t, double dt) {
         legged_state.fbk.root_quat = root_quat_estimation;
         legged_state.fbk.root_pos = kf_state.segment<3>(0); 
         legged_state.fbk.root_lin_vel = kf_state.segment<3>(3); 
+        legged_state.fbk.root_euler = kf_state.segment<3>(6); 
     }
 
     return true;
