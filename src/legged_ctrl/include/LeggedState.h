@@ -73,6 +73,7 @@ class LeggedCtrl {
 
 
     Eigen::Vector4d gait_counter;          // use time directly, the value in gait_counter is the phase time in the gait (0-1)
+    Eigen::Vector4d curr_gait_time;          // how long in seconds does current phase lasts
 
     // control target
     Eigen::Vector3d root_pos_d;

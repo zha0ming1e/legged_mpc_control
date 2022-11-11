@@ -31,7 +31,7 @@ namespace legged
 
             // foot_pos_cur_world is the feedback foot position, in stance phase we should hold this position
             // foot_pos_target_world is the raibert strategy target position, in swing phase we should move to this position
-            void update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag);
+            double update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag);
 
             // reset everything to the start of the gait pattern
             void reset();

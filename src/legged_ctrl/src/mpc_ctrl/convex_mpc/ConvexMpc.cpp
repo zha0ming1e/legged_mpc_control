@@ -91,7 +91,7 @@ namespace legged
             }
         } else {
             for (int i = 0; i < NUM_LEG; i++) {
-                leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
+                state.ctrl.gait_counter[i] = leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
                                     state.ctrl.foot_pos_target_world.block<3,1>(0,i), 
                                     state.fbk.foot_contact_flag[i]);
 

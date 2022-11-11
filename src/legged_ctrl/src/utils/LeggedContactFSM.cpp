@@ -35,7 +35,7 @@ namespace legged
         not_first_call = false;
     }
 
-    void LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag) {
+    double LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag) {
 
         // the update is called first time in the main loop, record target position
         // in helper variables
@@ -48,6 +48,7 @@ namespace legged
         }
 
         gait_phase += gait_speed * dt;
+
         // std::cout << gait_phase << std::endl;
         // state transition
         if (s == STANCE) {
@@ -59,7 +60,7 @@ namespace legged
         } else if (s == SWING) {
             if (percent_in_state() > 0.9 && foot_force_flag) {
                 // if we are in the second half of the swing phase and we have early contact
-                // then we should switch to stance phase immediately
+                // then we should switch to next phase immediately
                 s = STANCE;
                 swing_exit();
                 stance_enter(foot_pos_cur_world);
@@ -69,9 +70,7 @@ namespace legged
                 stance_enter(foot_pos_cur_world);
             }
         }
-        if (gait_phase > 1.0) {
-            gait_phase = 0.0;
-        }
+
 
         // state update 
         if (s == STANCE) {
@@ -81,7 +80,7 @@ namespace legged
             // swing leg moves to the target position
             swing_update(dt, foot_pos_target_world);
         }
-
+        return gait_phase;
     }
 
     void LeggedContactFSM::stance_exit(Eigen::Vector3d foot_pos_cur_world) {
@@ -109,6 +108,9 @@ namespace legged
         gait_pattern_index = 0;
         prev_gait_pattern_index = gait_pattern_size - 1;
         gait_pattern_loaded = true;
+
+        cur_state_start_time = 0.0;
+        cur_state_end_time = gait_switch_time[gait_pattern_index];
     }
 
     void LeggedContactFSM::set_default_stand_pattern() {
@@ -128,13 +130,12 @@ namespace legged
         // first increase pattern index
         prev_gait_pattern_index = gait_pattern_index;
         gait_pattern_index = (gait_pattern_index + 1 ) % gait_pattern_size;
-        // reset cur_state_start_time,
-        // notice we do not wrap gaite phase here 
-        if (gait_phase > 1.0) {
-            cur_state_start_time = gait_phase - 1.0;
-        } else {
-            cur_state_start_time = gait_phase;
+        if (gait_pattern_index < prev_gait_pattern_index) {
+            // warp gait phase 
+            gait_phase -= 1.0;
         }
+        // reset cur_state_start_time
+        cur_state_start_time = gait_phase;
         cur_state_end_time = gait_switch_time[gait_pattern_index];
         std::cout << "cur_state_start_time: " << cur_state_start_time << std::endl;
         std::cout << "cur_state_end_time: " << cur_state_end_time << std::endl;

@@ -342,7 +342,7 @@ RUN git clone https://github.com/leggedrobotics/ocs2_robotic_assets.git
 
 
 RUN sudo apt-get update \
-    && sudo apt-get install -y ros-${ROS_DISTRO}-interactive-markers
+    && sudo apt-get install -y ros-${ROS_DISTRO}-interactive-markers ros-${ROS_DISTRO}-roslint
 
 WORKDIR $OCS2_WS
 RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash; catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo; catkin build ocs2_legged_robot_ros"

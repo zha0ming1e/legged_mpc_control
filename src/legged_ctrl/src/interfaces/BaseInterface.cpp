@@ -367,11 +367,11 @@ bool BaseInterface::sensor_update(double t, double dt) {
     for (int i = 0; i < NUM_LEG; ++i) {
         double delta_x =
                 k * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
-                (1.0/legged_state.param.gait_counter_speed/2.0) / 2.0 *
+                (1.0/legged_state.param.gait_counter_speed/2.0)  *
                 lin_vel_d_abs(0);
         double delta_y =
                 k * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
-                (1.0/legged_state.param.gait_counter_speed/2.0) / 2.0 *
+                (1.0/legged_state.param.gait_counter_speed/2.0)  *
                 lin_vel_d_abs(1);
 
         if (delta_x < -FOOT_DELTA_X_LIMIT) {

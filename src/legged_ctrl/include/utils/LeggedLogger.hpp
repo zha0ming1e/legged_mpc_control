@@ -307,6 +307,10 @@ public:
             pub_foot_pose_target_[i].publish(foot_marker_target_[i]); 
 
             contact_forces_msg_.effort[i] = state.fbk.foot_force_sensor[i]; 
+            contact_forces_msg_.position[i] = state.ctrl.plan_contacts[i]; 
+            contact_forces_msg_.velocity[i] = state.ctrl.gait_counter[i]; 
+
+
             mpc_contact_forces_msg_.effort[i] = state.ctrl.optimized_input.segment<3>(i*3).norm();
             foot_force_tauEst_msg_.effort[i] = state.fbk.foot_force_tauEst.block<3,1>(0,i).norm();
         }
