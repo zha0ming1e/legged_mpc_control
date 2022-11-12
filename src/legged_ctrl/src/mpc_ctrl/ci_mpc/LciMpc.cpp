@@ -14,21 +14,13 @@ LciMpc::LciMpc() {
 
     jl_eval_string("include(\"scripts/stand_policy.jl\")");
     jl_eval_string("include(\"scripts/trot_policy.jl\")");
-    jl_eval_string("include(\"scripts/centroidalBox_test.jl\")");
-    // jl_eval_string("include(\"scripts/wall_stand_policy.jl\")");
-    // jl_eval_string("include(\"scripts/wall_walk_policy.jl\")");
     
     // Obtain mpc module from Julia 
     julia_mpc_module_ = (jl_module_t *)jl_eval_string("EmbeddedLciMpc");
 
     // Obtain the necessary function 
     standing_policy_ = (jl_value_t*) jl_eval_string("p_stand");
-    // standing_policy_ = (jl_value_t*) jl_eval_string("tvlqr_policy");
     walking_policy_ = (jl_value_t*) jl_eval_string("p_walk"); 
-    // walking_policy_ = (jl_value_t*) jl_eval_string("p_box");
-    // walking_policy_ = (jl_value_t*) jl_eval_string("p_wall");
-    // wall_climb_policy_ = (jl_value_t*) jl_eval_string("p_wall_stand");
-    // wall_walk_policy_ = (jl_value_t*) jl_eval_string("p_wall_walk");
     policy_function_ = jl_get_function(julia_mpc_module_, "exec_policy");
     // update_velocity_function_ = jl_get_function(jl_main_module, "update_velocity");
 
@@ -104,11 +96,10 @@ bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
         policy_args_[0] = (jl_value_t*) standing_policy_; 
         velocity_args_[0]= policy_args_[0]; 
     } else if(legged_state.ctrl.movement_mode == 1) {
-        // policy_args_[0] = (jl_value_t*) wall_climb_policy_; 
         policy_args_[0] = (jl_value_t*) walking_policy_; 
         velocity_args_[0]= policy_args_[0]; 
     } else {
-        policy_args_[0] = (jl_value_t*) wall_walk_policy_; 
+        policy_args_[0] = (jl_value_t*) walking_policy_; 
         velocity_args_[0]= policy_args_[0]; 
     }
 
@@ -146,22 +137,7 @@ bool LciMpc::update(LeggedState &legged_state, double t, double dt) {
 
     legged_state.ctrl.optimized_input.head(12) = foot_forces;
     legged_state.ctrl.optimized_input.tail(12) = vel_des.tail(12);
-
-    // test 
-    // legged_state.ctrl.optimized_state << 0, 0, 0.3,
-    //                                      0, 0,   0,//zyx
-    //                                      0.18, 0.17, 0,
-    //                                      0.18, -0.17, 0, 
-    //                                      -0.18, 0.17, 0, 
-    //                                      -0.18, -0.17, 0;
-    // legged_state.ctrl.optimized_input << 0,0, 12*9.8/4,
-    //                                      0,0, 12*9.8/4,
-    //                                      0,0, 12*9.8/4,
-    //                                      0,0, 12*9.8/4,
-    //                                      0,0,0,
-    //                                      0,0,0,
-    //                                      0,0,0,
-    //                                      0,0,0;       
+    
 
     // set contacts according to contact flag thresholding 
     for (int i = 0; i < NUM_LEG; ++i) {
