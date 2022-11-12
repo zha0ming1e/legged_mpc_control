@@ -184,7 +184,7 @@ bool BaseInterface::joy_update(double t, double dt) {
     if (legged_state.joy.ctrl_state_change_request) {
         // toggle legged_state.joy.ctrl_state
         legged_state.joy.ctrl_state = legged_state.joy.ctrl_state + 1;
-        legged_state.joy.ctrl_state = legged_state.joy.ctrl_state % 3; //TODO: how to toggle more states?
+        legged_state.joy.ctrl_state = legged_state.joy.ctrl_state % 2; //TODO: how to toggle more states?
         legged_state.joy.ctrl_state_change_request = false; //erase this change request;
     }
 
