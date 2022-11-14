@@ -15,8 +15,9 @@ namespace legged
         fastConvex = ConvexQPSolver(state.param.q_weights, 
                                     state.param.r_weights); 
 
-        root_lin_vel_d_rel_filter_x = MovingWindowFilter(200);
-        root_lin_vel_d_rel_filter_y = MovingWindowFilter(200);
+        // adjust filter strength
+        root_lin_vel_d_rel_filter_x = MovingWindowFilter(int(1000.0/MPC_UPDATE_FREQUENCY*0.3));
+        root_lin_vel_d_rel_filter_y = MovingWindowFilter(int(1000.0/MPC_UPDATE_FREQUENCY*0.3));
 
     }
 

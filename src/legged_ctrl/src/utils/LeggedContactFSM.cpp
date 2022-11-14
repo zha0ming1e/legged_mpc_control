@@ -113,6 +113,91 @@ namespace legged
         cur_state_end_time = gait_switch_time[gait_pattern_index];
     }
 
+    void LeggedContactFSM::set_trot_with_stand_gait_pattern() {
+        gait_state_pattern.clear();
+        gait_pattern_index = 0;
+        gait_switch_time.clear();
+        if (leg_id == 0) {            //FL
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_switch_time.push_back(0.6);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        } else if (leg_id == 1) {     //FR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.1);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 2) {     //RL
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.1);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 3) {     //RR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_switch_time.push_back(0.6);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        }
+
+
+        gait_pattern_index = 0;
+        prev_gait_pattern_index = gait_pattern_size - 1;
+        gait_pattern_loaded = true;
+
+        cur_state_start_time = 0.0;
+        cur_state_end_time = gait_switch_time[gait_pattern_index];
+    }
+    void LeggedContactFSM::set_crawl_gait_pattern() {
+        gait_state_pattern.clear();
+        gait_pattern_index = 0;
+        gait_switch_time.clear();
+        if (leg_id == 0) {            //FL
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.25);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        } else if (leg_id == 1) {     //FR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.25);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 2) {     //RL
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(0.75);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 3) {     //RR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_switch_time.push_back(0.75);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        }
+
+
+        gait_pattern_index = 0;
+        prev_gait_pattern_index = gait_pattern_size - 1;
+        gait_pattern_loaded = true;
+
+        cur_state_start_time = 0.0;
+        cur_state_end_time = gait_switch_time[gait_pattern_index];
+    }
+
     void LeggedContactFSM::set_default_stand_pattern() {
         // default gait pattern is trotting
         gait_state_pattern.clear();

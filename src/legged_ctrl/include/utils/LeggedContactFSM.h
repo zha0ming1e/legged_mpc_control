@@ -20,6 +20,8 @@ namespace legged
             LeggedContactFSM() {};
             void reset_params(LeggedState &legged_state, int _leg_id);
             void set_default_gait_pattern();
+            void set_crawl_gait_pattern();
+            void set_trot_with_stand_gait_pattern();
             void set_default_stand_pattern();
 
             LeggedContactState get_contact_state() {return s;}

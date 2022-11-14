@@ -363,15 +363,15 @@ bool BaseInterface::sensor_update(double t, double dt) {
 
     // foothold target 
     legged_state.ctrl.foot_pos_target_abs = legged_state.fbk.root_rot_mat_z * legged_state.param.default_foot_pos_rel;
-    double k = std::sqrt(std::abs(legged_state.param.default_foot_pos_rel(2)) / 9.8);
+    double k = std::sqrt(std::abs(legged_state.fbk.root_pos(2)) / 9.8);
     for (int i = 0; i < NUM_LEG; ++i) {
         double delta_x =
                 k * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
-                (1.0/legged_state.param.gait_counter_speed/2.0)  *
+                (1.0/legged_state.param.gait_counter_speed/2.0)/2.0  *
                 lin_vel_d_abs(0);
         double delta_y =
                 k * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
-                (1.0/legged_state.param.gait_counter_speed/2.0)  *
+                (1.0/legged_state.param.gait_counter_speed/2.0)/2.0  *
                 lin_vel_d_abs(1);
 
         if (delta_x < -FOOT_DELTA_X_LIMIT) {
