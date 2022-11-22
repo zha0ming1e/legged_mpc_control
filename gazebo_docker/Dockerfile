@@ -92,7 +92,8 @@ RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
       ros-${ROS_DISTRO}-joy \
       ros-${ROS_DISTRO}-ros-controllers \
       ros-${ROS_DISTRO}-robot-state-publisher \
-      ros-${ROS_DISTRO}-plotjuggler 
+      ros-${ROS_DISTRO}-plotjuggler \
+      ros-${ROS_DISTRO}-plotjuggler-ros 
 
 WORKDIR $UNITREE_WS/src
 RUN git clone https://github.com/ShuoYangRobotics/unitree_ros.git

@@ -2,11 +2,11 @@
 // Created by shuoy on 11/1/21.
 //
 
-#include "estimation/BasicEKF.h"
+#include "estimation/BasicKF.h"
 
 namespace legged
 {
-BasicEKF::BasicEKF () {
+BasicKF::BasicKF () {
     // constructor
     eye3.setIdentity();
     // C is fixed
@@ -43,7 +43,7 @@ BasicEKF::BasicEKF () {
 
 }
 
-BasicEKF::BasicEKF (bool assume_flat_ground_):BasicEKF() {
+BasicKF::BasicKF (bool assume_flat_ground_):BasicKF() {
     // constructor
     assume_flat_ground = assume_flat_ground_;
     // change R according to this flag, if we do not assume the robot moves on flat ground,
@@ -54,7 +54,7 @@ BasicEKF::BasicEKF (bool assume_flat_ground_):BasicEKF() {
         }
     }
 }
-void BasicEKF::init_state(LeggedState& state) {
+void BasicKF::init_state(LeggedState& state) {
 
     filter_initialized = true;
     P.setIdentity();
@@ -69,7 +69,7 @@ void BasicEKF::init_state(LeggedState& state) {
     }
 }
 
-void BasicEKF::update_estimation(LeggedState& state, double dt) {
+void BasicKF::update_estimation(LeggedState& state, double dt) {
     // update A B using latest dt
     A.block<3, 3>(0, 3) = dt * eye3;
     B.block<3, 3>(3, 0) = dt * eye3;
@@ -82,8 +82,9 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
         for (int i = 0; i < NUM_LEG; ++i) estimated_contacts[i] = 1.0;
     } else {  // walk
         for (int i = 0; i < NUM_LEG; ++i) {
-            // estimated_contacts[i] = std::min(std::max((state.fbk.foot_force(i)) / (70.0 - 0.0), 0.0), 1.0);
-            estimated_contacts[i] = 1.0/(1.0+std::exp(-(state.fbk.foot_force(i)-80)));
+            // estimated_contacts[i] = std::min(std::max((state.fbk.foot_force_sensor(i)) / (70.0 - 0.0), 0.0), 1.0);
+            // estimated_contacts[i] = 1.0/(1.0+std::exp(-(state.fbk.foot_force_sensor(i)-20)));
+            estimated_contacts[i] = state.fbk.foot_contact_flag[i];
         }
     }
     // update Q
@@ -103,7 +104,7 @@ void BasicEKF::update_estimation(LeggedState& state, double dt) {
         R.block<3, 3>(NUM_LEG * 3 + i * 3, NUM_LEG * 3 + i * 3)
                 = (1 + (1 - estimated_contacts[i]) * 1e3) * SENSOR_NOISE_VIMU_REL_FOOT * eye3;      // vel estimation
         if (assume_flat_ground) {
-            R(NUM_LEG * 6 + i, NUM_LEG * 6 + i)
+                R(NUM_LEG * 6 + i, NUM_LEG * 6 + i)
                     = (1 + (1 - estimated_contacts[i]) * 1e3) * SENSOR_NOISE_ZFOOT;       // height z estimation
         }
     }

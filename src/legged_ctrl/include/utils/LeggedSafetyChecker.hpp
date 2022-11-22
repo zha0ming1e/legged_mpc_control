@@ -16,15 +16,15 @@ namespace legged
 
             bool is_safe(LeggedState &legged_state) {
                 // safe rules
-                if (legged_state.fbk.root_euler[0] > 0.5 || legged_state.fbk.root_euler[0] < -0.5) {
+                if (legged_state.fbk.root_euler[0] > 1 || legged_state.fbk.root_euler[0] < -1) {
                     std::cout << "LeggedSafetyChecker: robot roll is too large " << std::endl;
                     return false;
                 }
-                if (legged_state.fbk.root_euler[1] > 0.9 || legged_state.fbk.root_euler[1] < -0.9) {
+                if (legged_state.fbk.root_euler[1] > 3 || legged_state.fbk.root_euler[1] < -3) {
                     std::cout << "LeggedSafetyChecker: robot pitch is too large " << std::endl;
                     return false;
                 }
-                if (legged_state.fbk.joint_vel.maxCoeff() > 40.0) {
+                if (legged_state.fbk.joint_vel.maxCoeff() > 30.0) {
                     std::cout << "LeggedSafetyChecker: joint velocity is too large " << std::endl;
                     return false;
                 }

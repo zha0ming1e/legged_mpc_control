@@ -38,6 +38,8 @@ private:
     jl_function_t* update_velocity_function_; 
     jl_value_t* standing_policy_; 
     jl_value_t* walking_policy_; 
+    jl_value_t* wall_climb_policy_; 
+    jl_value_t* wall_walk_policy_; 
     jl_value_t* oneleg_policy_;; 
     vector<jl_value_t*> policy_args_; 
     vector<jl_value_t*> velocity_args_; 

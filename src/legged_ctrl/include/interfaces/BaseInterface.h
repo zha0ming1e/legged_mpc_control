@@ -2,6 +2,7 @@
 
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
+#include <std_msgs/Float64MultiArray.h>
 
 
 #include <ocs2_legged_robot/common/ModelSettings.h>
@@ -14,10 +15,11 @@
 #include <boost/filesystem/path.hpp>
 
 #include "LeggedState.h"
-#include "estimation/BasicEKF.h"
+#include "estimation/BasicKF.h"
 #include "wbc_ctrl/wbc.h"
 #include "utils/LeggedIKSolver.h"
 #include "utils/A1Kinematics.h"
+#include "CasadiEKF/A1KFCombineLOWithFootTerrain.h"
 
 namespace legged
 {
@@ -33,13 +35,15 @@ public:
      */
     BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
     virtual ~BaseInterface() {}
-    virtual bool update(double t, double dt) = 0;
+    virtual bool ctrl_update(double t, double dt) = 0;
+    virtual bool fbk_update(double t, double dt) = 0;
     
-    virtual bool send_cmd() = 0;
+    virtual bool send_cmd(double t) = 0;
 
     LeggedState& get_legged_state() {return legged_state; }; 
 
     void joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg);
+    void gain_callback(const std_msgs::Float64MultiArray &gain_msg);
 
     // process joystick data
     bool joy_update(double t, double dt);
@@ -89,12 +93,16 @@ public:
     vector_t prev_pos_des;
     vector_t vel_des;
 
+    // KF state estimator
+    BasicKF kf;
+    // Casadi EKF state estimator
+    A1SensorData ekf_data; 
+    A1KFCombineLOWithFootTerrain ekf;
 
 private:
     ros::Subscriber sub_joy_msg;
+    ros::Subscriber low_level_gains_msg;
 
-    // KF state estimator
-    BasicEKF kf;
 
     // old a1 kinematics
     double leg_offset_x[4] = {};

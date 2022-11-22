@@ -6,6 +6,7 @@
 #include <sensor_msgs/JointState.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/WrenchStamped.h>
+#include <geometry_msgs/PoseStamped.h>      // for reading mocap 
 #include <unitree_legged_msgs/MotorState.h>
 #include <unitree_legged_msgs/MotorCmd.h>
 #include <unitree_legged_msgs/LowCmd.h>
@@ -18,7 +19,7 @@
 #include "utils/MovingWindowFilter.hpp"
 #include "utils/LeggedSafetyChecker.hpp"
 
-#define FOOT_FILTER_WINDOW_SIZE 5
+#define FOOT_FILTER_WINDOW_SIZE 40
 namespace legged
 {
 using namespace ocs2;
@@ -28,10 +29,10 @@ class HardwareInterface : public BaseInterface {
 public:
     HardwareInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
 
-    bool update(double t, double dt);
+    bool ctrl_update(double t, double dt);
+    bool fbk_update(double t, double dt);
     
-    bool send_cmd();
-
+    bool send_cmd(double t);
 
 private:
 
@@ -48,7 +49,7 @@ private:
 
     void udp_init_send();
 
-    void receive_low_state();
+    void receive_low_state(double dt);
 
     // a1 hardware switch foot order
     Eigen::Matrix<int, NUM_DOF, 1> swap_joint_indices;
@@ -57,8 +58,22 @@ private:
     // a1 hardware foot force filter
     MovingWindowFilter foot_force_filters[NUM_LEG];
 
+    // hardware joint vel filter
+    MovingWindowFilter joint_vel_filters[NUM_DOF];
+
     // a1 hardware safety checker
     LeggedSafetyChecker safety_checker;
+
+    // process mocap data
+    int DROP_COUNT = 10;   // drop the first 10 data
+    int current_count = 0;
+    bool first_mocap_received = false;
+    double opti_t_prev;
+    Eigen::Vector3d initial_opti_euler;  // the data we input to the filter is the difference between the current and initial euler angles
+    Eigen::Vector3d initial_opti_pos;    // the data we input to the filter is the difference between the current and initial position
+
+    ros::Subscriber mocap_sub;
+    void opti_callback(const geometry_msgs::PoseStamped::ConstPtr& opti_msg);
 };
 
 }  // namespace legged

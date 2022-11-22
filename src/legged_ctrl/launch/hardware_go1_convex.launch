@@ -1,0 +1,25 @@
+<launch>
+    <arg name="run_type" default="hardware"/>
+    <arg name="robot_type" default="go1"/>
+    <arg name="mpc_type" default="convex"/>
+
+    <!-- Loading Config files -->
+    <rosparam file="$(find legged_ctrl)/config/$(arg run_type)_$(arg robot_type)_$(arg mpc_type).yaml" command="load"/>
+
+    <!-- Load actual executables -->
+    <node pkg="legged_ctrl" type="main" name="main" output="screen"/>
+
+
+    <!-- record data to do analysis -->
+    <node pkg="rosbag" type="record" name="record" 
+        args="record -o /home/REXOperator/legged_ctrl_ws/bags/ 
+            /a1_debug/contact_forces
+            /a1_debug/mpc_contact_forces
+            /a1_debug/euler
+            /a1_debug/odom 
+            /a1_debug/euler_d
+            /a1_debug/odom_d 
+            /hardware_a1/imu
+            /hardware_a1/joint_foot
+        " />
+</launch>

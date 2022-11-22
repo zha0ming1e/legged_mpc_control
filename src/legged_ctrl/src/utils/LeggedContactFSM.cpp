@@ -35,7 +35,7 @@ namespace legged
         not_first_call = false;
     }
 
-    void LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag) {
+    double LeggedContactFSM::update(double dt, Eigen::Vector3d foot_pos_cur_world, Eigen::Vector3d  foot_pos_target_world, bool foot_force_flag) {
 
         // the update is called first time in the main loop, record target position
         // in helper variables
@@ -48,6 +48,7 @@ namespace legged
         }
 
         gait_phase += gait_speed * dt;
+
         // std::cout << gait_phase << std::endl;
         // state transition
         if (s == STANCE) {
@@ -57,9 +58,9 @@ namespace legged
                 s = SWING;
             }
         } else if (s == SWING) {
-            if (percent_in_state() > 0.7 && foot_force_flag) {
+            if (percent_in_state() > 0.9 && foot_force_flag) {
                 // if we are in the second half of the swing phase and we have early contact
-                // then we should switch to stance phase immediately
+                // then we should switch to next phase immediately
                 s = STANCE;
                 swing_exit();
                 stance_enter(foot_pos_cur_world);
@@ -69,9 +70,7 @@ namespace legged
                 stance_enter(foot_pos_cur_world);
             }
         }
-        if (gait_phase > 1.0) {
-            gait_phase = 0.0;
-        }
+
 
         // state update 
         if (s == STANCE) {
@@ -81,7 +80,7 @@ namespace legged
             // swing leg moves to the target position
             swing_update(dt, foot_pos_target_world);
         }
-
+        return gait_phase;
     }
 
     void LeggedContactFSM::stance_exit(Eigen::Vector3d foot_pos_cur_world) {
@@ -109,6 +108,94 @@ namespace legged
         gait_pattern_index = 0;
         prev_gait_pattern_index = gait_pattern_size - 1;
         gait_pattern_loaded = true;
+
+        cur_state_start_time = 0.0;
+        cur_state_end_time = gait_switch_time[gait_pattern_index];
+    }
+
+    void LeggedContactFSM::set_trot_with_stand_gait_pattern() {
+        gait_state_pattern.clear();
+        gait_pattern_index = 0;
+        gait_switch_time.clear();
+        if (leg_id == 0) {            //FL
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_switch_time.push_back(0.6);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        } else if (leg_id == 1) {     //FR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.1);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 2) {     //RL
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.1);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 3) {     //RR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_switch_time.push_back(0.6);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        }
+
+
+        gait_pattern_index = 0;
+        prev_gait_pattern_index = gait_pattern_size - 1;
+        gait_pattern_loaded = true;
+
+        cur_state_start_time = 0.0;
+        cur_state_end_time = gait_switch_time[gait_pattern_index];
+    }
+    void LeggedContactFSM::set_crawl_gait_pattern() {
+        gait_state_pattern.clear();
+        gait_pattern_index = 0;
+        gait_switch_time.clear();
+        if (leg_id == 0) {            //FL
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.25);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        } else if (leg_id == 1) {     //FR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.25);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 2) {     //RL
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_state_pattern.push_back(STANCE);
+            gait_switch_time.push_back(0.5);
+            gait_switch_time.push_back(0.75);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 3;
+        } else if (leg_id == 3) {     //RR
+            gait_state_pattern.push_back(STANCE);
+            gait_state_pattern.push_back(SWING);
+            gait_switch_time.push_back(0.75);
+            gait_switch_time.push_back(1.0);
+            gait_pattern_size = 2;
+        }
+
+
+        gait_pattern_index = 0;
+        prev_gait_pattern_index = gait_pattern_size - 1;
+        gait_pattern_loaded = true;
+
+        cur_state_start_time = 0.0;
+        cur_state_end_time = gait_switch_time[gait_pattern_index];
     }
 
     void LeggedContactFSM::set_default_stand_pattern() {
@@ -128,13 +215,12 @@ namespace legged
         // first increase pattern index
         prev_gait_pattern_index = gait_pattern_index;
         gait_pattern_index = (gait_pattern_index + 1 ) % gait_pattern_size;
-        // reset cur_state_start_time,
-        // notice we do not wrap gaite phase here 
-        if (gait_phase > 1.0) {
-            cur_state_start_time = gait_phase - 1.0;
-        } else {
-            cur_state_start_time = gait_phase;
+        if (gait_pattern_index < prev_gait_pattern_index) {
+            // warp gait phase 
+            gait_phase -= 1.0;
         }
+        // reset cur_state_start_time
+        cur_state_start_time = gait_phase;
         cur_state_end_time = gait_switch_time[gait_pattern_index];
         std::cout << "cur_state_start_time: " << cur_state_start_time << std::endl;
         std::cout << "cur_state_end_time: " << cur_state_end_time << std::endl;
@@ -170,14 +256,14 @@ namespace legged
     void LeggedContactFSM::stance_update(double dt, bool foot_force_flag) {
         // in stance phase, if do not have foot force flag, we should push down the foot to the ground
         // TODO: make these parameters configurable
-        if (!foot_force_flag) {
-            if (FSM_foot_pos_target_world[2] > -0.4) { // there is a threshold to prevent the foot from going too deep
-                FSM_foot_pos_target_world[2] -= 0.2*dt;
-                FSM_foot_vel_target_world[2] = -0.2;
-            }
-        } else {
-            FSM_foot_vel_target_world.setZero();
-        }
+        // if (!foot_force_flag) {
+        //     if (FSM_foot_pos_target_world[2] > -0.1) { // there is a threshold to prevent the foot from going too deep
+        //         FSM_foot_pos_target_world[2] -= 0.2*dt;
+        //         FSM_foot_vel_target_world[2] = -0.2;
+        //     }
+        // } else {
+        //     FSM_foot_vel_target_world.setZero();
+        // }
     }
 
     double LeggedContactFSM::percent_in_state() {

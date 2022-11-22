@@ -91,8 +91,9 @@ RUN   if [ "x$(nproc)" = "x1" ] ; then export USE_PROC=1 ; \
       ros-${ROS_DISTRO}-gazebo-ros \
       ros-${ROS_DISTRO}-joy \
       ros-${ROS_DISTRO}-ros-controllers \
-      ros-${ROS_DISTRO}-robot-state-publisher
-
+      ros-${ROS_DISTRO}-robot-state-publisher\
+      ros-${ROS_DISTRO}-plotjuggler \
+      ros-${ROS_DISTRO}-plotjuggler-ros 
 
 # https://github.com/JetBrains/clion-remote/blob/master/Dockerfile.remote-cpp-env
 # ssh credentials (test user):
@@ -255,11 +256,11 @@ RUN git clone https://github.com/lcm-proj/lcm.git && \
     make -j$(USE_PROC) && \
     sudo make install 
 
-# notice we must use v3.2 
-ENV UNITREE_SDK_VERSION=3_2
+# notice we must use v3.8 for go1 
+ENV UNITREE_SDK_VERSION=3_8
 WORKDIR $SUPPORT_WS
 RUN git clone https://github.com/unitreerobotics/unitree_legged_sdk.git && \
-    cd ${SUPPORT_WS}/unitree_legged_sdk && git checkout v3.2 && \
+    cd ${SUPPORT_WS}/unitree_legged_sdk && git checkout v3.8.0 && \
     mkdir build && \
     cd build && \
     cmake .. && \
@@ -309,10 +310,6 @@ WORKDIR ${SUPPORT_WS}/gram_savitzky_golay/build
 RUN cmake -DCMAKE_BUILD_TYPE=Release ../ && \
     make -j$(USE_PROC) && sudo make install
 
-# Install vicon dependency
-RUN sudo apt install ros-noetic-mocap-optitrack
-
-
 
 # config bash 
 CMD ["/bin/bash"]
@@ -345,7 +342,7 @@ RUN git clone https://github.com/leggedrobotics/ocs2_robotic_assets.git
 
 
 RUN sudo apt-get update \
-    && sudo apt-get install -y ros-${ROS_DISTRO}-interactive-markers
+    && sudo apt-get install -y ros-${ROS_DISTRO}-interactive-markers ros-${ROS_DISTRO}-roslint
 
 WORKDIR $OCS2_WS
 RUN /bin/bash -c "source ${UNITREE_WS}/devel/setup.bash; catkin config -DCMAKE_BUILD_TYPE=RelWithDebInfo; catkin build ocs2_legged_robot_ros"

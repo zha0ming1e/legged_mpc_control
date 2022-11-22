@@ -19,6 +19,7 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
     nh = _nh;
 
     sub_joy_msg = nh.subscribe("/joy", 1000, &BaseInterface::joy_callback, this);
+    low_level_gains_msg = nh.subscribe("/a1_debug/low_level_gains", 100, &BaseInterface::gain_callback, this);
 
     // pinnochio stuff
         bool verbose = true;
@@ -98,53 +99,84 @@ BaseInterface::BaseInterface(ros::NodeHandle &_nh, const std::string& taskFile, 
 
     // load parameter is very important 
     legged_state.param.load(_nh);
+
+    // set casadi ekf
+    ekf.set_noise_params(
+        legged_state.param.ekf_inital_cov,
+        legged_state.param.ekf_noise_process_pos_xy,
+        legged_state.param.ekf_noise_process_pos_z,
+        legged_state.param.ekf_noise_process_vel_xy,
+        legged_state.param.ekf_noise_process_vel_z,
+        legged_state.param.ekf_noise_process_rot,
+        legged_state.param.ekf_noise_process_foot,
+        legged_state.param.ekf_noise_measure_fk,
+        legged_state.param.ekf_noise_measure_vel,
+        legged_state.param.ekf_noise_measure_height,
+        legged_state.param.ekf_noise_opti_pos,
+        legged_state.param.ekf_noise_opti_vel,
+        legged_state.param.ekf_noise_opti_yaw
+    );
 }
 
 
-void BaseInterface::
-joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
+void BaseInterface::joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
     // left updown
-    legged_state.joy.velz = joy_msg->axes[1] * JOY_CMD_BODY_HEIGHT_VEL;
+    legged_state.joy.velz = joy_msg->axes[legged_state.param.joystick_left_updown_axis] * legged_state.param.joystick_height_vel;
 
     //A
-    if (joy_msg->buttons[0] == 1) {
-        std::cout << std::endl << "You have requested to chaneg state!" << std::endl << std::endl;
+    if (joy_msg->buttons[legged_state.param.joystick_mode_switch_button] == 1) {
+        std::cout << std::endl << "You have requested to chaneg legged_state!" << std::endl << std::endl;
         legged_state.joy.ctrl_state_change_request = true;
     }
 
     // xbox controller mapping
     // right updown
-    legged_state.joy.velx = joy_msg->axes[4] * JOY_CMD_VELX_MAX;
+    legged_state.joy.velx = joy_msg->axes[legged_state.param.joystick_right_updown_axis] * legged_state.param.joystick_velx_scale;
     // right horiz
-    legged_state.joy.vely = joy_msg->axes[3] * JOY_CMD_VELY_MAX;
+    legged_state.joy.vely = joy_msg->axes[legged_state.param.joystick_right_horiz_axis] * legged_state.param.joystick_vely_scale;
     // left horiz
-    legged_state.joy.yaw_rate = joy_msg->axes[0] * JOY_CMD_YAW_MAX;
-    // up-down button
-    // legged_state.joy.pitch_rate = joy_msg->axes[7] * JOY_CMD_PITCH_MAX;
-    // left-right button
-    // legged_state.joy.roll_rate = joy_msg->axes[6] * JOY_CMD_ROLL_MAX;
+    legged_state.joy.yaw_rate = joy_msg->axes[legged_state.param.joystick_left_horiz_axis] * legged_state.param.joystick_yaw_rate_scale;
 
     // lb
-    if (joy_msg->buttons[4] == 1) {
+    if (joy_msg->buttons[legged_state.param.joystick_exit_button] == 1) {
         std::cout << "You have pressed the exit button!!!!" << std::endl;
         legged_state.joy.exit = true;
     }
 }
 
+void BaseInterface::
+gain_callback(const std_msgs::Float64MultiArray &gain_msg) {
+    std::cout << "RECEIVED GAIN UPDATE: ";
+    for (int i = 0; i < 6; i++) {
+        std::cout << gain_msg.data[i] << " ";
+    }
+    std::cout << std::endl;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 4; j++) {
+            legged_state.param.kp_foot(i, j) = gain_msg.data[i];
+            legged_state.param.kd_foot(i, j) = gain_msg.data[i + 3];
+        }
+    }
+    std::cout << legged_state.param.kp_foot << std::endl;
+    std::cout << legged_state.param.kd_foot << std::endl;
+}
 
+double start_time = -1;
 bool BaseInterface::joy_update(double t, double dt) {
     if (legged_state.joy.exit) {
         return false;
     }
 
+    if (start_time == -1) start_time = t;
+
     // process joy cmd data to get desired height, velocity, yaw, etc
     // save the result into legged_state
     legged_state.joy.body_height += legged_state.joy.velz * dt;
-    if (legged_state.joy.body_height >= JOY_CMD_BODY_HEIGHT_MAX) {
-        legged_state.joy.body_height = JOY_CMD_BODY_HEIGHT_MAX;
+    if (legged_state.joy.body_height >= legged_state.param.joystick_max_height) {
+        legged_state.joy.body_height = legged_state.param.joystick_max_height;
     }
-    if (legged_state.joy.body_height <= JOY_CMD_BODY_HEIGHT_MIN) {
-        legged_state.joy.body_height = JOY_CMD_BODY_HEIGHT_MIN;
+    if (legged_state.joy.body_height <= legged_state.param.joystick_min_height) {
+        legged_state.joy.body_height = legged_state.param.joystick_min_height;
     }
 
     legged_state.joy.prev_ctrl_state = legged_state.joy.ctrl_state;
@@ -164,7 +196,12 @@ bool BaseInterface::joy_update(double t, double dt) {
         // leave walking mode
         // lock current position, should just happen for one instance
         legged_state.ctrl.movement_mode = 0;
-    } else {
+    // } else if (t - start_time > 0.5) {
+    //     legged_state.ctrl.movement_mode = 1;
+    } else if (legged_state.joy.ctrl_state == 2) {
+        legged_state.ctrl.movement_mode = 2;
+    }
+    else {
         legged_state.ctrl.movement_mode = 0;
     }    
 
@@ -260,7 +297,8 @@ bool BaseInterface::sensor_update(double t, double dt) {
         legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
 
         legged_state.fbk.foot_pos_world.block<3, 1>(0, i) = legged_state.fbk.foot_pos_abs.block<3, 1>(0, i) + legged_state.fbk.root_pos;
-        legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) + legged_state.fbk.root_lin_vel;
+        legged_state.fbk.foot_vel_world.block<3, 1>(0, i) = legged_state.fbk.foot_vel_abs.block<3, 1>(0, i) + legged_state.fbk.root_lin_vel
+            + legged_state.fbk.root_rot_mat * Utils::skew(legged_state.fbk.imu_ang_vel) * legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
     }
     // std::cout << "---------------------------------" << std::endl;
     // //compare
@@ -275,23 +313,142 @@ bool BaseInterface::sensor_update(double t, double dt) {
     // std::cout << legged_state.fbk.foot_pos_rel.block<3, 1>(0, 3).transpose() << " ---pos_rel3--- " << pos_measured[3].transpose() << std::endl;
     // std::cout << "---------------------------------" << std::endl;
 
+    // a dynamic model for foot contact thresholding
+    // TODO: make some parameters configurable
+    for (int i = 0; i < NUM_LEG; ++i) {
+            double force_mag = legged_state.fbk.foot_force_sensor[i];
+
+            legged_state.fbk.foot_force_min[i] = legged_state.param.foot_sensor_min_value;
+            legged_state.fbk.foot_force_max[i] = legged_state.param.foot_sensor_max_value;
+
+            legged_state.fbk.foot_force_contact_threshold[i] = 
+                legged_state.fbk.foot_force_min[i] + legged_state.param.foot_sensor_ratio * (legged_state.fbk.foot_force_max[i] - legged_state.fbk.foot_force_min[i]);
+
+            legged_state.fbk.foot_contact_flag[i] = 
+                1.0 / (1 + exp(-10 * (force_mag - legged_state.fbk.foot_force_contact_threshold[i])));        
+    }
+
+    // after we got leg jacobians, convert tauEst to foot force estimation
+    // tau = J^T * F, so F = J^T^-1 * tau
+    for (int i = 0; i < NUM_LEG; ++i) {
+        Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3, 3>(3 * i, 3 * i).transpose();
+        Eigen::Vector3d measure_tau = legged_state.fbk.joint_tauEst.segment<3>(3 * i);
+
+        // remove the joint command from measure_tau
+        measure_tau -= legged_state.param.kp_foot.block<3, 1>(0, i).cwiseProduct(
+            legged_state.ctrl.joint_ang_tgt.segment<3>(3 * i) - legged_state.fbk.joint_pos.segment<3>(3 * i)
+        );
+        measure_tau -= legged_state.param.kd_foot.block<3, 1>(0, i).cwiseProduct(
+            legged_state.ctrl.joint_vel_tgt.segment<3>(3 * i) - legged_state.fbk.joint_vel.segment<3>(3 * i)
+        );
+
+        // robot frame foot force estimation
+        Eigen::Vector3d force_rel = jac.lu().solve(measure_tau);
+        // world frame foot force estimation
+        legged_state.fbk.foot_force_tauEst.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat * force_rel;
+
+    }
+
     estimation_update(t, dt);
+
+    // std::cout << "pos estimation" << legged_state.fbk.root_pos.transpose() << std::endl;
+    // std::cout << "euler estimation" << legged_state.fbk.root_euler.transpose() << std::endl;
+
+
+    // always calculate Raibert Heuristic, calculate foothold position
+    // update foot plan: legged_state.foot_pos_target_world
+    Eigen::Vector3d lin_vel_abs = legged_state.fbk.root_lin_vel; lin_vel_abs[2] = 0;// world frame linear velocity, cannot regulate z velocity so we set it to 0
+    // desired abs frame linear velocity
+    Eigen::Vector3d lin_vel_d_abs = legged_state.fbk.root_rot_mat_z * legged_state.ctrl.root_lin_vel_d_rel; // robot body frame linear velocity
+
+    // foothold target 
+    legged_state.ctrl.foot_pos_target_abs = legged_state.fbk.root_rot_mat_z * legged_state.param.default_foot_pos_rel;
+    double k = std::sqrt(std::abs(legged_state.fbk.root_pos(2)) / 9.8);
+    for (int i = 0; i < NUM_LEG; ++i) {
+        double delta_x =
+                k * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
+                (1.0/legged_state.param.gait_counter_speed/2.0)/2.0  *
+                lin_vel_d_abs(0);
+        double delta_y =
+                k * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
+                (1.0/legged_state.param.gait_counter_speed/2.0)/2.0  *
+                lin_vel_d_abs(1);
+
+        if (delta_x < -FOOT_DELTA_X_LIMIT) {
+            delta_x = -FOOT_DELTA_X_LIMIT;
+        }
+        if (delta_x > FOOT_DELTA_X_LIMIT) {
+            delta_x = FOOT_DELTA_X_LIMIT;
+        }
+        if (delta_y < -FOOT_DELTA_Y_LIMIT) {
+            delta_y = -FOOT_DELTA_Y_LIMIT;
+        }
+        if (delta_y > FOOT_DELTA_Y_LIMIT) {
+            delta_y = FOOT_DELTA_Y_LIMIT;
+        }
+
+        // modify abs frame foothold target
+        legged_state.ctrl.foot_pos_target_abs(0, i) += delta_x;
+        legged_state.ctrl.foot_pos_target_abs(1, i) += delta_y;
+
+        // dont really use this but still calculate it
+        legged_state.ctrl.foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * legged_state.ctrl.foot_pos_target_abs.block<3, 1>(0, i);
+
+        // swing leg need to use foot_pos_target_world
+        legged_state.ctrl.foot_pos_target_world.block<3, 1>(0, i) = legged_state.ctrl.foot_pos_target_abs.block<3, 1>(0, i) + legged_state.fbk.root_pos;
+    }
 
     return true;
 }
 
 bool BaseInterface::estimation_update(double t, double dt) {
-    // state estimation EKF
-    if (!kf.is_inited()) {
-        kf.init_state(legged_state);
-    } else {
-        kf.update_estimation(legged_state, dt);
+    // legged_state estimation KF
+
+    if (legged_state.param.kf_type == 1) {
+        if (!kf.is_inited()) {
+            kf.init_state(legged_state);
+            legged_state.estimation_inited = true;
+        } else {
+            kf.update_estimation(legged_state, dt);
+        }
+    } else if (legged_state.param.kf_type == 2) {
+        // new casadi EKF
+        Eigen::Matrix<double, NUM_LEG, 1> contacts; 
+        if (legged_state.ctrl.movement_mode == 0) {  // stand
+            for (int i = 0; i < NUM_LEG; ++i) contacts[i] = 1.0;
+        } else {  // walk
+            for (int i = 0; i < NUM_LEG; ++i) {
+                contacts[i] = legged_state.fbk.foot_contact_flag[i];
+            }
+        }
+        ekf_data.input_dt(dt); 
+        ekf_data.input_imu(legged_state.fbk.imu_acc, legged_state.fbk.imu_ang_vel); 
+        ekf_data.input_leg(legged_state.fbk.joint_pos, legged_state.fbk.joint_vel, contacts); 
+
+        if (t < 0.1) {
+            std::cout << "do not run filter at beginning when ekf_data is not filled! " << std::endl;
+            return true;
+        }
+        if(!ekf.is_inited()) {
+            ekf.init_filter(ekf_data); 
+            legged_state.estimation_inited = true;
+        } else {
+            ekf.update_filter(ekf_data); 
+        }
+        // get result 
+        Eigen::Matrix<double, EKF_STATE_SIZE, 1> kf_state = ekf.get_state(); 
+        Eigen::Vector3d root_euler_estimation = kf_state.segment<3>(6); 
+        Eigen::Quaterniond root_quat_estimation = Utils::euler_to_quat(root_euler_estimation);
+        legged_state.fbk.root_quat = root_quat_estimation;
+        legged_state.fbk.root_pos = kf_state.segment<3>(0); 
+        legged_state.fbk.root_lin_vel = kf_state.segment<3>(3); 
+        legged_state.fbk.root_euler = kf_state.segment<3>(6); 
     }
+
     return true;
 }
 
 bool BaseInterface::tau_ctrl_update(double t, double dt) {
-
     // test old control strategy
     for(int i = 0; i < NUM_LEG; ++i) {
         // Ground reaction forces assignment, world to body
@@ -300,57 +457,41 @@ bool BaseInterface::tau_ctrl_update(double t, double dt) {
 
         Eigen::Matrix3d jac = legged_state.fbk.j_foot.block<3,3>(3*i, 3*i); 
         legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) = -jac.transpose() * foot_forces_grf_rel.block<3,1>(0,i);  
+        // TODO: add dynamics feedforward
 
         if (legged_state.ctrl.movement_mode > 0) {
-            // foot target force assignment
+            // foot target pos/vel assignment
             foot_pos_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
                 (legged_state.ctrl.optimized_state.segment<3>(6 + 3 * i)  - legged_state.fbk.root_pos);
+
+
             foot_vel_target_rel.block<3, 1>(0, i) = legged_state.fbk.root_rot_mat.transpose() * 
-                (legged_state.ctrl.optimized_input.segment<3>(12 + 3 * i) - legged_state.fbk.root_lin_vel); 
+                (legged_state.ctrl.optimized_input.segment<3>(12 + 3 * i)  - legged_state.fbk.root_lin_vel);
 
-            foot_pos_error_rel.block<3, 1>(0, i) = 
-                foot_pos_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_pos_rel.block<3, 1>(0, i);
-            foot_vel_error_rel.block<3, 1>(0, i) = 
-                foot_vel_target_rel.block<3, 1>(0, i) - legged_state.fbk.foot_vel_rel.block<3, 1>(0, i);
-            
-            Eigen::Vector3d tmp = foot_pos_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kp_foot.block<3, 1>(0, i)) + foot_vel_error_rel.block<3, 1>(0, i).cwiseProduct(legged_state.param.kd_foot.block<3, 1>(0, i)); 
-                     
-            foot_forces_kin.block<3, 1>(0, i) = legged_state.param.km_foot.cwiseProduct(tmp);        
-
-            Eigen::Vector3d joint_kin = jac.lu().solve( foot_forces_kin.block<3, 1>(0, i) );
-            if ((isnan(joint_kin[0])) || (isnan(joint_kin[1])) || (isnan(joint_kin[2]))) {
-                //nan
-            } else {
-                legged_state.ctrl.joint_tau_tgt.segment<3>(i*3) += joint_kin; 
-            }
-
-            legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
             Eigen::Vector3d joint_ang_tgt = a1_kin.inv_kin(foot_pos_target_rel.block<3, 1>(0, i), legged_state.fbk.joint_pos.segment<3>(i*3), rho_opt_list[i], rho_fix_list[i]);
             if ((isnan(joint_ang_tgt[0])) || (isnan(joint_ang_tgt[1])) || (isnan(joint_ang_tgt[2]))) {
+                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
                 legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
-                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             } else {
+                legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.ctrl.joint_ang_tgt.segment<3>(i*3);
                 legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = joint_ang_tgt;
             }
-
-            Eigen::Vector3d joint_vel_tgt = (legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) - legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3)) / dt;
+            Eigen::Vector3d joint_vel_tgt = jac.lu().solve(foot_vel_target_rel.block<3, 1>(0, i));
             if ((isnan(joint_vel_tgt[0])) || (isnan(joint_vel_tgt[1])) || (isnan(joint_vel_tgt[2]))) {
                 legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
             } else {
                 legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = joint_vel_tgt;
             }
-            
-            // legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
-            // legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
-        }   else {
+        } else {
+            legged_state.ctrl.prev_joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             legged_state.ctrl.joint_ang_tgt.segment<3>(i*3) = legged_state.fbk.joint_pos.segment<3>(i*3);
             legged_state.ctrl.joint_vel_tgt.segment<3>(i*3) = legged_state.fbk.joint_vel.segment<3>(i*3);
         }
     } 
     
-    std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
-    std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
-    std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
+    // std::cout << "foot_pos_target_rel: " << foot_pos_target_rel.transpose() << std::endl;
+    // std::cout << "joint_pos: " << legged_state.fbk.joint_pos.transpose() << std::endl;
+    // std::cout << "joint_ang_tgt: " << legged_state.ctrl.joint_ang_tgt.transpose() << std::endl;
     
     // legged_state.ctrl.joint_ang_tgt = legged_state.fbk.joint_pos;
     // legged_state.ctrl.joint_vel_tgt = legged_state.fbk.joint_vel;

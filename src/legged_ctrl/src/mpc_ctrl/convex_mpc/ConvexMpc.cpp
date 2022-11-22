@@ -14,6 +14,11 @@ namespace legged
         // notice we scale weights by control dt
         fastConvex = ConvexQPSolver(state.param.q_weights, 
                                     state.param.r_weights); 
+
+        // adjust filter strength
+        root_lin_vel_d_rel_filter_x = MovingWindowFilter(int(1000.0/MPC_UPDATE_FREQUENCY*0.3));
+        root_lin_vel_d_rel_filter_y = MovingWindowFilter(int(1000.0/MPC_UPDATE_FREQUENCY*0.3));
+
     }
 
     bool ConvexMpc::update(LeggedState &state, double t, double dt)
@@ -26,8 +31,9 @@ namespace legged
         }
         // read joy command 
         state.ctrl.root_pos_d[2] = state.joy.body_height;
-        state.ctrl.root_lin_vel_d_rel[0] = state.joy.velx;
-        state.ctrl.root_lin_vel_d_rel[1] = state.joy.vely;
+        // TODO: add a filter here for lin_vel_d_rel
+        state.ctrl.root_lin_vel_d_rel[0] = root_lin_vel_d_rel_filter_x.CalculateAverage(state.joy.velx);
+        state.ctrl.root_lin_vel_d_rel[1] = root_lin_vel_d_rel_filter_y.CalculateAverage(state.joy.vely);
         state.ctrl.root_ang_vel_d_rel[2] = state.joy.yaw_rate;
         state.ctrl.root_euler_d[2] += state.joy.yaw_rate * dt;
 
@@ -72,48 +78,9 @@ namespace legged
     }
 
     bool ConvexMpc::foot_update(LeggedState &state, double t, double dt)
-    {
-        // always calculate Raibert Heuristic, calculate foothold position
-        // update foot plan: state.foot_pos_target_world
-        Eigen::Vector3d lin_vel_abs = state.fbk.root_lin_vel; lin_vel_abs[2] = 0;// world frame linear velocity, cannot regulate z velocity so we set it to 0
-        // desired abs frame linear velocity
-        Eigen::Vector3d lin_vel_d_abs = state.fbk.root_rot_mat_z * state.ctrl.root_lin_vel_d_rel; // robot body frame linear velocity
-
-        // foothold target 
-        state.ctrl.foot_pos_target_abs = state.fbk.root_rot_mat_z * state.param.default_foot_pos_rel;
-        for (int i = 0; i < NUM_LEG; ++i) {
-            double delta_x =
-                    std::sqrt(std::abs(state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(0) - lin_vel_d_abs(0)) +
-                    (1/state.param.gait_counter_speed) / 2.0 *
-                    lin_vel_d_abs(0);
-            double delta_y =
-                    std::sqrt(std::abs(state.param.default_foot_pos_rel(2)) / 9.8) * (lin_vel_abs(1) - lin_vel_d_abs(1)) +
-                    (1/state.param.gait_counter_speed) / 2.0 *
-                    lin_vel_d_abs(1);
-
-            if (delta_x < -FOOT_DELTA_X_LIMIT) {
-                delta_x = -FOOT_DELTA_X_LIMIT;
-            }
-            if (delta_x > FOOT_DELTA_X_LIMIT) {
-                delta_x = FOOT_DELTA_X_LIMIT;
-            }
-            if (delta_y < -FOOT_DELTA_Y_LIMIT) {
-                delta_y = -FOOT_DELTA_Y_LIMIT;
-            }
-            if (delta_y > FOOT_DELTA_Y_LIMIT) {
-                delta_y = FOOT_DELTA_Y_LIMIT;
-            }
-
-            // modify abs frame foothold target
-            state.ctrl.foot_pos_target_abs(0, i) += delta_x;
-            state.ctrl.foot_pos_target_abs(1, i) += delta_y;
-
-            // dont really use this but still calculate it
-            state.ctrl.foot_pos_target_rel.block<3, 1>(0, i) = state.fbk.root_rot_mat.transpose() * state.ctrl.foot_pos_target_abs.block<3, 1>(0, i);
-
-            // swing leg need to use foot_pos_target_world
-            state.ctrl.foot_pos_target_world.block<3, 1>(0, i) = state.ctrl.foot_pos_target_abs.block<3, 1>(0, i) + state.fbk.root_pos;
-        }
+    {   
+        // in low level loop, a raibert strategy generates foot_pos_target_world
+        // stored in state.ctrl.foot_pos_target_world
 
         // reset LegFSM in movement_mode 0
         if (state.ctrl.movement_mode == 0) {
@@ -125,9 +92,9 @@ namespace legged
             }
         } else {
             for (int i = 0; i < NUM_LEG; i++) {
-                leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
+                state.ctrl.gait_counter[i] = leg_FSM[i].update(dt, state.fbk.foot_pos_world.block<3,1>(0,i), 
                                     state.ctrl.foot_pos_target_world.block<3,1>(0,i), 
-                                    state.fbk.estimated_contacts[i]);
+                                    state.fbk.foot_contact_flag[i]);
 
                 // TODO: gait phase of each leg is individually controlled, so we may need to occasionally synchrinize them, for example if all leg are in contact, average their gait phase and set them to that value
             }        

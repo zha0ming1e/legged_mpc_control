@@ -80,18 +80,27 @@ int main(int argc, char **argv) {
         // TODO: use Go1 urdf
         urdfFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/urdf/a1_description/urdf/a1.urdf";
         std::cout << "not implemented yet " << std::endl;
-        return -1;
+        intef = std::unique_ptr<legged::GazeboInterface>(new legged::GazeboInterface(nh, taskFile, urdfFile, referenceFile)); 
+        // return -1;
 
     } else if (use_sim_time == false && robot_type == 1) {
         // TODO: use Go1 urdf
         urdfFile = "/home/REXOperator/legged_ctrl_ws/src/legged_ctrl/urdf/a1_description/urdf/a1.urdf";
-        std::cout << "not implemented yet " << std::endl;
-        return -1;
+        intef = std::unique_ptr<legged::HardwareInterface>(new legged::HardwareInterface(nh, taskFile, urdfFile, referenceFile)); 
 
     } else {
         std::cout << "undefined run type and robot type combination" << std::endl;
         return -1;
     }
+
+    // some other critical check 
+    if (intef->legged_state.param.kf_type == 0 && use_sim_time == false) {
+        std::cout << "using hardware but kf_type is set to 0" << std::endl;
+        return -1;
+    }
+
+    // wait for the ROS clock to be ready
+    ros::Duration(0.5).sleep();
 
     std::atomic<bool> control_execute{};
     control_execute.store(true, std::memory_order_release);
@@ -136,9 +145,6 @@ int main(int argc, char **argv) {
             std::chrono::duration<double, std::milli> ms_double = t2 - t1;
             std::cout << "MPC solution is updated in " << ms_double.count() << "ms" << std::endl;
 
-            
-            // Logging 
-            logger->publish_state(intef->get_legged_state(), elapsed.toSec()); 
 
             if (!running) {
                 std::cout << "Thread 1 loop is terminated because of errors." << std::endl;
@@ -149,9 +155,9 @@ int main(int argc, char **argv) {
             }
             dt_solver_time_in_ros = ros::Time::now() - now;
             if (dt_solver_time_in_ros.toSec() < MPC_UPDATE_FREQUENCY / 1000) {    
-                std::cout << "waiting...." << std::endl;
-                std::cout << "waiting time :" << MPC_UPDATE_FREQUENCY - dt_solver_time_in_ros.toSec()*1000<< "ms" << std::endl;
-                std::cout << "waiting...." << std::endl;
+                // std::cout << "waiting...." << std::endl;
+                // std::cout << "waiting time :" << MPC_UPDATE_FREQUENCY - dt_solver_time_in_ros.toSec()*1000<< "ms" << std::endl;
+                // std::cout << "waiting...." << std::endl;
                 ros::Duration( MPC_UPDATE_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec() ).sleep();
             }
         }
@@ -167,6 +173,7 @@ int main(int argc, char **argv) {
         ros::Time prev = ros::Time::now();
         ros::Time now = ros::Time::now();  // bool res = app.exec();
         ros::Duration dt(0);
+        ros::Duration dt_solver_time_in_ros(0);
 
         if (mpc_type == 0) {
             // wait for LCI MPC controller to load julia stuff
@@ -176,24 +183,68 @@ int main(int argc, char **argv) {
         }
 
         while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
-            auto t3 = std::chrono::high_resolution_clock::now();
-
-            ros::Duration(LOW_LEVEL_CTRL_FREQUENCY / 1000).sleep();
-
             // get t and dt
             now = ros::Time::now();
             dt = now - prev;
             prev = now;
             ros::Duration elapsed = now - start;
 
-            std::cout << "run "  << elapsed.toSec() << std::endl;
-            bool main_update_running = intef->update(elapsed.toSec(), dt.toSec());
+            bool main_update_running = intef->ctrl_update(elapsed.toSec(), dt.toSec());
             
             if (!main_update_running) {
                 std::cout << "Thread 2 loop is terminated because of errors." << std::endl;
                 ros::shutdown();
                 std::terminate();
                 break;
+            }
+
+            dt_solver_time_in_ros = ros::Time::now() - now;
+            if (dt_solver_time_in_ros.toSec() < LOW_LEVEL_CTRL_FREQUENCY / 1000) {    
+                ros::Duration(LOW_LEVEL_CTRL_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec()).sleep();
+            }
+        }
+    });
+
+    // Thread 3: get feedback
+    std::cout << "Start thread 3: get feedback"
+              << std::endl;
+    std::thread feedback_thread([&]() {
+        // prepare variables to monitor time and control the while loop
+        ros::Time start = ros::Time::now();
+        ros::Time prev = ros::Time::now();
+        ros::Time now = ros::Time::now();  // bool res = app.exec();
+        ros::Duration dt(0);
+        ros::Duration dt_solver_time_in_ros(0);
+
+        if (mpc_type == 0) {
+            // wait for LCI MPC controller to load julia stuff
+            ros::Duration(1.5).sleep();
+            lci_init_mutex.lock();
+            lci_init_mutex.unlock();
+        }
+
+        while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
+            // get t and dt
+            now = ros::Time::now();
+            dt = now - prev;
+            prev = now;
+            ros::Duration elapsed = now - start;
+
+            bool main_update_running = intef->fbk_update(elapsed.toSec(), dt.toSec());
+            
+            // Logging 
+            logger->publish_state(intef->get_legged_state(), elapsed.toSec()); 
+            
+            if (!main_update_running) {
+                std::cout << "Thread 3 loop is terminated because of errors." << std::endl;
+                ros::shutdown();
+                std::terminate();
+                break;
+            }
+
+            dt_solver_time_in_ros = ros::Time::now() - now;
+            if (dt_solver_time_in_ros.toSec() < FEEDBACK_FREQUENCY / 1000) {    
+                ros::Duration( FEEDBACK_FREQUENCY / 1000 - dt_solver_time_in_ros.toSec() ).sleep();
             }
         }
     });

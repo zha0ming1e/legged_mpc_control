@@ -25,12 +25,8 @@ Since LCI MPC uses Julia, we need to config Julia environment after building the
     3. start julia 
     4. pkg> activate .
     5. pkg> instantiate 
-    6. pkg> add YAML 
-    7. (@v1.7) pkg> rm ContactImplicitMPC.jl
-    8. @v1.7) pkg> dev ../ContactImplicitMPC.jl/
-    9. @v1.7) pkg> status ContactImplicitMPC (must be the local dir)
-    10. julia> import Pkg; Pkg.upgrade_manifest()
-    11. julia> include("scripts/precompile_sysimage.jl") 
+    6. @v1.7) pkg> status ContactImplicitMPC (must be the local dir)
+    7. julia> include("scripts/precompile_sysimage.jl") 
 
 ## Gazebo Setup
 On the host computer, build a second docker in "gazebo_docker" folder

@@ -14,6 +14,7 @@
 #include "LeggedState.h"
 #include "interfaces/BaseInterface.h"
 #include "utils/MovingWindowFilter.hpp"
+#include "utils/LeggedSafetyChecker.hpp"
 
 namespace legged
 {
@@ -24,9 +25,10 @@ class GazeboInterface : public BaseInterface {
 public:
     GazeboInterface(ros::NodeHandle &_nh, const std::string& taskFile, const std::string& urdfFile, const std::string& referenceFile);
 
-    bool update(double t, double dt);
+    bool ctrl_update(double t, double dt);
+    bool fbk_update(double t, double dt);
     
-    bool send_cmd();
+    bool send_cmd(double t);
 
 
     // callback functions
@@ -96,6 +98,16 @@ private:
     MovingWindowFilter quat_x;
     MovingWindowFilter quat_y;
     MovingWindowFilter quat_z;
+
+    LeggedSafetyChecker safety_checker;
+    
+    // simulate opti track
+    int DROP_COUNT = 10;   // drop the first 10 data
+    int current_count = 0;
+    bool first_mocap_received = false;
+    double opti_t_prev;
+    Eigen::Vector3d initial_opti_euler;  // the data we input to the filter is the difference between the current and initial euler angles
+    Eigen::Vector3d initial_opti_pos;    // the data we input to the filter is the difference between the current and initial position
 };
 
 }  // namespace legged
