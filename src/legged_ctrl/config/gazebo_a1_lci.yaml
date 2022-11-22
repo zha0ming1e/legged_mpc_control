@@ -7,7 +7,7 @@ robot_type: 0
 mpc_type: 0
 low_level_type: 0
 
-kf_type: 2        # 0: no kf ( only available in Gazebo)
+kf_type: 1        # 0: no kf ( only available in Gazebo)
                   # 1: linear KF
                   # 2: EKF
                   
