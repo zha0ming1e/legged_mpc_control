@@ -193,6 +193,13 @@ target_link_libraries(main
         ${pinocchio_LIBRARIES}
 )
 
+############### unitree highlevel control ################
+add_executable(unitree_highlevel_ctrl src/unitree_highlevel_ctrl/unitree_highlevel_ctrl.cpp)
+target_link_libraries(unitree_highlevel_ctrl ${UNITREE_LIBS} ${catkin_LIBRARIES})
+
+
+
+############### tests #########################
 add_executable(test_inv_kin
         src/test/test_inv_kin.cpp
 )
